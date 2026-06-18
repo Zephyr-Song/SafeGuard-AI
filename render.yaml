@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: safebars
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: ENABLE_OPENAI_PROVIDER
+        value: "0"
+      - key: FLASK_SECRET_KEY
+        sync: false
+      - key: SAFEBARS_DEMO_USER
+        value: safebars
+      - key: SAFEBARS_DEMO_PASSWORD
+        sync: false
+      - key: ZHI_KEY
+        sync: false
+      - key: BAILIAN_API_KEY
+        sync: false
+      - key: BAILIAN_BASE_URL
+        value: https://dashscope.aliyuncs.com/compatible-mode/v1
+      - key: BAILIAN_MODEL
+        value: qwen-plus
+      - key: TENCENT_API_KEY
+        sync: false
+      - key: TENCENT_BASE_URL
+        value: https://tokenhub.tencentmaas.com/v1
+      - key: TENCENT_MODEL
+        value: hy3-preview
+      - key: TENCENT_LABEL
+        value: Tencent TokenHub HY3 Preview

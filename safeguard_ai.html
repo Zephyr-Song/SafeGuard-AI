@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeGuard AI - Scam Identification</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        h1 { font-size: 2.5rem; color: #2563eb; margin-bottom: 10px; }
+        .subtitle { font-size: 1.1rem; color: #6b7280; }
+        .section { margin-bottom: 30px; }
+        .section-title { font-size: 1.5rem; color: #2563eb; margin-bottom: 15px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .card {
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .card:hover {
+            border-color: #2563eb;
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.2);
+            transform: translateY(-2px);
+        }
+        .card.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .icon { font-size: 2rem; margin-bottom: 10px; }
+        .card-name { font-weight: 600; }
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        .btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        }
+        .scenario-box {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+        .scenario-box.active { display: block; }
+        .message-bubble {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #2563eb;
+        }
+        .sender { font-weight: 600; color: #2563eb; margin-bottom: 10px; }
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            margin: 15px 0;
+        }
+        .score-display {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border-radius: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+        .score-display.active { display: block; }
+        .score-number {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #065f46;
+        }
+        .score-label { font-size: 1.2rem; color: #065f46; margin-top: 10px; }
+        .feedback { padding: 15px; background: #dbeafe; border-radius: 10px; margin: 15px 0; }
+        .risk-list {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .risk-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: #f0fdf4;
+            border-left: 3px solid #10b981;
+            border-radius: 5px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ SafeGuard AI</h1>
+            <p class="subtitle">Learn to Identify Scams & Protect Yourself Online</p>
+        </header>
+
+        <div class="section">
+            <h2 class="section-title">📚 Select Scenario</h2>
+            <div class="grid" id="categoryGrid"></div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Difficulty Level</h2>
+            <div class="difficulty-selector" id="difficultySelector"></div>
+        </div>
+
+        <div class="section">
+            <button class="btn-primary" onclick="startLearning()">🚀 Start Learning</button>
+        </div>
+
+        <div class="scenario-box" id="scenarioBox">
+            <div class="message-bubble">
+                <div class="sender" id="senderName"></div>
+                <div id="scenarioContent"></div>
+            </div>
+
+            <textarea id="userResponse" placeholder="Analyze this message and explain what warning signs you notice..."></textarea>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-primary" onclick="submitResponse()" style="flex: 1;">📤 Submit Response</button>
+                <button class="btn-primary" onclick="getHint()" style="flex: 1; background: #6b7280;">💡 Hint (<span id="hintDisplay">3</span>)</button>
+            </div>
+
+            <div class="score-display" id="scoreDisplay">
+                <div class="score-number" id="scoreNumber">0</div>
+                <div class="score-label">Your Score</div>
+                <div id="scorePercentage" style="margin-top: 10px; color: #047857;"></div>
+            </div>
+
+            <div class="feedback" id="feedback" style="display: none;"></div>
+
+            <div class="risk-list" id="riskList" style="display: none;">
+                <h3 style="margin-bottom: 10px;">✅ Warning Signs You Should Know</h3>
+                <div id="riskItems"></div>
+            </div>
+
+            <div class="risk-list" id="alternativesList" style="display: none;">
+                <h3 style="margin-bottom: 10px;">💡 Recommended Actions</h3>
+                <div id="alternativesItems"></div>
+            </div>
+        </div>
+
+        <footer>
+            <p>SafeGuard AI - Scam Identification Learning Platform</p>
+            <p style="font-size: 0.9rem; margin-top: 10px;">Fully offline - No internet required</p>
+        </footer>
+    </div>
+
+    <script>
+        const categories = {
+            fraudulent_service: { name: '🎭 Fraudulent Service', desc: 'Scams disguised as legitimate services' },
+            impersonation: { name: '👤 Impersonation', desc: 'Impersonating friends or authorities' },
+            phishing: { name: '🎣 Phishing', desc: 'Stealing info via fake links' },
+            fake_job: { name: '💼 Fake Job Posting', desc: 'Job scams with high pay promises' },
+            online_relationship: { name: '💕 Online Relationship', desc: 'Romance scams via emotional manipulation' }
+        };
+
+        const difficulties = {
+            beginner: { name: '🌱 Beginner', hints: 3, multiplier: 1.0 },
+            intermediate: { name: '🌿 Intermediate', hints: 2, multiplier: 1.2 },
+            advanced: { name: '🌳 Advanced', hints: 1, multiplier: 1.5 }
+        };
+
+        const scenarios = {
+            fraudulent_service: {
+                beginner: [{
+                    title: 'Fake Driving School',
+                    content: 'Hello, this is City Driving School. We can help you get a B1 driver\'s license without taking the exam. Just pay a deposit of 800 yuan and an exam fee of 7,500 yuan.',
+                    sender: 'Coach Li',
+                    red_flags: ['Promises no exam required', 'Requests upfront payment', 'Personal bank account'],
+                    alternatives: ['Visit official driving school', 'Check credentials online']
+                }],
+                intermediate: [{
+                    title: 'Fake Certificate Service',
+                    content: 'Get your professional certification in just 3 days! No studying required. We have connections with official exam centers. Special offer: only 5,000 yuan.',
+                    sender: 'FastCert Services',
+                    red_flags: ['Unrealistic timeline', 'Claims of inside connections', 'Too good to be true pricing'],
+                    alternatives: ['Research accredited programs', 'Check official certification bodies']
+                }],
+                advanced: [{
+                    title: 'Fake Investment Platform',
+                    content: 'Our AI trading system has generated 300% returns for investors last month. Join now with minimum 10,000 yuan. Limited spots available. Risk-free guarantee with our advanced algorithm.',
+                    sender: 'QuantumTrade AI',
+                    red_flags: ['Unrealistic returns', 'Urgency tactic', 'Risk-free claim'],
+                    alternatives: ['Research investment platforms', 'Check regulatory licenses']
+                }]
+            },
+            impersonation: {
+                beginner: [{
+                    title: 'Friend Emergency',
+                    content: 'Hey, this is Xiao Ming. My phone broke, so this is my new number. I urgently need 5,000 yuan. Can you transfer it to me?',
+                    sender: 'Xiao Ming',
+                    red_flags: ['New number claim', 'Urgent request', 'Money transfer request'],
+                    alternatives: ['Call original number', 'Ask personal verification questions']
+                }],
+                intermediate: [{
+                    title: 'Bank Official',
+                    content: 'This is a security alert from your bank. We detected suspicious activity. To verify your identity, please provide your account number and password immediately.',
+                    sender: 'Security Team',
+                    red_flags: ['Asks for sensitive info', 'Creates urgency', 'Non-official contact'],
+                    alternatives: ['Call official bank hotline', 'Visit bank branch']
+                }],
+                advanced: [{
+                    title: 'Government Official',
+                    content: 'I am Officer Wang from Public Security Bureau. Your ID is linked to a money laundering case. Transfer your funds to a secure government account for investigation. This is confidential.',
+                    sender: 'PSB Officer Wang',
+                    red_flags: ['Authority impersonation', 'Intimidation tactic', 'Secrecy demand'],
+                    alternatives: ['Hang up and call 110', 'Visit local police station']
+                }]
+            },
+            phishing: {
+                beginner: [{
+                    title: 'Bank Verification',
+                    content: '[XX Bank] Your account has unusual login activity. Click the link immediately to verify your identity: http://xxbank-verify.com/safety',
+                    sender: 'XX Bank',
+                    red_flags: ['Suspicious link', 'Urgent tone', 'Non-official domain'],
+                    alternatives: ['Use official bank app', 'Call bank directly']
+                }],
+                intermediate: [{
+                    title: 'Package Delivery',
+                    content: 'Your package has arrived! Click here to confirm delivery: http://track-package-xyz.com. Urgent: package will be returned if not confirmed within 24 hours.',
+                    sender: 'Express Delivery',
+                    red_flags: ['Shortened link', 'Artificial deadline', 'No company details'],
+                    alternatives: ['Check delivery status on official site', 'Contact shipping company directly']
+                }],
+                advanced: [{
+                    title: 'Social Media Login',
+                    content: 'We\'ve detected unusual activity on your account. Someone tried to log in from another country. Secure your account now: https://socialmedia-secure.com/login. Your account will be suspended in 2 hours if not verified.',
+                    sender: 'Social Media Security',
+                    red_flags: ['Fake login page link', 'Time pressure', 'Password harvest attempt'],
+                    alternatives: ['Go directly to official app', 'Check login activity in settings']
+                }]
+            },
+            fake_job: {
+                beginner: [{
+                    title: 'High-Pay Part-Time',
+                    content: 'High-paying part-time job! Earn 300-500 yuan daily, flexible hours, no experience needed. Just pay a 200 yuan training fee to start immediately.',
+                    sender: 'XX HR',
+                    red_flags: ['High pay for low skills', 'Upfront payment', 'Vague description'],
+                    alternatives: ['Research company online', 'Ask for detailed job description']
+                }],
+                intermediate: [{
+                    title: 'Data Entry Job',
+                    content: 'Urgent hiring! Simple data entry work. $50 per hour. Only 20 positions left! Send your ID and bank details to apply. No interview required.',
+                    sender: 'Global Data Solutions',
+                    red_flags: ['Unrealistic pay', 'Sensitive info early', 'Pressure tactics'],
+                    alternatives: ['Verify company registration', 'Request detailed job description']
+                }],
+                advanced: [{
+                    title: 'Remote Developer Position',
+                    content: 'Silicon Valley startup seeking remote developers. $8,000/month salary. Complete our coding challenge at: techskills-assessment.com. After passing, pay $500 refundable equipment deposit for MacBook Pro.',
+                    sender: 'TechVenture Labs',
+                    red_flags: ['High salary minimal vetting', 'Equipment deposit scam', 'Excessive personal data'],
+                    alternatives: ['Research company on LinkedIn', 'Real companies don\'t ask for deposits']
+                }]
+            },
+            online_relationship: {
+                beginner: [{
+                    title: 'Online Dating',
+                    content: 'Hi, I saw your profile and I think we have a special connection. I work abroad and feel lonely. I\'d love to get to know you better.',
+                    sender: 'David',
+                    red_flags: ['Quick emotional connection', 'Foreign location', 'Vulnerability expression'],
+                    alternatives: ['Take time to know person', 'Request video calls']
+                }],
+                intermediate: [{
+                    title: 'Investment Romance',
+                    content: 'I\'ve been trading crypto for 2 years and making good profits. I can teach you my secret method. We can build a future together. Just invest 10,000 yuan to start.',
+                    sender: 'Sarah',
+                    red_flags: ['Financial proposal', 'Future promises', 'Specific amount request'],
+                    alternatives: ['Research investment independently', 'Never mix romance and money']
+                }],
+                advanced: [{
+                    title: 'Military Romance',
+                    content: 'I\'m Captain James Miller, US Marine deployed in Syria. I\'ll retire in 3 months. I have $2.5 million inheritance but can\'t access it here. Can you help transfer it? I\'ll give you 30%. I love you and want to marry you.',
+                    sender: 'Captain James Miller',
+                    red_flags: ['Military impersonation', 'Large money transfer', 'Quick marriage proposal'],
+                    alternatives: ['Military don\'t ask for money', 'Reverse image search photos']
+                }]
+            }
+        };
+
+        let currentCategory = null;
+        let currentDifficulty = 'beginner';
+        let currentScenario = null;
+        let hintsRemaining = 999;
+        let hintsUsed = 0;
+
+        // 初始化
+        function init() {
+            // 创建类别卡片
+            const grid = document.getElementById('categoryGrid');
+            for (const [key, cat] of Object.entries(categories)) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.category = key;
+                card.innerHTML = `<div class="icon">${cat.name.split(' ')[0]}</div><div class="card-name">${cat.name}</div>`;
+                card.onclick = () => selectCategory(key);
+                grid.appendChild(card);
+            }
+
+            // 创建难度按钮
+            const diffSelector = document.getElementById('difficultySelector');
+            for (const [key, diff] of Object.entries(difficulties)) {
+                const btn = document.createElement('button');
+                btn.className = 'btn' + (key === 'beginner' ? ' active' : '');
+                btn.dataset.difficulty = key;
+                btn.textContent = diff.name;
+                btn.onclick = () => selectDifficulty(key);
+                diffSelector.appendChild(btn);
+            }
+        }
+
+        function selectCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('[data-category]').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[data-category="${cat}"]`).classList.add('active');
+        }
+
+        function selectDifficulty(diff) {
+            currentDifficulty = diff;
+            document.querySelectorAll('[data-difficulty]').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-difficulty="${diff}"]`).classList.add('active');
+            hintsRemaining = difficulties[diff].hints;
+            hintsUsed = 0;
+        }
+
+        function startLearning() {
+            if (!currentCategory) {
+                alert('Please select a scenario first!');
+                return;
+            }
+
+            const scenarioList = scenarios[currentCategory][currentDifficulty];
+            currentScenario = scenarioList[Math.floor(Math.random() * scenarioList.length)];
+
+            document.getElementById('senderName').textContent = `From: ${currentScenario.sender}`;
+            document.getElementById('scenarioContent').textContent = currentScenario.content;
+            document.getElementById('userResponse').value = '';
+            document.getElementById('scoreDisplay').classList.remove('active');
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('riskList').style.display = 'none';
+            document.getElementById('alternativesList').style.display = 'none';
+
+            // 更新提示次数显示
+            hintsRemaining = difficulties[currentDifficulty].hints;
+            hintsUsed = 0;
+            document.getElementById('hintDisplay').textContent = hintsRemaining;
+
+            document.getElementById('scenarioBox').classList.add('active');
+            window.scrollTo(0, document.getElementById('scenarioBox').offsetTop - 100);
+        }
+
+        function submitResponse() {
+            const response = document.getElementById('userResponse').value.trim();
+            if (!response) {
+                alert('Please enter your analysis!');
+                return;
+            }
+
+            // 简单的分析
+            let identified = 0;
+            for (const flag of currentScenario.red_flags) {
+                if (response.toLowerCase().includes(flag.toLowerCase())) {
+                    identified++;
+                }
+            }
+
+            const percentage = Math.round((identified / currentScenario.red_flags.length) * 100);
+            let score = 20;
+            if (percentage >= 100) score = 100;
+            else if (percentage >= 70) score = 80;
+            else if (percentage >= 50) score = 60;
+            else if (percentage >= 30) score = 40;
+
+            const multiplier = difficulties[currentDifficulty].multiplier;
+            const finalScore = Math.min(100, Math.round(score * multiplier));
+
+            // 显示结果
+            document.getElementById('scoreNumber').textContent = finalScore;
+            document.getElementById('scorePercentage').textContent = `${percentage}% Warning Signs Identified`;
+            if (multiplier > 1) {
+                document.getElementById('scorePercentage').innerHTML += `<br><small>Original: ${score} × ${multiplier} = ${finalScore}</small>`;
+            }
+            document.getElementById('scoreDisplay').classList.add('active');
+
+            // 反馈
+            let feedbackText = '';
+            if (finalScore >= 80) feedbackText = '🎉 Excellent! You identified most warning signs!';
+            else if (finalScore >= 60) feedbackText = '👍 Good job! You identified several warning signs.';
+            else if (finalScore >= 40) feedbackText = '🤔 Fair attempt. Try to identify more warning signs.';
+            else feedbackText = '⚠️ Review the scenario and try again.';
+
+            document.getElementById('feedback').textContent = feedbackText;
+            document.getElementById('feedback').style.display = 'block';
+
+            // 风险列表
+            const riskItems = document.getElementById('riskItems');
+            riskItems.innerHTML = '';
+            for (let i = 0; i < currentScenario.red_flags.length; i++) {
+                const item = document.createElement('div');
+                item.className = 'risk-item';
+                item.textContent = `${i + 1}. ${currentScenario.red_flags[i]}`;
+                riskItems.appendChild(item);
+            }
+            document.getElementById('riskList').style.display = 'block';
+
+            // 替代方案
+            const altItems = document.getElementById('alternativesItems');
+            altItems.innerHTML = '';
+            for (const alt of currentScenario.alternatives) {
+                const item = document.createElement('div');
+                item.className = 'risk-item';
+                item.textContent = `• ${alt}`;
+                altItems.appendChild(item);
+            }
+            document.getElementById('alternativesList').style.display = 'block';
+        }
+
+        function getHint() {
+            if (hintsRemaining <= 0) {
+                alert('❌ No hints remaining!');
+                return;
+            }
+
+            const hintIdx = Math.min(hintsUsed, currentScenario.red_flags.length - 1);
+            alert(`💡 Hint: Look for "${currentScenario.red_flags[hintIdx]}"`);
+
+            if (hintsRemaining !== 999) {
+                hintsRemaining--;
+            }
+            hintsUsed++;
+            
+            // 更新显示
+            document.getElementById('hintDisplay').textContent = hintsRemaining;
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>

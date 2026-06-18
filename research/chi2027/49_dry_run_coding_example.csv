@@ -1,0 +1,2 @@
+participant_id,research_experience,llm_experience,presets_used,turn_count,C1_stakeholder_coverage,C2_privacy_data,C3_distress_safety,C4_victim_blaming,C5_burden,C6_consent,C7_followup,C8_trust_calibration,C9_feasibility,overall_revision_quality,main_usefulness_theme,main_risk_theme,overtrust_risk_level,prototype_issue
+DRYRUN01,internal_system_dry_run,n/a,affected_participant,4,1,3,3,3,2,3,2,3,2,4,"Surfaced concrete wording/privacy/safety revisions","Template signal for burden was partly generic",0,"Need browser-based dry run and more specific burden signal label"

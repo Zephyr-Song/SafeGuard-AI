@@ -1,0 +1,140 @@
+[
+  {
+    "preset_id": "affected_high_privacy",
+    "stakeholder": "Affected Participant",
+    "tests": [
+      {
+        "message": "How much money did you lose and what mistake did you make?",
+        "signal": "distress risk",
+        "flags": [
+          "potential victim-blaming"
+        ],
+        "response_excerpt": "I would feel uncomfortable with that wording. It sounds like you already think I did something wrong. If this were a real interview, I would want you to ask what I was comfortable sharing and avoid framing the experience as my fault.\n\nA safer question might ask what made the mess"
+      },
+      {
+        "message": "We will record the session for analysis. Is that okay?",
+        "signal": "privacy concern",
+        "flags": [
+          "privacy concern"
+        ],
+        "response_excerpt": "Before answering, I would want to know why you need that information, whether the session is recorded, who will see the data, and whether I can skip the question. Exact financial details can feel very personal.\n\nI might answer more openly if you explain the purpose and give me co"
+      },
+      {
+        "message": "Can I assume most people in your community would feel the same way?",
+        "signal": "limitation reminder",
+        "flags": [
+          "replacement boundary"
+        ],
+        "response_excerpt": "I cannot answer for real participants or a whole community. This rehearsal can help you notice assumptions and questions to check, but you would still need real participants and community partners to validate them.\n\n[Rehearsal signal: limitation reminder]"
+      },
+      {
+        "message": "We want a two-hour interview plus a two-hour workshop on the same day.",
+        "signal": "useful question",
+        "flags": [
+          "participant burden"
+        ],
+        "response_excerpt": "I can try to answer, but I would need the study to feel safe and non-judgmental. It helps when you explain why you are asking, what I can skip, and how my privacy will be protected.\n\n[Rehearsal signal: useful question]"
+      },
+      {
+        "message": "The university and local police support this, so participants should feel comfortable joining.",
+        "signal": "trust issue",
+        "flags": [
+          "authority or institution issue"
+        ],
+        "response_excerpt": "Saying that an institution supports the study would not automatically make me comfortable. I would still want to know what happens to my information and whether participation could create trouble for me or my family.\n\n[Rehearsal signal: trust issue]"
+      }
+    ]
+  },
+  {
+    "preset_id": "family_helper_protective",
+    "stakeholder": "Family Helper",
+    "tests": [
+      {
+        "message": "How much money did you lose and what mistake did you make?",
+        "signal": "missing context",
+        "flags": [
+          "potential victim-blaming"
+        ],
+        "response_excerpt": "As a family member, I might also feel frustrated and ask why they believed the scam, but that can quickly sound blaming. Your materials should probably help families talk about the situation without making the affected person feel ashamed.\n\nIt may be useful to include family guid"
+      },
+      {
+        "message": "We will record the session for analysis. Is that okay?",
+        "signal": "missing context",
+        "flags": [
+          "privacy concern"
+        ],
+        "response_excerpt": "From a family perspective, I would want to know how this helps us respond after something happens. The plan should consider family reactions, privacy inside the household, and how to avoid making the affected person feel blamed.\n\n[Rehearsal signal: missing context]"
+      },
+      {
+        "message": "Can I assume most people in your community would feel the same way?",
+        "signal": "limitation reminder",
+        "flags": [
+          "replacement boundary"
+        ],
+        "response_excerpt": "I cannot answer for real participants or a whole community. This rehearsal can help you notice assumptions and questions to check, but you would still need real participants and community partners to validate them.\n\n[Rehearsal signal: limitation reminder]"
+      },
+      {
+        "message": "We want a two-hour interview plus a two-hour workshop on the same day.",
+        "signal": "missing context",
+        "flags": [
+          "participant burden"
+        ],
+        "response_excerpt": "From a family perspective, I would want to know how this helps us respond after something happens. The plan should consider family reactions, privacy inside the household, and how to avoid making the affected person feel blamed.\n\n[Rehearsal signal: missing context]"
+      },
+      {
+        "message": "The university and local police support this, so participants should feel comfortable joining.",
+        "signal": "trust issue",
+        "flags": [
+          "authority or institution issue"
+        ],
+        "response_excerpt": "If the university, police, or bank is involved, I might trust the study more, but I would also want clear instructions about when to contact each institution. Families often need practical next steps, not only awareness information.\n\n[Rehearsal signal: trust issue]"
+      }
+    ]
+  },
+  {
+    "preset_id": "community_worker_feasibility",
+    "stakeholder": "Community Worker",
+    "tests": [
+      {
+        "message": "How much money did you lose and what mistake did you make?",
+        "signal": "participant burden",
+        "flags": [
+          "potential victim-blaming"
+        ],
+        "response_excerpt": "I would worry about participant burden. A long session or detailed story collection may be difficult, especially for people who feel embarrassed or distressed. You may need shorter options, breaks, private participation, and a clear way to leave without explanation.\n\nI would also"
+      },
+      {
+        "message": "We will record the session for analysis. Is that okay?",
+        "signal": "participant burden",
+        "flags": [
+          "privacy concern"
+        ],
+        "response_excerpt": "I would worry about participant burden. A long session or detailed story collection may be difficult, especially for people who feel embarrassed or distressed. You may need shorter options, breaks, private participation, and a clear way to leave without explanation.\n\nI would also"
+      },
+      {
+        "message": "Can I assume most people in your community would feel the same way?",
+        "signal": "limitation reminder",
+        "flags": [
+          "replacement boundary"
+        ],
+        "response_excerpt": "I cannot answer for real participants or a whole community. This rehearsal can help you notice assumptions and questions to check, but you would still need real participants and community partners to validate them.\n\n[Rehearsal signal: limitation reminder]"
+      },
+      {
+        "message": "We want a two-hour interview plus a two-hour workshop on the same day.",
+        "signal": "participant burden",
+        "flags": [
+          "participant burden"
+        ],
+        "response_excerpt": "I would worry about participant burden. A long session or detailed story collection may be difficult, especially for people who feel embarrassed or distressed. You may need shorter options, breaks, private participation, and a clear way to leave without explanation.\n\nI would also"
+      },
+      {
+        "message": "The university and local police support this, so participants should feel comfortable joining.",
+        "signal": "participant burden",
+        "flags": [
+          "authority or institution issue"
+        ],
+        "response_excerpt": "I would worry about participant burden. A long session or detailed story collection may be difficult, especially for people who feel embarrassed or distressed. You may need shorter options, breaks, private participation, and a clear way to leave without explanation.\n\nI would also"
+      }
+    ]
+  }
+]

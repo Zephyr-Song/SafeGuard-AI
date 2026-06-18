@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeGuard AI 使用说明 - 打印版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @media print {
+            @page {
+                size: A4;
+                margin: 2cm;
+            }
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .no-print {
+                display: none;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", "SimHei", "PingFang SC", sans-serif;
+            font-size: 11pt;
+            line-height: 1.8;
+            color: #333;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+        
+        .cover {
+            text-align: center;
+            padding: 80px 20px;
+            page-break-after: always;
+        }
+        
+        .cover h1 {
+            font-size: 32pt;
+            color: #2563eb;
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .cover .subtitle {
+            font-size: 16pt;
+            color: #6b7280;
+            margin-bottom: 40px;
+        }
+        
+        .cover .info {
+            font-size: 12pt;
+            color: #9ca3af;
+            margin-top: 60px;
+        }
+        
+        h1 {
+            font-size: 20pt;
+            color: #1d4ed8;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #2563eb;
+            page-break-after: avoid;
+        }
+        
+        h2 {
+            font-size: 14pt;
+            color: #2563eb;
+            margin: 25px 0 15px 0;
+            padding-left: 12px;
+            border-left: 4px solid #2563eb;
+            page-break-after: avoid;
+        }
+        
+        h3 {
+            font-size: 12pt;
+            color: #3b82f6;
+            margin: 20px 0 10px 0;
+            page-break-after: avoid;
+        }
+        
+        p {
+            margin: 10px 0;
+            text-align: justify;
+        }
+        
+        .highlight {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .warning {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .success {
+            background: #ecfdf5;
+            border: 1px solid #6ee7b7;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #10b981;
+        }
+        
+        .code-block {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 10pt;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "Consolas", monospace;
+            font-size: 10pt;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 10pt;
+        }
+        
+        th {
+            background: #2563eb;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        td {
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        ul, ol {
+            margin: 10px 0 10px 25px;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .step-number {
+            background: #2563eb;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .icon {
+            font-size: 1.2em;
+            margin-right: 5px;
+        }
+        
+        .toc {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+            color: #1d4ed8;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .toc li {
+            padding: 5px 0;
+            border-bottom: 1px dotted #e5e7eb;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 10pt;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+        
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            z-index: 1000;
+        }
+        
+        .print-btn:hover {
+            background: #1d4ed8;
+        }
+        
+        .feature-box {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f0f9ff;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #0ea5e9;
+        }
+        
+        .feature-icon {
+            font-size: 24px;
+            margin-right: 15px;
+        }
+        
+        .feature-text {
+            flex: 1;
+        }
+        
+        .feature-title {
+            font-weight: bold;
+            color: #0369a1;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn no-print" onclick="window.print()">🖨️ 打印为PDF</button>
+    
+    <!-- 封面 -->
+    <div class="cover">
+        <div style="font-size: 80px; margin-bottom: 30px;">🛡️</div>
+        <h1>SafeGuard AI</h1>
+        <div class="subtitle">安全教育与AI伦理学习平台<br>使用说明</div>
+        <div class="info">
+            <p>基于Fraud-R1改进</p>
+            <p>版本 1.0</p>
+            <p>2025年3月</p>
+        </div>
+    </div>
+    
+    <!-- 目录 -->
+    <div class="toc">
+        <h3>📑 目录</h3>
+        <ul>
+            <li>1. 项目简介</li>
+            <li>2. 快速开始</li>
+            <li>3. 项目结构</li>
+            <li>4. 使用指南</li>
+            <li>5. 核心功能</li>
+            <li>6. 故障排除</li>
+            <li>7. 注意事项</li>
+            <li>8. 技术特点</li>
+        </ul>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <!-- 第1章 -->
+    <h1>1. 项目简介</h1>
+    
+    <div class="highlight">
+        <strong>SafeGuard AI</strong> 是基于Fraud-R1改进的安全教育与AI伦理学习平台。本项目将原本用于测试LLM脆弱性的攻击框架，转变为具有正面社会价值的教育工具。
+    </div>
+    
+    <h2>1.1 项目目标</h2>
+    <ul>
+        <li><strong>教育目标</strong>：帮助用户识别和防范网络诈骗</li>
+        <li><strong>伦理目标</strong>：理解AI决策的透明度、偏见与公平性</li>
+        <li><strong>技术目标</strong>：实现安全、可解释、负责任的AI教育系统</li>
+    </ul>
+    
+    <h2>1.2 核心创新</h2>
+    
+    <div class="feature-box">
+        <div class="feature-icon">🔄</div>
+        <div class="feature-text">
+            <div class="feature-title">模式转换</div>
+            <div>从攻击测试工具转变为教育学习平台</div>
+        </div>
+    </div>
+    
+    <div class="feature-box">
+        <div class="feature-icon">🔍</div>
+        <div class="feature-text">
+            <div class="feature-title">透明度仪表板</div>
+            <div>展示AI决策过程，理解决策因素和置信度</div>
+        </div>
+    </div>
+    
+    <div class="feature-box">
+        <div class="feature-icon">⚖️</div>
+        <div class="feature-text">
+            <div class="feature-title">偏见检测</div>
+            <div>识别和分析AI系统中的潜在偏见</div>
+        </div>
+    </div>
+    
+    <div class="feature-box">
+        <div class="feature-icon">🔄</div>
+        <div class="feature-text">
+            <div class="feature-title">反事实推理</div>
+            <div>探索"如果...会怎样"的场景分析</div>
+        </div>
+    </div>
+    
+    <div class="feature-box">
+        <div class="feature-icon">🛡️</div>
+        <div class="feature-text">
+            <div class="feature-title">安全守护</div>
+            <div>创伤知情的安全检查机制</div>
+        </div>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <!-- 第2章 -->
+    <h1>2. 快速开始</h1>
+    
+    <h2>2.1 环境要求</h2>
+    <table>
+        <tr>
+            <th>项目</th>
+            <th>要求</th>
+        </tr>
+        <tr>
+            <td>Python版本</td>
+            <td>3.8 或更高</td>
+        </tr>
+        <tr>
+            <td>操作系统</td>
+            <td>Windows 10/11, macOS, Linux</td>
+        </tr>
+        <tr>
+            <td>浏览器</td>
+            <td>Chrome, Firefox, Edge (最新版)</td>
+        </tr>
+        <tr>
+            <td>内存</td>
+            <td>4GB 或更高</td>
+        </tr>
+    </table>
+    
+    <h2>2.2 安装步骤</h2>
+    
+    <h3>方法一：直接运行（推荐）</h3>
+    
+    <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            <strong>打开终端</strong>
+            <div class="code-block">cd C:\Users\song\.qclaw\workspace\SafeGuard-AI</div>
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            <strong>安装依赖</strong>
+            <div class="code-block">pip install flask requests python-dotenv</div>
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            <strong>运行应用</strong>
+            <div class="code-block">python app.py</div>
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+            <strong>访问应用</strong>
+            <p>打开浏览器，访问：<code>http://localhost:5000</code></p>
+        </div>
+    </div>
+    
+    <h3>方法二：使用虚拟环境</h3>
+    
+    <div class="code-block"># 1. 进入项目目录
+cd C:\Users\song\.qclaw\workspace\SafeGuard-AI
+
+# 2. 创建虚拟环境
+python -m venv venv
+
+# 3. 激活虚拟环境
+venv\Scripts\activate
+
+# 4. 安装依赖
+pip install flask requests python-dotenv
+
+# 5. 运行应用
+python app.py</div>
+    
+    <div class="page-break"></div>
+    
+    <!-- 第3章 -->
+    <h1>3. 项目结构</h1>
+    
+    <table>
+        <tr>
+            <th>文件/文件夹</th>
+            <th>说明</th>
+            <th>大小</th>
+        </tr>
+        <tr>
+            <td><code>app.py</code></td>
+            <td>主应用入口，Flask后端API</td>
+            <td>~300行</td>
+        </tr>
+        <tr>
+            <td><code>config.py</code></td>
+            <td>配置文件，API设置和安全配置</td>
+            <td>~100行</td>
+        </tr>
+        <tr>
+            <td><code>modules/</code></td>
+            <td>核心功能模块</td>
+            <td>-</td>
+        </tr>
+        <tr>
+            <td>　├─ education_engine.py</td>
+            <td>教育引擎，生成学习内容</td>
+            <td>~300行</td>
+        </tr>
+        <tr>
+            <td>　├─ scenario_simulator.py</td>
+            <td>场景模拟器，管理互动场景</td>
+            <td>~400行</td>
+        </tr>
+        <tr>
+            <td>　├─ transparency_dashboard.py</td>
+            <td>透明度仪表板，展示AI决策</td>
+            <td>~400行</td>
+        </tr>
+        <tr>
+            <td>　├─ safety_guardian.py</td>
+            <td>安全守护，情绪监控</td>
+            <td>~300行</td>
+        </tr>
+        <tr>
+            <td>　└─ learning_tracker.py</td>
+            <td>学习追踪，进度记录</td>
+            <td>~400行</td>
+        </tr>
+        <tr>
+            <td><code>templates/</code></td>
+            <td>前端HTML模板</td>
+            <td>-</td>
+        </tr>
+        <tr>
+            <td>　└─ index.html</td>
+            <td>主界面，互动学习UI</td>
+            <td>~400行</td>
+        </tr>
+        <tr>
+            <td><code>*.md</code></td>
+            <td>项目文档</td>
+            <td>-</td>
+        </tr>
+    </table>
+    
+    <div class="page-break"></div>
+    
+    <!-- 第4章 -->
+    <h1>4. 使用指南</h1>
+    
+    <h2>4.1 选择学习场景</h2>
+    
+    <p>平台提供5种诈骗类型学习：</p>
+    
+    <table>
+        <tr>
+            <th>图标</th>
+            <th>类型</th>
+            <th>描述</th>
+        </tr>
+        <tr>
+            <td>🎭</td>
+            <td>虚假服务</td>
+            <td>伪装成正规服务机构的诈骗，如虚假驾校、假冒客服</td>
+        </tr>
+        <tr>
+            <td>👤</td>
+            <td>身份冒充</td>
+            <td>冒充熟人、官方机构或权威人士进行诈骗</td>
+        </tr>
+        <tr>
+            <td>🎣</td>
+            <td>钓鱼诈骗</td>
+            <td>通过虚假链接或网站窃取个人信息</td>
+        </tr>
+        <tr>
+            <td>💼</td>
+            <td>虚假招聘</td>
+            <td>以高薪招聘为名，实则骗取钱财</td>
+        </tr>
+        <tr>
+            <td>💕</td>
+            <td>网恋诈骗</td>
+            <td>通过建立感情关系骗取钱财</td>
+        </tr>
+    </table>
+    
+    <h2>4.2 互动学习流程</h2>
+    
+    <div class="success">
+        <strong>学习步骤：</strong>
+        <ol>
+            <li>在首页选择一种诈骗类型（点击卡片）</li>
+            <li>点击"🚀 开始学习"按钮</li>
+            <li>阅读模拟的诈骗消息</li>
+            <li>在文本框中输入你的判断和分析</li>
+            <li>点击"📤 提交回复"查看AI分析</li>
+            <li>查看透明度分析和学习反馈</li>
+            <li>切换到"🔍 透明度仪表板"深入了解</li>
+        </ol>
+    </div>
+    
+    <h2>4.3 示例场景</h2>
+    
+    <h3>场景：虚假驾校服务</h3>
+    
+    <div class="highlight">
+        <strong>📱 来自：李教练</strong><br><br>
+        您好，这里是环城驾校，我们可以代办B1驾照，无需考试，只需支付800元定金和7500元考试费。请转账至账户：6228 4801 2665 3397 775
+    </div>
+    
+    <p><strong>风险点分析：</strong></p>
+    <ul>
+        <li>⚠️ <strong>承诺无需考试</strong> - 正规驾照必须通过考试获得</li>
+        <li>⚠️ <strong>要求预付费用</strong> - 大额预付款是常见诈骗手段</li>
+        <li>⚠️ <strong>个人账户收款</strong> - 正规机构使用对公账户</li>
+    </ul>
+    
+    <h2>4.4 查看透明度分析</h2>
+    
+    <p>在"🔍 透明度仪表板"标签页，你可以看到：</p>
+    
+    <ul>
+        <li><strong>决策因素分析</strong> - AI如何判断风险，各因素权重</li>
+        <li><strong>偏见检测</strong> - 人口统计、语言、场景偏见</li>
+        <li><strong>反事实推理</strong> - "如果...会怎样"的场景分析</li>
+    </ul>
+    
+    <div class="page-break"></div>
+    
+    <!-- 第5章 -->
+    <h1>5. 核心功能</h1>
+    
+    <h2>5.1 互动式学习</h2>
+    <p>通过模拟真实诈骗场景，让用户在实践中学习识别技巧。系统提供即时反馈，帮助用户理解风险点。</p>
+    
+    <h2>5.2 透明度仪表板</h2>
+    <p>展示AI如何分析风险，包括：</p>
+    <ul>
+        <li>决策因素及其权重</li>
+        <li>置信度评分</li>
+        <li>证据和推理过程</li>
+    </ul>
+    
+    <h2>5.3 偏见检测</h2>
+    <p>识别和分析AI系统中的潜在偏见：</p>
+    <ul>
+        <li><strong>人口统计偏见</strong> - 是否针对特定群体</li>
+        <li><strong>语言偏见</strong> - 中英文使用平衡</li>
+        <li><strong>场景偏见</strong> - 场景类型分布</li>
+    </ul>
+    
+    <h2>5.4 反事实推理</h2>
+    <p>探索"如果...会怎样"的场景，例如：</p>
+    <ul>
+        <li>如果发送者可以通过官方渠道验证？</li>
+        <li>如果是面对面交流？</li>
+        <li>如果没有紧急性语言？</li>
+    </ul>
+    
+    <h2>5.5 安全守护</h2>
+    <p>创伤知情的安全检查机制：</p>
+    <ul>
+        <li>内容distress检测</li>
+        <li>情绪状态监控</li>
+        <li>分级干预机制</li>
+        <li>随时退出选项</li>
+    </ul>
+    
+    <div class="page-break"></div>
+    
+    <!-- 第6章 -->
+    <h1>6. 故障排除</h1>
+    
+    <table>
+        <tr>
+            <th>问题</th>
+            <th>原因</th>
+            <th>解决方案</th>
+        </tr>
+        <tr>
+            <td>端口5000被占用</td>
+            <td>其他程序使用了该端口</td>
+            <td>修改app.py最后一行：<br><code>app.run(port=5001)</code></td>
+        </tr>
+        <tr>
+            <td>缺少依赖包</td>
+            <td>未安装所需Python包</td>
+            <td>运行：<br><code>pip install flask requests python-dotenv</code></td>
+        </tr>
+        <tr>
+            <td>页面显示异常</td>
+            <td>浏览器缓存或兼容性问题</td>
+            <td>清除浏览器缓存，或尝试使用Chrome/Firefox</td>
+        </tr>
+        <tr>
+            <td>Python版本过低</td>
+            <td>Python版本低于3.8</td>
+            <td>升级Python到3.8或更高版本</td>
+        </tr>
+        <tr>
+            <td>无法访问localhost</td>
+            <td>防火墙阻止</td>
+            <td>检查防火墙设置，允许Python访问网络</td>
+        </tr>
+        <tr>
+            <td>模块导入错误</td>
+            <td>项目路径问题</td>
+            <td>确保在SafeGuard-AI目录下运行</td>
+        </tr>
+    </table>
+    
+    <div class="page-break"></div>
+    
+    <!-- 第7章 -->
+    <h1>7. 注意事项</h1>
+    
+    <div class="warning">
+        <strong>⚠️ 内容警告</strong><br><br>
+        平台包含模拟诈骗场景，旨在教育目的。所有内容均为学习材料，不会对您造成实际伤害。如感到不适，请随时停止学习。
+    </div>
+    
+    <div class="warning">
+        <strong>🔒 安全提示</strong>
+        <ul>
+            <li>学习场景中的联系方式、链接均为虚构，请勿真实联系或点击</li>
+            <li>平台仅在本地运行，不会收集您的个人信息</li>
+            <li>建议在学习后与家人朋友分享所学知识</li>
+            <li>如感到焦虑或不适，请立即停止学习并休息</li>
+        </ul>
+    </div>
+    
+    <h2>7.1 隐私保护</h2>
+    <ul>
+        <li>所有数据本地存储，不上传云端</li>
+        <li>无需注册账号，保护用户隐私</li>
+        <li>学习进度保存在本地浏览器</li>
+    </ul>
+    
+    <div class="page-break"></div>
+    
+    <!-- 第8章 -->
+    <h1>8. 技术特点</h1>
+    
+    <h2>8.1 与Fraud-R1对比</h2>
+    
+    <table>
+        <tr>
+            <th>特性</th>
+            <th>Fraud-R1</th>
+            <th>SafeGuard AI</th>
+        </tr>
+        <tr>
+            <td>主要目标</td>
+            <td>测试LLM脆弱性</td>
+            <td>教育用户识别诈骗</td>
+        </tr>
+        <tr>
+            <td>交互模式</td>
+            <td>攻击-防御</td>
+            <td>学习-反馈</td>
+        </tr>
+        <tr>
+            <td>透明度</td>
+            <td>黑盒测试</td>
+            <td>白盒解释</td>
+        </tr>
+        <tr>
+            <td>安全性</td>
+            <td>无保护</td>
+            <td>创伤知情</td>
+        </tr>
+        <tr>
+            <td>偏见关注</td>
+            <td>无</td>
+            <td>有</td>
+        </tr>
+        <tr>
+            <td>反事实</td>
+            <td>无</td>
+            <td>有</td>
+        </tr>
+        <tr>
+            <td>教育价值</td>
+            <td>低</td>
+            <td>高</td>
+        </tr>
+        <tr>
+            <td>社会影响</td>
+            <td>负面</td>
+            <td>正面</td>
+        </tr>
+    </table>
+    
+    <h2>8.2 技术栈</h2>
+    <ul>
+        <li><strong>后端</strong>：Python + Flask</li>
+        <li><strong>前端</strong>：HTML5 + CSS3 + JavaScript</li>
+        <li><strong>架构</strong>：模块化设计，易于扩展</li>
+        <li><strong>安全</strong>：本地运行，数据隔离</li>
+    </ul>
+    
+    <h2>8.3 代码统计</h2>
+    <ul>
+        <li>总代码行数：约2500行</li>
+        <li>Python代码：约2100行</li>
+        <li>HTML/CSS/JS：约400行</li>
+        <li>文档和注释：约500行</li>
+    </ul>
+    
+    <div class="success">
+        <strong>🎯 学习目标达成</strong><br><br>
+        完成学习后，您将能够：<br>
+        ✅ 识别5种常见网络诈骗类型<br>
+        ✅ 理解AI如何分析和判断风险<br>
+        ✅ 意识到AI系统中的潜在偏见<br>
+        ✅ 培养批判性思维和风险意识<br>
+        ✅ 保护自己和家人免受诈骗
+    </div>
+    
+    <div class="footer">
+        <p><strong>SafeGuard AI</strong> - 基于Fraud-R1改进的安全教育平台</p>
+        <p>项目位置：C:\Users\song\.qclaw\workspace\SafeGuard-AI</p>
+        <p>生成时间：2025年3月26日</p>
+        <p>仅供学习研究使用</p>
+    </div>
+    
+    <script>
+        // 自动检测打印并优化
+        window.addEventListener('beforeprint', function() {
+            document.body.style.padding = '0';
+        });
+        window.addEventListener('afterprint', function() {
+            document.body.style.padding = '20px';
+        });
+    </script>
+</body>
+</html>

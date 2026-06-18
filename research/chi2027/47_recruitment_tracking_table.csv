@@ -1,0 +1,9 @@
+participant_id,status,background_category,research_experience,llm_experience,sensitive_fieldwork_experience,digital_safety_experience,screened_date,scheduled_date,session_completed,export_completed,notes
+P01,not_contacted,,,,,,,,,,
+P02,not_contacted,,,,,,,,,,
+P03,not_contacted,,,,,,,,,,
+P04,not_contacted,,,,,,,,,,
+P05,not_contacted,,,,,,,,,,
+P06,not_contacted,,,,,,,,,,
+P07,optional,,,,,,,,,,
+P08,optional,,,,,,,,,,

@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+!.env.local.example
+__pycache__/
+*.pyc
+data/safebars/
+data/safebars_study/
+research/chi2027/screenshots/

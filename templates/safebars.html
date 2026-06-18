@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBARS Research Rehearsal</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --bg: #f6f7f9;
+            --panel: #ffffff;
+            --line: #d9dee7;
+            --text: #172033;
+            --muted: #667085;
+            --primary: #2563eb;
+            --primary-dark: #1746a2;
+            --risk: #b42318;
+            --warn-bg: #fff7e6;
+            --warn-line: #f2b84b;
+            --ok: #087443;
+        }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--text);
+            background: var(--bg);
+        }
+        header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--line);
+            background: var(--panel);
+        }
+        h1 { margin: 0; font-size: 22px; letter-spacing: 0; }
+        header p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+        .top-note {
+            margin-top: 10px;
+            max-width: 980px;
+            color: #475467;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        main {
+            display: grid;
+            grid-template-columns: minmax(280px, 360px) minmax(360px, 1fr) minmax(300px, 420px);
+            gap: 16px;
+            padding: 16px;
+            min-height: calc(100vh - 74px);
+        }
+        section {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            min-width: 0;
+        }
+        .panel-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+            font-weight: 700;
+        }
+        .panel-body { padding: 16px; }
+        label {
+            display: block;
+            margin: 12px 0 6px;
+            font-size: 13px;
+            font-weight: 650;
+        }
+        input, textarea, select {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 10px;
+            font: inherit;
+            color: var(--text);
+            background: #fff;
+        }
+        textarea { min-height: 76px; resize: vertical; }
+        button {
+            border: 0;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-weight: 700;
+            cursor: pointer;
+            background: var(--primary);
+            color: white;
+        }
+        button:hover { background: var(--primary-dark); }
+        button.secondary {
+            background: #eef2f7;
+            color: var(--text);
+            border: 1px solid var(--line);
+        }
+        button.secondary:hover { background: #e4e9f2; }
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .notice {
+            border-left: 4px solid var(--warn-line);
+            background: var(--warn-bg);
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: #624200;
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 14px;
+        }
+        .chat {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 154px);
+        }
+        .chat-log {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+            background: #fbfcfe;
+        }
+        .message {
+            margin-bottom: 12px;
+            padding: 11px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: #fff;
+            line-height: 1.45;
+            white-space: pre-wrap;
+        }
+        .message.researcher {
+            border-color: #b8cdf8;
+            background: #eef4ff;
+        }
+        .message.stakeholder {
+            border-color: #d7dde7;
+        }
+        .comparison {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+        }
+        .comparison-card {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            padding: 10px;
+            min-width: 0;
+        }
+        .comparison-card.error-card {
+            border-color: #f4b6ae;
+            background: #fffafa;
+        }
+        .comparison-title {
+            font-weight: 800;
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: var(--primary-dark);
+        }
+        .comparison-text {
+            white-space: pre-wrap;
+            line-height: 1.42;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        .speaker {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .chat-input {
+            border-top: 1px solid var(--line);
+            padding: 12px;
+            background: var(--panel);
+        }
+        .chat-input textarea { min-height: 84px; }
+        .report-list {
+            margin: 0 0 16px;
+            padding-left: 18px;
+        }
+        .report-list li { margin-bottom: 8px; line-height: 1.4; }
+        .report-heading {
+            margin: 16px 0 8px;
+            font-size: 14px;
+            color: var(--primary-dark);
+        }
+        .meta {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .status {
+            margin-top: 10px;
+            color: var(--ok);
+            font-size: 13px;
+        }
+        .slider-row {
+            display: grid;
+            grid-template-columns: 1fr 44px;
+            gap: 8px;
+            align-items: center;
+            margin: 8px 0;
+        }
+        .slider-row label {
+            margin: 0;
+            font-weight: 600;
+            color: var(--muted);
+        }
+        .slider-row input { padding: 0; }
+        .slider-row input[type="range"] { grid-column: 1 / 3; }
+        .slider-value {
+            text-align: center;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 5px 0;
+            font-size: 13px;
+            background: #fbfcfe;
+        }
+        .small-title {
+            margin: 16px 0 8px;
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+        .check-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .check-row input { width: auto; margin-top: 2px; }
+        .error { color: var(--risk); }
+        .study-banner {
+            display: none;
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            background: #ecfdf3;
+            border-left: 4px solid #12b76a;
+            color: #075e3d;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        body.study-mode .study-banner { display: block; }
+        body.study-mode .technical-option { display: none; }
+        @media (max-width: 1080px) {
+            main { grid-template-columns: 1fr; }
+            .chat { height: 620px; }
+        }
+    </style>
+</head>
+<body class="{% if study_mode %}study-mode{% endif %}">
+    <header>
+        <h1>SafeBARS Research Rehearsal</h1>
+        <p>Bias-aware synthetic stakeholders for pre-fieldwork action research planning.</p>
+        <div class="top-note">
+            Use this prototype to rehearse a sensitive research plan before fieldwork. The synthetic stakeholders are fictional prompts for reflection, not substitutes for real participants or community partners.
+        </div>
+        <div class="study-banner">
+            Study mode: draft an initial plan, rehearse it with a fictional stakeholder, generate a reflection report, then write what you would revise before real fieldwork.
+        </div>
+    </header>
+    <main>
+        <section>
+            <div class="panel-header">Research Plan</div>
+            <div class="panel-body">
+                <div class="notice">
+                    Study task: enter an initial research plan, rehearse it with a fictional stakeholder, generate a reflection report, then write what you would revise before real fieldwork.
+                </div>
+                <label for="title">Title</label>
+                <input id="title" value="Community workshop on online fraud prevention">
+
+                <label for="goal">Goal</label>
+                <textarea id="goal">Prepare older adults to identify suspicious online investment messages.</textarea>
+
+                <label for="community">Target community</label>
+                <input id="community" value="Older adults in a community center">
+
+                <label for="method">Planned method</label>
+                <input id="method" value="Interviews followed by a workshop">
+
+                <label for="materials">Draft materials</label>
+                <textarea id="materials">We want to ask participants how much money they lost and why they believed the message. Then we will run a two-hour workshop.</textarea>
+
+                <label for="risks">Known risks</label>
+                <textarea id="risks">Potential embarrassment, privacy concerns, and distress around financial loss.</textarea>
+
+                <label for="focus">Rehearsal focus</label>
+                <input id="focus" value="Testing interview questions and safety protocol">
+
+                <label for="preset">Stakeholder preset</label>
+                <select id="preset"></select>
+
+                <div class="small-title">Bias / Risk-Response Profile</div>
+                <div id="sliders"></div>
+                <label class="check-row technical-option">
+                    <input type="checkbox" id="useLlm">
+                    <span>Use LLM-backed responses when configured. If unavailable, SafeBARS will use deterministic fallback responses.</span>
+                </label>
+                <div id="llmStatus" class="meta technical-option"></div>
+
+                <div class="actions">
+                    <button id="startBtn">Start Session</button>
+                    <button class="secondary" id="exportBtn" disabled>Export</button>
+                </div>
+                <div id="startStatus" class="status"></div>
+            </div>
+        </section>
+
+        <section>
+            <div class="panel-header">Rehearsal Chat</div>
+            <div class="chat">
+                <div id="chatLog" class="chat-log">
+                    <div class="meta">Start a session, then ask the stakeholder to react to your study plan, interview questions, consent language, workshop script, or safety procedure.</div>
+                </div>
+                <div class="chat-input">
+                    <textarea id="messageInput" placeholder="Ask the stakeholder to react to part of your study plan..."></textarea>
+                    <div class="actions">
+                        <button id="sendBtn" disabled>Send</button>
+                        <button class="secondary technical-option" id="compareBtn" disabled>Compare Providers</button>
+                        <button class="secondary technical-option" id="exportComparisonBtn" disabled>Export Comparison</button>
+                        <button class="secondary" id="reflectionBtn" disabled>Generate Reflection</button>
+                    </div>
+                    <div id="chatStatus" class="status"></div>
+                    <div id="compareResults" class="comparison technical-option"></div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="panel-header">Reflection Report</div>
+            <div id="report" class="panel-body">
+                <div class="meta">Generate a report after a few rehearsal turns. Use it to identify planning issues and questions for real fieldwork, not as participant evidence.</div>
+            </div>
+            <div class="panel-header">Revised Plan</div>
+            <div class="panel-body">
+                <textarea id="revisedPlan" placeholder="After rehearsal, revise your research plan, interview questions, or safety procedure here."></textarea>
+                <div class="actions">
+                    <button class="secondary" id="saveRevisionBtn" disabled>Save Revision</button>
+                </div>
+                <div id="revisionStatus" class="status"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let currentSessionId = null;
+        let options = null;
+        let lastComparison = null;
+        const studyMode = document.body.classList.contains('study-mode');
+        const profileDimensions = [
+            'authority_trust',
+            'confirmation_bias',
+            'urgency_sensitivity',
+            'shame_stigma_sensitivity',
+            'institutional_distrust',
+            'social_proof_susceptibility',
+            'help_seeking_reluctance',
+            'privacy_sensitivity',
+            'distress_sensitivity',
+            'victim_blaming_risk',
+            'resource_constraint_sensitivity',
+            'participant_burden_sensitivity'
+        ];
+
+        const el = (id) => document.getElementById(id);
+
+        async function loadOptions() {
+            const res = await fetch('/api/safebars/options');
+            const data = await res.json();
+            options = data;
+            if (data.llm_configured && data.llm_providers && data.llm_providers.length) {
+                const providers = data.llm_providers
+                    .map((provider) => `${provider.label} / ${provider.model} / ${provider.key_hint}`)
+                    .join('; ');
+                el('llmStatus').textContent = `Configured providers: ${providers}`;
+            } else {
+                el('llmStatus').textContent = 'No LLM API key detected; template fallback mode is available.';
+            }
+            const preset = el('preset');
+            preset.innerHTML = '';
+            Object.entries(data.presets).forEach(([id, item]) => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = item.label;
+                preset.appendChild(option);
+            });
+            renderSliders();
+        }
+
+        function researchPlan() {
+            return {
+                title: el('title').value,
+                goal: el('goal').value,
+                target_community: el('community').value,
+                planned_method: el('method').value,
+                draft_materials: el('materials').value,
+                known_risks: el('risks').value,
+                rehearsal_focus: el('focus').value
+            };
+        }
+
+        function labelForDimension(name) {
+            return name.replaceAll('_', ' ');
+        }
+
+        function currentPreset() {
+            return options.presets[el('preset').value];
+        }
+
+        function renderSliders() {
+            if (!options) return;
+            const preset = currentPreset();
+            const profile = preset.profile || {};
+            const container = el('sliders');
+            container.innerHTML = '';
+            profileDimensions.forEach((name) => {
+                const value = profile[name] ?? 0;
+                const row = document.createElement('div');
+                row.className = 'slider-row';
+                row.innerHTML = `
+                    <label for="dim_${name}">${labelForDimension(name)}</label>
+                    <span class="slider-value" id="val_${name}">${value}</span>
+                    <input id="dim_${name}" data-dimension="${name}" type="range" min="0" max="4" step="1" value="${value}">
+                `;
+                container.appendChild(row);
+                row.querySelector('input').addEventListener('input', (event) => {
+                    el(`val_${name}`).textContent = event.target.value;
+                });
+            });
+        }
+
+        function biasProfile() {
+            const profile = {};
+            profileDimensions.forEach((name) => {
+                const input = el(`dim_${name}`);
+                profile[name] = input ? Number(input.value) : 0;
+            });
+            return profile;
+        }
+
+        function addMessage(speaker, text) {
+            const log = el('chatLog');
+            if (log.querySelector('.meta')) log.innerHTML = '';
+            const node = document.createElement('div');
+            node.className = `message ${speaker}`;
+            node.innerHTML = `<span class="speaker">${speaker === 'researcher' ? 'Researcher' : 'Synthetic stakeholder'}</span>${escapeHtml(text)}`;
+            log.appendChild(node);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;');
+        }
+
+        async function fetchJson(url, options = {}) {
+            const timeoutMs = options.timeoutMs || 20000;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const res = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                const data = await res.json();
+                if (!res.ok && data && !data.success) {
+                    throw new Error(data.error || `Request failed with status ${res.status}`);
+                }
+                return data;
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    throw new Error('Request timed out. If LLM mode is enabled, try unchecking it and use template fallback mode.');
+                }
+                throw error;
+            } finally {
+                clearTimeout(timeout);
+            }
+        }
+
+        function setButtonBusy(buttonId, busy, label) {
+            const button = el(buttonId);
+            if (!button) return;
+            if (busy) {
+                button.dataset.originalText = button.textContent;
+                button.textContent = label;
+                button.disabled = true;
+            } else {
+                button.textContent = button.dataset.originalText || button.textContent;
+                button.disabled = !currentSessionId && buttonId !== 'startBtn';
+            }
+        }
+
+        async function startSession() {
+            el('startStatus').textContent = 'Starting session...';
+            setButtonBusy('startBtn', true, 'Starting...');
+            try {
+                const data = await fetchJson('/api/safebars/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        research_plan: researchPlan(),
+                        role: currentPreset().role,
+                        bias_profile: biasProfile(),
+                        use_llm: !studyMode && el('useLlm').checked
+                    })
+                });
+                if (!data.success) {
+                    el('startStatus').innerHTML = `<span class="error">${data.error}</span>`;
+                    return;
+                }
+                currentSessionId = data.session.id;
+                el('startStatus').textContent = `Session started with ${data.session.stakeholder.display_name}.`;
+                el('chatStatus').textContent = 'Now type a question and click Send.';
+                el('sendBtn').disabled = false;
+                el('compareBtn').disabled = false;
+                el('exportComparisonBtn').disabled = true;
+                el('reflectionBtn').disabled = false;
+                el('exportBtn').disabled = false;
+                el('saveRevisionBtn').disabled = false;
+                el('chatLog').innerHTML = '';
+                addMessage('stakeholder', `I am ready to rehearse this plan as ${data.session.stakeholder.display_name}. Please ask me about your interview questions, workshop script, consent process, or safety procedure.\n\n[Rehearsal signal: limitation reminder]`);
+            } catch (error) {
+                el('startStatus').innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+            } finally {
+                setButtonBusy('startBtn', false);
+            }
+        }
+
+        async function sendMessage() {
+            const message = el('messageInput').value.trim();
+            if (!currentSessionId) {
+                el('chatStatus').innerHTML = '<span class="error">Click Start Session first.</span>';
+                return;
+            }
+            if (!message) {
+                el('chatStatus').innerHTML = '<span class="error">Type a question or script excerpt first.</span>';
+                return;
+            }
+            el('messageInput').value = '';
+            el('compareResults').innerHTML = '';
+            lastComparison = null;
+            el('exportComparisonBtn').disabled = true;
+            addMessage('researcher', message);
+            el('chatStatus').textContent = 'Waiting for stakeholder response...';
+            setButtonBusy('sendBtn', true, 'Sending...');
+            try {
+                const data = await fetchJson('/api/safebars/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: currentSessionId, message }),
+                    timeoutMs: 25000
+                });
+                if (!data.success) {
+                    addMessage('stakeholder', `Error: ${data.error}`);
+                    return;
+                }
+                addMessage('stakeholder', data.turn.text);
+                const mode = data.turn.metadata && data.turn.metadata.response_mode;
+                if (mode) el('startStatus').textContent = `Last response mode: ${mode}`;
+                el('chatStatus').textContent = 'Response received.';
+            } catch (error) {
+                el('chatStatus').innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+                addMessage('stakeholder', `Error: ${error.message}`);
+            } finally {
+                setButtonBusy('sendBtn', false);
+            }
+        }
+
+        async function compareProviders() {
+            const message = el('messageInput').value.trim();
+            if (!currentSessionId) {
+                el('chatStatus').innerHTML = '<span class="error">Click Start Session first.</span>';
+                return;
+            }
+            if (!message) {
+                el('chatStatus').innerHTML = '<span class="error">Type a question or script excerpt first.</span>';
+                return;
+            }
+            el('chatStatus').textContent = 'Comparing template and configured providers...';
+            setButtonBusy('compareBtn', true, 'Comparing...');
+            try {
+                const data = await fetchJson('/api/safebars/compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: currentSessionId, message }),
+                    timeoutMs: 45000
+                });
+                if (!data.success) {
+                    el('chatStatus').innerHTML = `<span class="error">${data.error}</span>`;
+                    return;
+                }
+                lastComparison = data;
+                renderComparisonV2(data);
+                el('exportComparisonBtn').disabled = false;
+                el('chatStatus').textContent = 'Provider comparison generated. This does not save turns into the session log.';
+            } catch (error) {
+                el('chatStatus').innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+            } finally {
+                setButtonBusy('compareBtn', false);
+            }
+        }
+
+        function renderComparison(responses) {
+            const container = el('compareResults');
+            if (!responses.length) {
+                container.innerHTML = '<div class="meta">No comparison responses returned.</div>';
+                return;
+            }
+            container.innerHTML = responses.map((item) => `
+                <div class="comparison-card ${item.ok ? '' : 'error-card'}">
+                    <div class="comparison-title">${escapeHtml(item.label || item.provider_id)}</div>
+                    <div class="meta">${escapeHtml(item.model || '')} · key ${escapeHtml(item.key_hint || '')}</div>
+                    ${item.rehearsal_signal ? `<div class="meta">Signal: ${escapeHtml(item.rehearsal_signal)}</div>` : ''}
+                    <div class="comparison-text">${escapeHtml(item.text || '')}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderComparisonV2(data) {
+            const container = el('compareResults');
+            const responses = data.responses || [];
+            if (!responses.length) {
+                container.innerHTML = '<div class="meta">No comparison responses returned.</div>';
+                return;
+            }
+            const summary = data.comparison_summary || {};
+            const summaryHtml = `
+                <div class="comparison-card">
+                    <div class="comparison-title">Comparison Summary</div>
+                    ${summary.interpretation_note ? `<div class="meta">${escapeHtml(summary.interpretation_note)}</div>` : ''}
+                    <div class="comparison-text"><strong>Consensus risks:</strong> ${escapeHtml((summary.consensus_risks || []).join(', ') || 'None')}</div>
+                    <div class="comparison-text"><strong>Unique risks:</strong> ${escapeHtml((summary.unique_risks || []).join(', ') || 'None')}</div>
+                    <div class="comparison-text"><strong>Risk coverage:</strong><br>${Object.entries(summary.risk_provider_matrix || {}).map(([risk, providers]) => `${escapeHtml(risk)}: ${escapeHtml((providers || []).join(', '))}`).join('<br>') || 'None'}</div>
+                    <div class="comparison-text"><strong>Provider coverage:</strong><br>${Object.entries(summary.provider_coverage || {}).map(([provider, risks]) => `${escapeHtml(provider)}: ${escapeHtml((risks || []).join(', ') || 'None')}`).join('<br>') || 'None'}</div>
+                    <div class="comparison-text"><strong>Boundary-aware providers:</strong> ${escapeHtml((summary.providers_with_boundary || []).join(', ') || 'None')}</div>
+                    <div class="comparison-text"><strong>Overtrust warnings:</strong> ${escapeHtml((summary.providers_with_overtrust_warning || []).join(', ') || 'None')}</div>
+                </div>
+            `;
+            const responseHtml = responses.map((item) => {
+                const analysis = item.analysis || {};
+                return `
+                    <div class="comparison-card ${item.ok ? '' : 'error-card'}">
+                        <div class="comparison-title">${escapeHtml(item.label || item.provider_id)}</div>
+                        <div class="meta">${escapeHtml(item.model || '')} - key ${escapeHtml(item.key_hint || '')}</div>
+                        ${item.rehearsal_signal ? `<div class="meta">Signal: ${escapeHtml(item.rehearsal_signal)}</div>` : ''}
+                        ${item.status_code ? `<div class="meta">HTTP status: ${escapeHtml(String(item.status_code))}</div>` : ''}
+                        ${item.error_type ? `<div class="comparison-text error"><strong>Error type:</strong> ${escapeHtml(item.error_type)}</div>` : ''}
+                        ${item.error ? `<div class="comparison-text error"><strong>Error detail:</strong> ${escapeHtml(item.error)}</div>` : ''}
+                        ${analysis.concise_assessment ? `<div class="meta"><strong>Assessment:</strong> ${escapeHtml(analysis.concise_assessment)}</div>` : ''}
+                        <div class="comparison-text"><strong>Risks:</strong> ${escapeHtml((analysis.risk_categories || []).join(', ') || 'None')}</div>
+                        <div class="comparison-text"><strong>Boundary cues:</strong> ${escapeHtml((analysis.boundary_markers || []).join(', ') || 'None')}</div>
+                        <div class="comparison-text"><strong>Revision cues:</strong> ${escapeHtml((analysis.useful_revision_cues || []).join(', ') || 'None')}</div>
+                        ${(analysis.overtrust_warnings || []).length ? `<div class="comparison-text error"><strong>Overtrust warning:</strong> ${escapeHtml(analysis.overtrust_warnings.join(', '))}</div>` : ''}
+                        <div class="comparison-text">${escapeHtml(item.text || '')}</div>
+                    </div>
+                `;
+            }).join('');
+            container.innerHTML = summaryHtml + responseHtml;
+        }
+
+        async function exportComparison() {
+            if (!lastComparison || !currentSessionId) {
+                el('chatStatus').innerHTML = '<span class="error">Run Compare Providers first.</span>';
+                return;
+            }
+            el('chatStatus').textContent = 'Exporting comparison...';
+            setButtonBusy('exportComparisonBtn', true, 'Exporting...');
+            try {
+                const data = await fetchJson('/api/safebars/export-comparison', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: currentSessionId,
+                        message: lastComparison.message,
+                        responses: lastComparison.responses,
+                        comparison_summary: lastComparison.comparison_summary
+                    })
+                });
+                if (data.success) {
+                    el('chatStatus').textContent = `Comparison exported to ${data.markdown_path}`;
+                } else {
+                    el('chatStatus').innerHTML = `<span class="error">${data.error}</span>`;
+                }
+            } catch (error) {
+                el('chatStatus').innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+            } finally {
+                setButtonBusy('exportComparisonBtn', false);
+            }
+        }
+
+        async function generateReflection() {
+            if (!currentSessionId) {
+                el('chatStatus').innerHTML = '<span class="error">Click Start Session first.</span>';
+                return;
+            }
+            el('chatStatus').textContent = 'Generating reflection report...';
+            setButtonBusy('reflectionBtn', true, 'Generating...');
+            try {
+                const data = await fetchJson('/api/safebars/reflection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: currentSessionId })
+                });
+                if (!data.success) {
+                    el('chatStatus').innerHTML = `<span class="error">${data.error}</span>`;
+                    return;
+                }
+                renderReport(data.report);
+                el('chatStatus').textContent = 'Reflection report generated.';
+            } catch (error) {
+                el('chatStatus').innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+            } finally {
+                setButtonBusy('reflectionBtn', false);
+            }
+        }
+
+        function renderReport(report) {
+            const sections = [
+                ['Missing stakeholders', report.missing_stakeholders],
+                ['Hidden assumptions', report.hidden_assumptions],
+                ['Ethical risks', report.ethical_risks],
+                ['Safety gaps', report.safety_gaps],
+                ['Participant burden', report.participant_burden],
+                ['Trust calibration notes', report.trust_calibration_notes],
+                ['Recommended revisions', report.recommended_revisions],
+                ['Open questions for real fieldwork', report.open_questions_for_real_fieldwork],
+                ['Evidence from rehearsal', report.evidence_notes]
+            ];
+            el('report').innerHTML = sections.map(([title, items]) => {
+                const list = items && items.length ? items : ['No issue detected by this v0.1 heuristic. Verify with real stakeholders.'];
+                return `<h3 class="report-heading">${title}</h3><ul class="report-list">${list.map(item => {
+                    if (typeof item === 'object') {
+                        return `<li><strong>${escapeHtml(item.signal || 'note')}</strong>: ${escapeHtml(item.interpretation || '')}<br><span class="meta">Evidence: ${escapeHtml(item.quote || '')}</span></li>`;
+                    }
+                    return `<li>${escapeHtml(item)}</li>`;
+                }).join('')}</ul>`;
+            }).join('');
+        }
+
+        async function exportSession() {
+            if (!currentSessionId) return;
+            const res = await fetch(`/api/safebars/export/${currentSessionId}`);
+            const data = await res.json();
+            if (data.success) {
+                el('startStatus').textContent = `Exported to ${data.markdown_path}`;
+            }
+        }
+
+        async function saveRevision() {
+            if (!currentSessionId) return;
+            const revisedPlan = el('revisedPlan').value.trim();
+            const res = await fetch('/api/safebars/revise', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: currentSessionId, revised_plan: revisedPlan })
+            });
+            const data = await res.json();
+            if (data.success) {
+                el('revisionStatus').textContent = 'Revision saved for this session.';
+            } else {
+                el('revisionStatus').innerHTML = `<span class="error">${data.error}</span>`;
+            }
+        }
+
+        el('startBtn').addEventListener('click', startSession);
+        el('sendBtn').addEventListener('click', sendMessage);
+        el('compareBtn').addEventListener('click', compareProviders);
+        el('exportComparisonBtn').addEventListener('click', exportComparison);
+        el('reflectionBtn').addEventListener('click', generateReflection);
+        el('exportBtn').addEventListener('click', exportSession);
+        el('saveRevisionBtn').addEventListener('click', saveRevision);
+        el('preset').addEventListener('change', renderSliders);
+        loadOptions();
+    </script>
+</body>
+</html>

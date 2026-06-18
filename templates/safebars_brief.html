@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBARS CHI 2027 Brief</title>
+    <style>
+        :root {
+            --bg: #f7f8fb;
+            --panel: #ffffff;
+            --text: #111827;
+            --muted: #667085;
+            --line: #d9dee7;
+            --blue: #2459d6;
+            --green: #087443;
+            --amber: #a15c00;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        header {
+            background: #fff;
+            border-bottom: 1px solid var(--line);
+            padding: 22px 28px;
+        }
+        h1 { margin: 0; font-size: 28px; letter-spacing: 0; }
+        header p { margin: 8px 0 0; color: var(--muted); max-width: 980px; line-height: 1.45; }
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 18px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 14px;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .span-4 { grid-column: span 4; }
+        .span-6 { grid-column: span 6; }
+        .span-8 { grid-column: span 8; }
+        .span-12 { grid-column: span 12; }
+        h2 { margin: 0 0 10px; font-size: 16px; color: var(--blue); }
+        p, li { line-height: 1.45; font-size: 14px; }
+        ul { margin: 8px 0 0; padding-left: 18px; }
+        .tag {
+            display: inline-block;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 5px 9px;
+            margin: 4px 4px 0 0;
+            background: #fbfcfe;
+            font-size: 12px;
+        }
+        .flow {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            align-items: stretch;
+        }
+        .step {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fbfcfe;
+            padding: 10px;
+            font-size: 13px;
+            min-height: 70px;
+        }
+        .step strong { display: block; color: var(--blue); margin-bottom: 4px; }
+        blockquote {
+            margin: 8px 0;
+            border-left: 4px solid #b8cdf8;
+            padding: 8px 12px;
+            background: #f1f6ff;
+            font-size: 14px;
+        }
+        .callout {
+            border-left: 4px solid var(--amber);
+            background: #fff8eb;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        .ok { color: var(--green); font-weight: 700; }
+        .links a {
+            display: inline-block;
+            margin-right: 12px;
+            color: var(--blue);
+            font-weight: 700;
+            text-decoration: none;
+        }
+        @media (max-width: 900px) {
+            .span-4, .span-6, .span-8 { grid-column: span 12; }
+            .flow { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SafeBARS: CHI 2027 Project Brief</h1>
+        <p>Bias-calibrated synthetic stakeholders for safer pre-fieldwork action research planning. The project studies how AI can help researchers prepare for real community engagement, not replace it.</p>
+    </header>
+    <main>
+        <div class="grid">
+            <section class="card span-6">
+                <h2>Concrete Problem</h2>
+                <p>Researchers preparing online fraud prevention or other high-risk digital safety studies need to test interview questions, workshop scripts, consent language, and safety procedures before fieldwork.</p>
+                <p>Testing rough materials directly with vulnerable participants can be ethically risky. Ordinary LLM persona role-play is uncontrolled and may miss shame, privacy concerns, institutional distrust, family pressure, distress, or participant burden.</p>
+            </section>
+
+            <section class="card span-6">
+                <h2>CoBRA-Inspired Move</h2>
+                <p>CoBRA shows that natural-language personas are unreliable and that agent behavior can be shaped through measurable bias abstractions.</p>
+                <p>SafeBARS adapts this idea into research planning: synthetic stakeholders have adjustable risk-response profiles.</p>
+                <span class="tag">privacy sensitivity</span>
+                <span class="tag">shame/stigma sensitivity</span>
+                <span class="tag">institutional distrust</span>
+                <span class="tag">help-seeking reluctance</span>
+                <span class="tag">distress sensitivity</span>
+            </section>
+
+            <section class="card span-12">
+                <h2>System Workflow</h2>
+                <div class="flow">
+                    <div class="step"><strong>1. Plan</strong>Researcher enters initial study plan.</div>
+                    <div class="step"><strong>2. Stakeholder</strong>Select affected participant, family helper, or community worker.</div>
+                    <div class="step"><strong>3. Profile</strong>Adjust bias/risk-response sliders.</div>
+                    <div class="step"><strong>4. Rehearse</strong>Chat about interview, workshop, consent, or safety plan.</div>
+                    <div class="step"><strong>5. Reflect</strong>Report flags risks with evidence notes.</div>
+                    <div class="step"><strong>6. Revise</strong>Save revised plan for pre/post analysis.</div>
+                </div>
+            </section>
+
+            <section class="card span-4">
+                <h2>Prototype Status</h2>
+                <ul>
+                    <li class="ok">Working Flask prototype</li>
+                    <li>Bias sliders and stakeholder presets</li>
+                    <li>Template fallback + optional LLM mode</li>
+                    <li>Reflection report with evidence</li>
+                    <li>Revised plan capture and export</li>
+                </ul>
+                <div class="links">
+                    <p><a href="/safebars">Open Prototype</a></p>
+                </div>
+            </section>
+
+            <section class="card span-8">
+                <h2>Demo Example</h2>
+                <p>Initial researcher question:</p>
+                <blockquote>How much money did you lose and what mistake did you make?</blockquote>
+                <p>Synthetic affected participant may respond:</p>
+                <blockquote>This wording feels uncomfortable because it sounds like you already think I did something wrong.</blockquote>
+                <p>Reflection report flags possible victim-blaming, privacy concern, distress risk, and need for skip/pause options.</p>
+                <div class="callout">Key boundary: this is not evidence about real participants. It is a rehearsal signal that should be verified with real participants or community partners.</div>
+            </section>
+
+            <section class="card span-6">
+                <h2>Proposed Formative Study</h2>
+                <ul>
+                    <li>Participants: HCI/UX/AI safety/design research students or researchers.</li>
+                    <li>Task: draft initial action research plan.</li>
+                    <li>Use SafeBARS to rehearse with synthetic stakeholders.</li>
+                    <li>Generate reflection report and revise plan.</li>
+                    <li>Interview about usefulness, risks, and trust calibration.</li>
+                </ul>
+            </section>
+
+            <section class="card span-6">
+                <h2>Possible CHI Contribution</h2>
+                <ul>
+                    <li>Problem framing: synthetic stakeholders as rehearsal aids, not participant replacements.</li>
+                    <li>System: bias-aware pre-fieldwork research scaffold.</li>
+                    <li>Study: how researchers identify risks and revise plans.</li>
+                    <li>Design implications for responsible AI-assisted research preparation.</li>
+                </ul>
+            </section>
+
+            <section class="card span-12">
+                <h2>Decisions Needed</h2>
+                <ul>
+                    <li>Is this problem original enough for CHI?</li>
+                    <li>Should we emphasize researcher reflexivity, trust calibration, or controllable stakeholder rehearsal?</li>
+                    <li>Should online fraud be the main domain or one example of broader high-risk digital safety?</li>
+                    <li>Is a formative study enough, or should we plan a small comparison pilot?</li>
+                    <li>Who should we recruit first?</li>
+                </ul>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

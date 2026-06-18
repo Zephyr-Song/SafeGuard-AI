@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeGuard AI - Scam Identification Learning Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb; --secondary: #7c3aed; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --dark: #1f2937; --light: #f3f4f6;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; color: var(--dark);
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; padding: 40px 20px; color: white; }
+        header h1 { font-size: 3rem; margin-bottom: 10px; }
+        header p { font-size: 1.2rem; opacity: 0.9; }
+        .main-content {
+            background: white; border-radius: 20px; padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .section { margin-bottom: 40px; }
+        .section-title { font-size: 1.8rem; color: var(--primary); margin-bottom: 20px; }
+        .category-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;
+        }
+        .category-card {
+            background: linear-gradient(145deg, #f8fafc, #e2e8f0);
+            border-radius: 15px; padding: 25px; cursor: pointer;
+            transition: all 0.3s; border: 2px solid transparent;
+        }
+        .category-card:hover, .category-card.active {
+            transform: translateY(-5px); border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+        }
+        .category-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .category-name { font-size: 1.3rem; font-weight: 600; }
+        .category-desc { font-size: 0.95rem; color: #6b7280; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 14px 28px; border-radius: 10px; font-size: 1rem;
+            font-weight: 600; cursor: pointer; transition: all 0.3s; border: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37,99,235,0.4); }
+        .scenario-container {
+            display: none; background: #f8fafc; border-radius: 15px;
+            padding: 30px; margin-top: 20px;
+        }
+        .scenario-container.active { display: block; }
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-left: 4px solid var(--warning); padding: 20px;
+            border-radius: 10px; margin-bottom: 20px;
+        }
+        .message-bubble {
+            background: white; border-radius: 15px; padding: 20px;
+            margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .message-sender { font-weight: 600; color: var(--primary); margin-bottom: 10px; }
+        .response-area textarea {
+            width: 100%; min-height: 120px; padding: 15px;
+            border: 2px solid #e5e7eb; border-radius: 10px;
+            font-size: 1rem; resize: vertical;
+        }
+        .score-display {
+            text-align: center; padding: 30px;
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border-radius: 15px; margin-top: 20px;
+        }
+        .score-number { font-size: 4rem; font-weight: 700; }
+        .feedback-box {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-radius: 15px; padding: 25px; margin-top: 20px;
+        }
+        .red-flag {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #fee2e2; color: #991b1b;
+            padding: 6px 12px; border-radius: 20px;
+            font-size: 0.9rem; margin: 5px;
+        }
+        .hidden { display: none !important; }
+        .score-excellent { background: #d1fae5; color: #065f46; }
+        .score-good { background: #dbeafe; color: #1e40af; }
+        .score-moderate { background: #fef3c7; color: #92400e; }
+        .score-fair { background: #fed7aa; color: #a16207; }
+        .score-poor { background: #fee2e2; color: #991b1b; }
+        .analysis-section {
+            background: white; border-radius: 10px; padding: 20px;
+            margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .difficulty-selector {
+            display: flex; gap: 10px; margin: 20px 0;
+        }
+        .difficulty-btn {
+            padding: 10px 20px; border-radius: 8px; border: 2px solid #e5e7eb;
+            background: white; cursor: pointer; transition: all 0.3s;
+        }
+        .difficulty-btn.active {
+            border-color: var(--primary); background: var(--primary);
+            color: white;
+        }
+        .difficulty-info {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        footer { text-align: center; padding: 40px; color: white; opacity: 0.8; }
+        .hint-counter {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 4px 12px;
+            background: #dbeafe;
+            color: #1e40af;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+        .loading { opacity: 0.6; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ SafeGuard AI</h1>
+            <p>Learn to Identify Scams & Protect Yourself Online</p>
+        </header>
+
+        <div class="main-content">
+            <div class="section">
+                <h2 class="section-title">📚 Select Learning Scenario</h2>
+                <div class="category-grid" id="categoryGrid"></div>
+            </div>
+
+            <div class="section">
+                <h3 style="margin-bottom: 10px;">Difficulty Level</h3>
+                <div class="difficulty-selector">
+                    <button class="difficulty-btn active" data-level="beginner">🌱 Beginner</button>
+                    <button class="difficulty-btn" data-level="intermediate">🌿 Intermediate</button>
+                    <button class="difficulty-btn" data-level="advanced">🌳 Advanced</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <button class="btn btn-primary" id="startBtn">🚀 Start Learning</button>
+            </div>
+
+            <div class="scenario-container" id="scenarioContainer">
+                <div class="warning-box" id="warningBox"></div>
+                <div id="scenarioContent"></div>
+                <div class="response-area">
+                    <textarea id="userResponse" placeholder="Type your analysis here..."></textarea>
+                    <div style="margin-top: 15px;">
+                        <button class="btn btn-primary" id="submitBtn">📤 Submit Response</button>
+                        <button class="btn btn-secondary" id="hintBtn">💡 Get Hint <span class="hint-counter" id="hintCounter">∞</span></button>
+                    </div>
+                </div>
+                <div id="analysisResult" class="hidden"></div>
+            </div>
+        </div>
+
+        <footer>
+            <p>SafeGuard AI - Scam Identification Learning Platform</p>
+        </footer>
+    </div>
+
+    <script>
+        let currentCategory = null;
+        let currentScenario = null;
+        let currentDifficulty = 'beginner';
+        let hintsRemaining = 999;
+        let hintsUsed = 0;
+
+        const difficultySettings = {
+            beginner: { hints: 3, scoreMultiplier: 1.0 },
+            intermediate: { hints: 2, scoreMultiplier: 1.2 },
+            advanced: { hints: 1, scoreMultiplier: 1.5 }
+        };
+
+        const categories = {
+            fraudulent_service: { name: "Fraudulent Service", icon: "🎭", desc: "Scams disguised as legitimate services" },
+            impersonation: { name: "Impersonation", icon: "👤", desc: "Impersonating friends or authorities" },
+            phishing: { name: "Phishing", icon: "🎣", desc: "Stealing info via fake links" },
+            fake_job: { name: "Fake Job Posting", icon: "💼", desc: "Job scams with high pay promises" },
+            online_relationship: { name: "Online Relationship", icon: "💕", desc: "Romance scams via emotional manipulation" }
+        };
+
+        const scenarioDatabase = {
+            fraudulent_service: {
+                beginner: [{
+                    title: "Fake Driving School",
+                    content: "Hello, this is City Driving School. We can help you get a B1 driver's license without taking the exam. Just pay a deposit of 800 yuan and an exam fee of 7,500 yuan.",
+                    sender: "Coach Li",
+                    red_flags: [
+                        { text: "Promises no exam required", keywords: ["no exam", "without exam"] },
+                        { text: "Requests upfront payment", keywords: ["deposit", "prepay"] },
+                        { text: "Personal bank account", keywords: ["account", "transfer"] }
+                    ],
+                    legitimate_alternatives: ["Visit official driving school", "Check credentials online"]
+                }],
+                intermediate: [{
+                    title: "Fake Certificate Service",
+                    content: "Get your professional certification in just 3 days! No studying required. We have connections with official exam centers. Special offer: only 5,000 yuan.",
+                    sender: "FastCert Services",
+                    red_flags: [
+                        { text: "Unrealistic timeline", keywords: ["3 days", "quick"] },
+                        { text: "Claims of inside connections", keywords: ["connections", "official"] },
+                        { text: "Too good to be true", keywords: ["only", "special offer"] }
+                    ],
+                    legitimate_alternatives: ["Research accredited programs", "Check official certification bodies"]
+                }],
+                advanced: [{
+                    title: "Fake Investment Platform",
+                    content: "Our AI trading system has generated 300% returns for investors last month. Join now with minimum 10,000 yuan. Limited spots available. Risk-free guarantee with our advanced algorithm.",
+                    sender: "QuantumTrade AI",
+                    red_flags: [
+                        { text: "Unrealistic returns", keywords: ["300%", "guaranteed"] },
+                        { text: "Urgency tactic", keywords: ["limited spots", "join now"] },
+                        { text: "Risk-free claim", keywords: ["risk-free", "guarantee"] }
+                    ],
+                    legitimate_alternatives: ["Research investment platforms", "Check regulatory licenses"]
+                }]
+            },
+            impersonation: {
+                beginner: [{
+                    title: "Friend Emergency",
+                    content: "Hey, this is Xiao Ming. My phone broke, so this is my new number. I urgently need 5,000 yuan. Can you transfer it to me?",
+                    sender: "Xiao Ming",
+                    red_flags: [
+                        { text: "New number claim", keywords: ["new number", "phone broke"] },
+                        { text: "Urgent request", keywords: ["urgent", "emergency"] },
+                        { text: "Money transfer request", keywords: ["transfer", "send money"] }
+                    ],
+                    legitimate_alternatives: ["Call original number", "Ask personal verification questions"]
+                }],
+                intermediate: [{
+                    title: "Bank Official",
+                    content: "This is a security alert from your bank. We detected suspicious activity. To verify your identity, please provide your account number and password immediately.",
+                    sender: "Security Team",
+                    red_flags: [
+                        { text: "Asks for sensitive info", keywords: ["password", "account number"] },
+                        { text: "Creates urgency", keywords: ["immediately", "freeze"] },
+                        { text: "Non-official contact", keywords: ["call us", "email"] }
+                    ],
+                    legitimate_alternatives: ["Call official bank hotline", "Visit bank branch"]
+                }],
+                advanced: [{
+                    title: "Government Official",
+                    content: "I am Officer Wang from Public Security Bureau. Your ID is linked to a money laundering case. Transfer your funds to a secure government account for investigation. This is confidential.",
+                    sender: "PSB Officer Wang",
+                    red_flags: [
+                        { text: "Authority impersonation", keywords: ["officer", "Public Security"] },
+                        { text: "Intimidation tactic", keywords: ["money laundering", "legal action"] },
+                        { text: "Secrecy demand", keywords: ["confidential", "do not tell"] }
+                    ],
+                    legitimate_alternatives: ["Hang up and call 110", "Visit local police station"]
+                }]
+            },
+            phishing: {
+                beginner: [{
+                    title: "Bank Verification",
+                    content: "[XX Bank] Your account has unusual login activity. Click the link immediately to verify your identity: http://xxbank-verify.com/safety",
+                    sender: "XX Bank",
+                    red_flags: [
+                        { text: "Suspicious link", keywords: ["click", "link", "http"] },
+                        { text: "Urgent tone", keywords: ["unusual", "immediately"] },
+                        { text: "Non-official domain", keywords: ["xxbank-verify"] }
+                    ],
+                    legitimate_alternatives: ["Use official bank app", "Call bank directly"]
+                }],
+                intermediate: [{
+                    title: "Package Delivery",
+                    content: "Your package has arrived! Click here to confirm delivery: http://track-package-xyz.com. Urgent: package will be returned if not confirmed within 24 hours.",
+                    sender: "Express Delivery",
+                    red_flags: [
+                        { text: "Shortened link", keywords: ["click here", "track-package"] },
+                        { text: "Artificial deadline", keywords: ["24 hours", "returned"] },
+                        { text: "No company details", keywords: ["express delivery"] }
+                    ],
+                    legitimate_alternatives: ["Check delivery status on official site", "Contact shipping company directly"]
+                }],
+                advanced: [{
+                    title: "Social Media Login",
+                    content: "We've detected unusual activity on your account. Someone tried to log in from another country. Secure your account now: https://socialmedia-secure.com/login. Your account will be suspended in 2 hours if not verified.",
+                    sender: "Social Media Security",
+                    red_flags: [
+                        { text: "Fake login page", keywords: ["socialmedia-secure", "login"] },
+                        { text: "Time pressure", keywords: ["2 hours", "suspended"] },
+                        { text: "Password harvest", keywords: ["username and password"] }
+                    ],
+                    legitimate_alternatives: ["Go directly to official app", "Check login activity in settings"]
+                }]
+            },
+            fake_job: {
+                beginner: [{
+                    title: "High-Pay Part-Time",
+                    content: "High-paying part-time job! Earn 300-500 yuan daily, flexible hours, no experience needed. Just pay a 200 yuan training fee to start immediately.",
+                    sender: "XX HR",
+                    red_flags: [
+                        { text: "High pay for low skills", keywords: ["high-paying", "no experience"] },
+                        { text: "Upfront payment", keywords: ["training fee", "pay"] },
+                        { text: "Vague description", keywords: ["part-time", "flexible"] }
+                    ],
+                    legitimate_alternatives: ["Research company online", "Ask for detailed job description"]
+                }],
+                intermediate: [{
+                    title: "Data Entry Job",
+                    content: "Urgent hiring! Simple data entry work. $50 per hour. Only 20 positions left! Send your ID and bank details to apply. No interview required.",
+                    sender: "Global Data Solutions",
+                    red_flags: [
+                        { text: "Unrealistic pay", keywords: ["$50", "per hour"] },
+                        { text: "Sensitive info early", keywords: ["ID", "bank details"] },
+                        { text: "Pressure tactics", keywords: ["urgent", "only 20"] }
+                    ],
+                    legitimate_alternatives: ["Verify company registration", "Request detailed job description"]
+                }],
+                advanced: [{
+                    title: "Remote Developer Position",
+                    content: "Silicon Valley startup seeking remote developers. $8,000/month salary. Complete our coding challenge at: techskills-assessment.com. After passing, pay $500 refundable equipment deposit for MacBook Pro.",
+                    sender: "TechVenture Labs",
+                    red_flags: [
+                        { text: "High salary minimal vetting", keywords: ["$8,000", "no interview"] },
+                        { text: "Equipment deposit scam", keywords: ["deposit", "MacBook", "$500"] },
+                        { text: "Excessive personal data", keywords: ["GitHub", "LinkedIn", "social media"] }
+                    ],
+                    legitimate_alternatives: ["Research company on LinkedIn", "Real companies don't ask for deposits"]
+                }]
+            },
+            online_relationship: {
+                beginner: [{
+                    title: "Online Dating",
+                    content: "Hi, I saw your profile and I think we have a special connection. I work abroad and feel lonely. I'd love to get to know you better.",
+                    sender: "David",
+                    red_flags: [
+                        { text: "Quick emotional connection", keywords: ["special connection", "love"] },
+                        { text: "Foreign location", keywords: ["abroad", "foreign"] },
+                        { text: "Vulnerability expression", keywords: ["lonely", "alone"] }
+                    ],
+                    legitimate_alternatives: ["Take time to know person", "Request video calls"]
+                }],
+                intermediate: [{
+                    title: "Investment Romance",
+                    content: "I've been trading crypto for 2 years and making good profits. I can teach you my secret method. We can build a future together. Just invest 10,000 yuan to start.",
+                    sender: "Sarah",
+                    red_flags: [
+                        { text: "Financial proposal", keywords: ["invest", "crypto", "10,000"] },
+                        { text: "Future promises", keywords: ["future together", "build"] },
+                        { text: "Specific amount", keywords: ["10,000", "invest"] }
+                    ],
+                    legitimate_alternatives: ["Research investment independently", "Never mix romance and money"]
+                }],
+                advanced: [{
+                    title: "Military Romance",
+                    content: "I'm Captain James Miller, US Marine deployed in Syria. I'll retire in 3 months. I have $2.5 million inheritance but can't access it here. Can you help transfer it? I'll give you 30%. I love you and want to marry you.",
+                    sender: "Captain James Miller",
+                    red_flags: [
+                        { text: "Military impersonation", keywords: ["Captain", "Marine", "deployed"] },
+                        { text: "Large money transfer", keywords: ["$2.5 million", "inheritance"] },
+                        { text: "Quick marriage proposal", keywords: ["marry you", "love you"] }
+                    ],
+                    legitimate_alternatives: ["Military don't ask for money", "Reverse image search photos"]
+                }]
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const grid = document.getElementById('categoryGrid');
+            for (const [key, cat] of Object.entries(categories)) {
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.dataset.category = key;
+                card.innerHTML = `<div class="category-icon">${cat.icon}</div><div class="category-name">${cat.name}</div><div class="category-desc">${cat.desc}</div>`;
+                card.addEventListener('click', () => selectCategory(key));
+                grid.appendChild(card);
+            }
+
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.addEventListener('click', function() { selectDifficulty(this.dataset.level); });
+            });
+
+            document.getElementById('startBtn').addEventListener('click', startLearning);
+            document.getElementById('submitBtn').addEventListener('click', submitResponse);
+            document.getElementById('hintBtn').addEventListener('click', getHint);
+        });
+
+        function selectCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[data-category="${cat}"]`).classList.add('active');
+        }
+
+        function selectDifficulty(level) {
+            currentDifficulty = level;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-level="${level}"]`).classList.add('active');
+            const settings = difficultySettings[level];
+            hintsRemaining = settings.hints;
+            updateHintCounter();
+        }
+
+        function updateHintCounter() {
+            const counter = document.getElementById('hintCounter');
+            counter.textContent = hintsRemaining === 999 ? '∞' : hintsRemaining;
+        }
+
+        function startLearning() {
+            if (!currentCategory) { alert('Please select a scenario category first'); return; }
+            const scenarios = scenarioDatabase[currentCategory][currentDifficulty];
+            currentScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+            const settings = difficultySettings[currentDifficulty];
+            hintsRemaining = settings.hints;
+            hintsUsed = 0;
+            updateHintCounter();
+            document.getElementById('scenarioContainer').classList.add('active');
+            document.getElementById('warningBox').innerHTML = `<h3>⚠️ Learning Content Warning</h3><p>You are about to learn about <strong>${currentScenario.title}</strong> scam identification.</p><p><strong>Hints available:</strong> ${hintsRemaining === 999 ? 'Unlimited' : hintsRemaining}</p><p><strong>Score multiplier:</strong> ${settings.scoreMultiplier}x</p>`;
+            document.getElementById('scenarioContent').innerHTML = `<div class="message-bubble"><div class="message-sender">📱 From: ${currentScenario.sender}</div><div style="margin-top: 10px; line-height: 1.6;">${currentScenario.content}</div></div><div style="background: #e0f2fe; padding: 15px; border-radius: 10px; margin-top: 15px;"><strong>📝 Instructions:</strong> Analyze this message and explain what warning signs you notice.</div>`;
+            document.getElementById('analysisResult').classList.add('hidden');
+            document.getElementById('userResponse').value = '';
+        }
+
+        async function submitResponse() {
+            const response = document.getElementById('userResponse').value.trim();
+            if (!response) { alert('Please enter your analysis'); return; }
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '⏳ AI Analyzing...';
+            submitBtn.disabled = true;
+            try {
+                const res = await fetch('/api/analyze-response', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scenario: currentScenario, user_response: response })
+                });
+                const data = await res.json();
+                const settings = difficultySettings[currentDifficulty];
+                const finalScore = Math.min(100, Math.round(data.score * settings.scoreMultiplier));
+                displayAnalysis({ ...data, score: finalScore, originalScore: data.score, multiplier: settings.scoreMultiplier });
+            } catch (error) {
+                console.error('Analysis failed:', error);
+                alert('Analysis failed. Please try again.');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function displayAnalysis(data) {
+            let scoreClass = data.score >= 80 ? 'score-excellent' : data.score >= 60 ? 'score-good' : data.score >= 40 ? 'score-moderate' : 'score-poor';
+            let multiplierInfo = data.multiplier && data.multiplier > 1 ? `<p style="margin: 5px 0; font-size: 0.9rem; color: #6b7280;">Original: ${data.originalScore} × ${data.multiplier} = ${data.score}</p>` : '';
+            let html = `<div class="score-display"><div class="score-number ${scoreClass}">${data.score}</div><div style="font-size: 1.2rem; font-weight: 600; margin-top: 10px;">${data.percentage || 0}% Warning Signs Identified</div>${multiplierInfo}</div><div class="feedback-box"><h4>💬 Analysis Feedback</h4><p style="margin: 10px 0; font-size: 1.1rem;">${data.feedback || 'Analysis complete'}</p></div><div class="analysis-section"><h4>✅ Identified Risks (${data.identified_risks ? data.identified_risks.length : 0})</h4><div style="margin-top: 10px;">${data.identified_risks && data.identified_risks.length > 0 ? data.identified_risks.map(r => `<div class="red-flag" style="display: block; margin: 8px 0;">✓ ${r.text}</div>`).join('') : '<p style="color: #6b7280;">No risks identified</p>'}</div></div><div class="analysis-section" style="background: #f0fdf4;"><h4>💡 Recommended Actions</h4><ul style="margin-top: 10px; margin-left: 20px; line-height: 1.8;">${currentScenario.legitimate_alternatives.map(alt => `<li>${alt}</li>`).join('')}</ul></div>`;
+            const resultDiv = document.getElementById('analysisResult');
+            resultDiv.innerHTML = html;
+            resultDiv.classList.remove('hidden');
+        }
+
+        function getHint() {
+            if (hintsRemaining <= 0) { alert('No hints remaining!'); return; }
+            if (currentScenario && currentScenario.red_flags.length > 0) {
+                const hint = currentScenario.red_flags[hintsUsed % currentScenario.red_flags.length].text;
+                alert(`💡 Hint: Look for "${hint}"`);
+                if (hintsRemaining !== 999) { hintsRemaining--; updateHintCounter(); }
+                hintsUsed++;
+            }
+        }
+    </script>
+</body>
+</html>
