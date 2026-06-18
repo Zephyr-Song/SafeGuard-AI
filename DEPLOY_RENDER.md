@@ -26,6 +26,7 @@ Do not upload `.env` or `.env.local`. They contain local API keys and are ignore
    - `ZHI_KEY`
    - `BAILIAN_API_KEY`
    - `TENCENT_API_KEY`
+   - `DEEPSEEK_API_KEY`
 6. Deploy.
 7. Open:
    - `https://YOUR-RENDER-URL/safebars`

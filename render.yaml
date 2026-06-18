@@ -32,3 +32,11 @@ services:
         value: hy3-preview
       - key: TENCENT_LABEL
         value: Tencent TokenHub HY3 Preview
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: DEEPSEEK_BASE_URL
+        value: https://api.deepseek.com
+      - key: DEEPSEEK_MODEL
+        value: deepseek-reasoner
+      - key: DEEPSEEK_LABEL
+        value: DeepSeek Reasoner

@@ -89,6 +89,18 @@ class LLMClient:
                 model=os.getenv("TENCENT_MODEL", os.getenv("SAFEBARS_LLM_MODEL", "hy3-preview")),
             )
 
+        if os.getenv("DEEPSEEK_API_KEY"):
+            providers["deepseek"] = LLMProvider(
+                id="deepseek",
+                label=os.getenv("DEEPSEEK_LABEL", "DeepSeek Reasoner"),
+                api_key=os.getenv("DEEPSEEK_API_KEY", ""),
+                base_url=os.getenv(
+                    "DEEPSEEK_BASE_URL",
+                    "https://api.deepseek.com",
+                ).rstrip("/"),
+                model=os.getenv("DEEPSEEK_MODEL", "deepseek-reasoner"),
+            )
+
         if os.getenv("OPENAI_API_KEY") and os.getenv("ENABLE_OPENAI_PROVIDER") == "1":
             providers["openai_compatible"] = LLMProvider(
                 id="openai_compatible",
@@ -120,7 +132,15 @@ class LLMClient:
         preferred = os.getenv("SAFEBARS_LLM_PROVIDER", "")
         if preferred in self.providers:
             return preferred
-        for provider_id in ["zhipu", "aliyun_bailian", "tencent_hunyuan", "openai_compatible", "profile_a", "profile_b"]:
+        for provider_id in [
+            "zhipu",
+            "aliyun_bailian",
+            "tencent_hunyuan",
+            "deepseek",
+            "openai_compatible",
+            "profile_a",
+            "profile_b",
+        ]:
             if provider_id in self.providers:
                 return provider_id
         return next(iter(self.providers), None)
