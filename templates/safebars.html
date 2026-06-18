@@ -41,7 +41,7 @@
         }
         main {
             display: grid;
-            grid-template-columns: minmax(280px, 360px) minmax(360px, 1fr) minmax(300px, 420px);
+            grid-template-columns: minmax(280px, 360px) minmax(420px, 1fr) minmax(300px, 420px);
             gap: 16px;
             padding: 16px;
             min-height: calc(100vh - 74px);
@@ -140,9 +140,15 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 10px;
-            max-height: 280px;
+        }
+        .comparison-panel {
+            border-top: 1px solid var(--line);
+            padding: 12px;
+            background: #fbfcfe;
+            max-height: 34vh;
             overflow: auto;
         }
+        .comparison-panel:empty { display: none; }
         .comparison-card {
             border: 1px solid var(--line);
             border-radius: 8px;
@@ -178,10 +184,18 @@
             padding: 12px;
             background: var(--panel);
             flex: 0 0 auto;
-            max-height: 46vh;
-            overflow: auto;
         }
         .chat-input textarea { min-height: 84px; }
+        .explain-box {
+            margin-top: 8px;
+            padding: 9px 10px;
+            border: 1px solid #dce6f8;
+            border-radius: 6px;
+            background: #f6f9ff;
+            color: #344054;
+            font-size: 13px;
+            line-height: 1.45;
+        }
         .report-list {
             margin: 0 0 16px;
             padding-left: 18px;
@@ -332,8 +346,8 @@
                         <button class="secondary" id="reflectionBtn" disabled>Generate Reflection</button>
                     </div>
                     <div id="chatStatus" class="status"></div>
-                    <div id="compareResults" class="comparison technical-option"></div>
                 </div>
+                <div id="compareResults" class="comparison comparison-panel technical-option"></div>
             </div>
         </section>
 
@@ -452,12 +466,36 @@
             return profile;
         }
 
-        function addMessage(speaker, text) {
+        function explainStakeholderResponse(text) {
+            const lower = text.toLowerCase();
+            const points = [];
+            if (lower.includes('money') || lower.includes('lost') || lower.includes('personal') || lower.includes('privacy') || lower.includes('private') || lower.includes('access')) {
+                points.push('隐私/数据风险：不要直接追问损失金额、被骗细节或个人经历，先说明为什么需要、谁能看到、如何匿名保存。');
+            }
+            if (lower.includes('judg') || lower.includes('embarrass') || lower.includes('shame') || lower.includes('comfortable')) {
+                points.push('羞耻/被评价风险：问题可能让参与者觉得被责备，需要改成更中性的表达。');
+            }
+            if (lower.includes('why do you need') || lower.includes('why i believed') || lower.includes('why they believed')) {
+                points.push('研究目的说明不足：参与者需要知道这些问题和 workshop 目标有什么关系。');
+            }
+            if (lower.includes('learned') || lower.includes('focus more')) {
+                points.push('可修改方向：把问题从“你为什么被骗/损失多少”改成“你后来注意到了哪些信号、希望别人获得什么支持”。');
+            }
+            if (lower.includes('skip') || lower.includes('pause') || lower.includes('stop') || lower.includes('withdraw')) {
+                points.push('安全流程：需要明确可以跳过、暂停或退出。');
+            }
+            if (!points.length) {
+                points.push('阅读方式：这不是现实参与者证据，而是帮你发现访谈问题、同意流程或 workshop 脚本里可能需要修改的地方。');
+            }
+            return `中文解释：${points.join(' ')}`;
+        }
+
+        function addMessage(speaker, text, explanation = '') {
             const log = el('chatLog');
             if (log.querySelector('.meta')) log.innerHTML = '';
             const node = document.createElement('div');
             node.className = `message ${speaker}`;
-            node.innerHTML = `<span class="speaker">${speaker === 'researcher' ? 'Researcher' : 'Synthetic stakeholder'}</span>${escapeHtml(text)}`;
+            node.innerHTML = `<span class="speaker">${speaker === 'researcher' ? 'Researcher' : 'Synthetic stakeholder / 合成利益相关者'}</span>${escapeHtml(text)}${explanation ? `<div class="explain-box">${escapeHtml(explanation)}</div>` : ''}`;
             log.appendChild(node);
             log.scrollTop = log.scrollHeight;
         }
@@ -582,7 +620,7 @@
                     addMessage('stakeholder', `Error: ${data.error}`);
                     return;
                 }
-                addMessage('stakeholder', data.turn.text);
+                addMessage('stakeholder', data.turn.text, explainStakeholderResponse(data.turn.text));
                 const mode = data.turn.metadata && data.turn.metadata.response_mode;
                 if (mode) el('startStatus').textContent = `Last response mode: ${mode}`;
                 el('chatStatus').textContent = 'Response received.';
@@ -683,7 +721,8 @@
                     </div>
                 `;
             }).join('');
-            container.innerHTML = summaryHtml + responseHtml;
+            container.innerHTML = `<div class="meta">Provider comparison / 多模型对比结果。这个区域可单独滚动，不会写入聊天记录。</div>` + summaryHtml + responseHtml;
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         async function exportComparison() {
