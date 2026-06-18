@@ -470,24 +470,24 @@
             const lower = text.toLowerCase();
             const points = [];
             if (lower.includes('money') || lower.includes('lost') || lower.includes('personal') || lower.includes('privacy') || lower.includes('private') || lower.includes('access')) {
-                points.push('隐私/数据风险：不要直接追问损失金额、被骗细节或个人经历，先说明为什么需要、谁能看到、如何匿名保存。');
+                points.push('Privacy/data risk: avoid directly asking for loss amount, scam details, or personal history unless you explain why it is needed, who can access it, and how it will be anonymized.');
             }
             if (lower.includes('judg') || lower.includes('embarrass') || lower.includes('shame') || lower.includes('comfortable')) {
-                points.push('羞耻/被评价风险：问题可能让参与者觉得被责备，需要改成更中性的表达。');
+                points.push('Shame/judgment risk: the wording may make participants feel blamed or evaluated; revise it into a more neutral phrasing.');
             }
             if (lower.includes('why do you need') || lower.includes('why i believed') || lower.includes('why they believed')) {
-                points.push('研究目的说明不足：参与者需要知道这些问题和 workshop 目标有什么关系。');
+                points.push('Purpose clarity gap: participants may need to know how these questions relate to the workshop goal.');
             }
             if (lower.includes('learned') || lower.includes('focus more')) {
-                points.push('可修改方向：把问题从“你为什么被骗/损失多少”改成“你后来注意到了哪些信号、希望别人获得什么支持”。');
+                points.push('Revision cue: shift from “why were you deceived / how much did you lose” toward “what warning signs did you notice later, and what support would help others.”');
             }
             if (lower.includes('skip') || lower.includes('pause') || lower.includes('stop') || lower.includes('withdraw')) {
-                points.push('安全流程：需要明确可以跳过、暂停或退出。');
+                points.push('Safety procedure: make skip, pause, and withdrawal options explicit.');
             }
             if (!points.length) {
-                points.push('阅读方式：这不是现实参与者证据，而是帮你发现访谈问题、同意流程或 workshop 脚本里可能需要修改的地方。');
+                points.push('How to use this: treat the response as a planning prompt, not evidence about real participants.');
             }
-            return `中文解释：${points.join(' ')}`;
+            return `Interpretation: ${points.join(' ')}`;
         }
 
         function addMessage(speaker, text, explanation = '') {
@@ -495,7 +495,7 @@
             if (log.querySelector('.meta')) log.innerHTML = '';
             const node = document.createElement('div');
             node.className = `message ${speaker}`;
-            node.innerHTML = `<span class="speaker">${speaker === 'researcher' ? 'Researcher' : 'Synthetic stakeholder / 合成利益相关者'}</span>${escapeHtml(text)}${explanation ? `<div class="explain-box">${escapeHtml(explanation)}</div>` : ''}`;
+            node.innerHTML = `<span class="speaker">${speaker === 'researcher' ? 'Researcher' : 'Synthetic stakeholder'}</span>${escapeHtml(text)}${explanation ? `<div class="explain-box">${escapeHtml(explanation)}</div>` : ''}`;
             log.appendChild(node);
             log.scrollTop = log.scrollHeight;
         }
@@ -721,7 +721,7 @@
                     </div>
                 `;
             }).join('');
-            container.innerHTML = `<div class="meta">Provider comparison / 多模型对比结果。这个区域可单独滚动，不会写入聊天记录。</div>` + summaryHtml + responseHtml;
+            container.innerHTML = `<div class="meta">Provider comparison. This area scrolls separately and is not saved into the chat log.</div>` + summaryHtml + responseHtml;
             container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
