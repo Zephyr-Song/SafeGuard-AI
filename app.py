@@ -378,12 +378,18 @@ def safebars_compare():
             "error": "Missing session_id or message"
         }), 400
 
-    result = rehearsal_engine.compare_responses(session_id, message)
-    if not result:
+    try:
+        result = rehearsal_engine.compare_responses(session_id, message)
+        if not result:
+            return jsonify({
+                "success": False,
+                "error": "Session not found"
+            }), 404
+    except Exception as exc:
         return jsonify({
             "success": False,
-            "error": "Session not found"
-        }), 404
+            "error": f"Comparison failed before providers could return: {str(exc)[:500]}"
+        }), 500
 
     return jsonify({
         "success": True,

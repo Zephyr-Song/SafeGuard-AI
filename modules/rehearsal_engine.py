@@ -5,6 +5,7 @@ SafeBARS rehearsal session engine.
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from typing import Dict, List, Any, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
 
 from .bias_profile import BiasProfile, BiasProfileLibrary
@@ -181,11 +182,17 @@ class RehearsalEngine:
             "analysis": template_analysis,
         }]
 
-        for provider in self.llm_client.configured_provider_summaries():
-            provider_result = self.llm_client.chat_with_provider_detailed(provider["id"], messages)
+        provider_summaries = self.llm_client.configured_provider_summaries()
+
+        def call_provider(provider: Dict[str, Any]) -> Dict[str, Any]:
+            provider_result = self.llm_client.chat_with_provider_detailed(
+                provider["id"],
+                messages,
+                timeout=18,
+            )
             text = provider_result.get("text", "")
             analysis = self.comparison_analyzer.analyze_response(text or "").to_dict()
-            responses.append({
+            return {
                 "provider_id": provider["id"],
                 "label": provider["label"],
                 "model": provider["model"],
@@ -198,7 +205,37 @@ class RehearsalEngine:
                 "rehearsal_signal": "",
                 "safety_flags": [],
                 "analysis": analysis,
-            })
+            }
+
+        if provider_summaries:
+            provider_results: Dict[str, Dict[str, Any]] = {}
+            with ThreadPoolExecutor(max_workers=min(6, len(provider_summaries))) as executor:
+                future_to_provider = {
+                    executor.submit(call_provider, provider): provider
+                    for provider in provider_summaries
+                }
+                for future in as_completed(future_to_provider):
+                    provider = future_to_provider[future]
+                    try:
+                        provider_results[provider["id"]] = future.result()
+                    except Exception as exc:
+                        provider_results[provider["id"]] = {
+                            "provider_id": provider["id"],
+                            "label": provider["label"],
+                            "model": provider["model"],
+                            "key_hint": provider["key_hint"],
+                            "ok": False,
+                            "text": "No response from provider.",
+                            "error": str(exc)[:500],
+                            "error_type": "compare_exception",
+                            "status_code": None,
+                            "rehearsal_signal": "",
+                            "safety_flags": [],
+                            "analysis": self.comparison_analyzer.analyze_response("").to_dict(),
+                        }
+            for provider in provider_summaries:
+                if provider["id"] in provider_results:
+                    responses.append(provider_results[provider["id"]])
 
         return {
             "session_id": session_id,

@@ -166,6 +166,7 @@ class LLMClient:
         provider_id: str,
         messages: List[Dict[str, str]],
         temperature: float = 0.4,
+        timeout: int = 35,
     ) -> Dict[str, Any]:
         provider = self.providers.get(provider_id)
         if not provider:
@@ -192,7 +193,7 @@ class LLMClient:
                 f"{provider.base_url}/chat/completions",
                 headers=headers,
                 json=payload,
-                timeout=35,
+                timeout=timeout,
             )
             if response.status_code != 200:
                 return {
