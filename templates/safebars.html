@@ -369,26 +369,29 @@
         const el = (id) => document.getElementById(id);
 
         async function loadOptions() {
-            const res = await fetch('/api/safebars/options');
-            const data = await res.json();
-            options = data;
-            if (data.llm_configured && data.llm_providers && data.llm_providers.length) {
-                const providers = data.llm_providers
-                    .map((provider) => `${provider.label} / ${provider.model} / ${provider.key_hint}`)
-                    .join('; ');
-                el('llmStatus').textContent = `Configured providers: ${providers}`;
-            } else {
-                el('llmStatus').textContent = 'No LLM API key detected; template fallback mode is available.';
+            try {
+                const data = await fetchJson('/api/safebars/options');
+                options = data;
+                if (data.llm_configured && data.llm_providers && data.llm_providers.length) {
+                    const providers = data.llm_providers
+                        .map((provider) => `${provider.label} / ${provider.model} / ${provider.key_hint}`)
+                        .join('; ');
+                    el('llmStatus').textContent = `Configured providers: ${providers}`;
+                } else {
+                    el('llmStatus').textContent = 'No LLM API key detected; template fallback mode is available.';
+                }
+                const preset = el('preset');
+                preset.innerHTML = '';
+                Object.entries(data.presets).forEach(([id, item]) => {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = item.label;
+                    preset.appendChild(option);
+                });
+                renderSliders();
+            } catch (error) {
+                el('llmStatus').innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
             }
-            const preset = el('preset');
-            preset.innerHTML = '';
-            Object.entries(data.presets).forEach(([id, item]) => {
-                const option = document.createElement('option');
-                option.value = id;
-                option.textContent = item.label;
-                preset.appendChild(option);
-            });
-            renderSliders();
         }
 
         function researchPlan() {
@@ -468,7 +471,19 @@
                     ...options,
                     signal: controller.signal
                 });
-                const data = await res.json();
+                const contentType = res.headers.get('content-type') || '';
+                const body = await res.text();
+                let data = null;
+                if (contentType.includes('application/json')) {
+                    try {
+                        data = body ? JSON.parse(body) : {};
+                    } catch (parseError) {
+                        throw new Error(`API ${url} returned invalid JSON.`);
+                    }
+                } else {
+                    const preview = body.replace(/\s+/g, ' ').slice(0, 120);
+                    throw new Error(`API ${url} returned HTML or plain text instead of JSON. This usually means the Render service is still deploying, the page is not authenticated, or the route returned an error page. Status: ${res.status}. Preview: ${preview}`);
+                }
                 if (!res.ok && data && !data.success) {
                     throw new Error(data.error || `Request failed with status ${res.status}`);
                 }
@@ -745,8 +760,7 @@
 
         async function exportSession() {
             if (!currentSessionId) return;
-            const res = await fetch(`/api/safebars/export/${currentSessionId}`);
-            const data = await res.json();
+            const data = await fetchJson(`/api/safebars/export/${currentSessionId}`);
             if (data.success) {
                 el('startStatus').textContent = `Exported to ${data.markdown_path}`;
             }
@@ -755,12 +769,11 @@
         async function saveRevision() {
             if (!currentSessionId) return;
             const revisedPlan = el('revisedPlan').value.trim();
-            const res = await fetch('/api/safebars/revise', {
+            const data = await fetchJson('/api/safebars/revise', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ session_id: currentSessionId, revised_plan: revisedPlan })
             });
-            const data = await res.json();
             if (data.success) {
                 el('revisionStatus').textContent = 'Revision saved for this session.';
             } else {
