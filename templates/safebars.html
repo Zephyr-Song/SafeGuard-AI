@@ -45,6 +45,7 @@
             gap: 16px;
             padding: 16px;
             min-height: calc(100vh - 74px);
+            align-items: start;
         }
         section {
             background: var(--panel);
@@ -109,12 +110,13 @@
         .chat {
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 154px);
-            min-height: 560px;
+            height: auto;
+            min-height: 640px;
         }
         .chat-log {
             flex: 1;
-            min-height: 260px;
+            min-height: 360px;
+            max-height: 52vh;
             overflow: auto;
             padding: 16px;
             background: #fbfcfe;
@@ -138,15 +140,13 @@
         .comparison {
             margin-top: 12px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: 1fr;
             gap: 10px;
         }
         .comparison-panel {
             border-top: 1px solid var(--line);
             padding: 12px;
             background: #fbfcfe;
-            max-height: 34vh;
-            overflow: auto;
         }
         .comparison-panel:empty { display: none; }
         .comparison-card {
@@ -201,10 +201,62 @@
             padding-left: 18px;
         }
         .report-list li { margin-bottom: 8px; line-height: 1.4; }
+        .report-grid {
+            display: grid;
+            gap: 10px;
+        }
+        .report-section-card {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fbfcfe;
+            padding: 11px 12px;
+        }
+        .report-section-card .report-list {
+            margin-bottom: 0;
+        }
         .report-heading {
-            margin: 16px 0 8px;
+            margin: 0 0 8px;
             font-size: 14px;
             color: var(--primary-dark);
+        }
+        .report-empty {
+            display: grid;
+            gap: 10px;
+        }
+        .empty-title {
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+        .empty-grid {
+            display: grid;
+            gap: 8px;
+        }
+        .empty-card {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fbfcfe;
+            padding: 10px;
+        }
+        .empty-card strong {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .empty-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .revision-helper {
+            border: 1px solid #dce6f8;
+            border-radius: 8px;
+            background: #f6f9ff;
+            padding: 10px;
+            margin-bottom: 10px;
+            color: #344054;
+            font-size: 13px;
+            line-height: 1.45;
         }
         .meta {
             color: var(--muted);
@@ -269,7 +321,8 @@
         body.study-mode .technical-option { display: none; }
         @media (max-width: 1080px) {
             main { grid-template-columns: 1fr; }
-            .chat { height: 680px; }
+            .chat { min-height: 680px; }
+            .chat-log { max-height: none; }
         }
     </style>
 </head>
@@ -354,11 +407,28 @@
         <section>
             <div class="panel-header">Reflection Report</div>
             <div id="report" class="panel-body">
-                <div class="meta">Generate a report after a few rehearsal turns. Use it to identify planning issues and questions for real fieldwork, not as participant evidence.</div>
+                <div class="report-empty">
+                    <div class="empty-title">Reflection workspace</div>
+                    <div class="empty-grid">
+                        <div class="empty-card">
+                            <strong>Risks surfaced</strong>
+                            <p>Signals about privacy, shame, consent, burden, trust, or missing stakeholders will appear here.</p>
+                        </div>
+                        <div class="empty-card">
+                            <strong>Revision cues</strong>
+                            <p>Use the report to turn rehearsal responses into concrete changes to questions, scripts, and safety procedures.</p>
+                        </div>
+                        <div class="empty-card">
+                            <strong>Boundary note</strong>
+                            <p>Treat synthetic responses as planning prompts, not evidence about real participants.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="panel-header">Revised Plan</div>
             <div class="panel-body">
-                <textarea id="revisedPlan" placeholder="After rehearsal, revise your research plan, interview questions, or safety procedure here."></textarea>
+                <div class="revision-helper">Write the concrete changes you would make before real fieldwork.</div>
+                <textarea id="revisedPlan" placeholder="Issue noticed:&#10;Revision to make:&#10;Remaining question for real stakeholders:"></textarea>
                 <div class="actions">
                     <button class="secondary" id="saveRevisionBtn" disabled>Save Revision</button>
                 </div>
@@ -795,15 +865,15 @@
                 ['Open questions for real fieldwork', report.open_questions_for_real_fieldwork],
                 ['Evidence from rehearsal', report.evidence_notes]
             ];
-            el('report').innerHTML = sections.map(([title, items]) => {
+            el('report').innerHTML = `<div class="report-grid">${sections.map(([title, items]) => {
                 const list = items && items.length ? items : ['No issue detected by this v0.1 heuristic. Verify with real stakeholders.'];
-                return `<h3 class="report-heading">${title}</h3><ul class="report-list">${list.map(item => {
+                return `<div class="report-section-card"><h3 class="report-heading">${title}</h3><ul class="report-list">${list.map(item => {
                     if (typeof item === 'object') {
                         return `<li><strong>${escapeHtml(item.signal || 'note')}</strong>: ${escapeHtml(item.interpretation || '')}<br><span class="meta">Evidence: ${escapeHtml(item.quote || '')}</span></li>`;
                     }
                     return `<li>${escapeHtml(item)}</li>`;
-                }).join('')}</ul>`;
-            }).join('');
+                }).join('')}</ul></div>`;
+            }).join('')}</div>`;
         }
 
         async function exportSession() {
