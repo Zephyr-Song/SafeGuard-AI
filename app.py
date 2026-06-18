@@ -7,7 +7,7 @@ import os
 import sys
 import json
 from datetime import datetime
-from flask import Flask, render_template, jsonify, request, session, Response
+from flask import Flask, render_template, jsonify, request, session, Response, redirect
 from dotenv import load_dotenv
 
 # 加载环境变量
@@ -71,6 +71,11 @@ ai_analyzer = AIAnalyzer(model=ACTIVE_MODEL)
 @app.route('/')
 def index():
     """主页"""
+    return redirect('/safebars')
+
+@app.route('/legacy')
+def legacy_index():
+    """Legacy SafeGuard AI page."""
     return render_template('index.html')
 
 @app.route('/test')
