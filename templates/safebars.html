@@ -484,6 +484,8 @@
                     preset.appendChild(option);
                 });
                 renderSliders();
+                el('startStatus').textContent = 'Starting default rehearsal session...';
+                await startSession();
             } catch (error) {
                 el('llmStatus').innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
             }
