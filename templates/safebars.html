@@ -140,7 +140,7 @@
         .comparison {
             margin-top: 12px;
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 10px;
         }
         .comparison-panel {
@@ -323,6 +323,7 @@
             main { grid-template-columns: 1fr; }
             .chat { min-height: 680px; }
             .chat-log { max-height: none; }
+            .comparison { grid-template-columns: 1fr; }
         }
     </style>
 </head>
