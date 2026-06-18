@@ -110,9 +110,11 @@
             display: flex;
             flex-direction: column;
             height: calc(100vh - 154px);
+            min-height: 560px;
         }
         .chat-log {
             flex: 1;
+            min-height: 260px;
             overflow: auto;
             padding: 16px;
             background: #fbfcfe;
@@ -138,6 +140,8 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 10px;
+            max-height: 280px;
+            overflow: auto;
         }
         .comparison-card {
             border: 1px solid var(--line);
@@ -173,6 +177,9 @@
             border-top: 1px solid var(--line);
             padding: 12px;
             background: var(--panel);
+            flex: 0 0 auto;
+            max-height: 46vh;
+            overflow: auto;
         }
         .chat-input textarea { min-height: 84px; }
         .report-list {
@@ -248,7 +255,7 @@
         body.study-mode .technical-option { display: none; }
         @media (max-width: 1080px) {
             main { grid-template-columns: 1fr; }
-            .chat { height: 620px; }
+            .chat { height: 680px; }
         }
     </style>
 </head>
@@ -539,7 +546,7 @@
                 el('exportBtn').disabled = false;
                 el('saveRevisionBtn').disabled = false;
                 el('chatLog').innerHTML = '';
-                addMessage('stakeholder', `I am ready to rehearse this plan as ${data.session.stakeholder.display_name}. Please ask me about your interview questions, workshop script, consent process, or safety procedure.\n\n[Rehearsal signal: limitation reminder]`);
+                addMessage('stakeholder', `I am ready to rehearse this plan as ${data.session.stakeholder.display_name}. Ask me to react to a draft interview question, workshop step, consent process, or safety procedure.\n\nNote: I am a fictional rehearsal stakeholder, so use my response to find planning risks, not as evidence about real participants.`);
             } catch (error) {
                 el('startStatus').innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
             } finally {
