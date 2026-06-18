@@ -89,18 +89,6 @@ class LLMClient:
                 model=os.getenv("TENCENT_MODEL", os.getenv("SAFEBARS_LLM_MODEL", "hy3-preview")),
             )
 
-        if os.getenv("DEEPSEEK_API_KEY"):
-            providers["deepseek"] = LLMProvider(
-                id="deepseek",
-                label=os.getenv("DEEPSEEK_LABEL", "DeepSeek Reasoner"),
-                api_key=os.getenv("DEEPSEEK_API_KEY", ""),
-                base_url=os.getenv(
-                    "DEEPSEEK_BASE_URL",
-                    "https://api.deepseek.com",
-                ).rstrip("/"),
-                model=os.getenv("DEEPSEEK_MODEL", "deepseek-reasoner"),
-            )
-
         if os.getenv("XFYUN_MAAS_API_KEY"):
             providers["xfyun_maas"] = LLMProvider(
                 id="xfyun_maas",
@@ -149,7 +137,6 @@ class LLMClient:
             "aliyun_bailian",
             "tencent_hunyuan",
             "xfyun_maas",
-            "deepseek",
             "openai_compatible",
             "profile_a",
             "profile_b",
