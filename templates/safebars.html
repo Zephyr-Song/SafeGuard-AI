@@ -398,8 +398,10 @@
                         .map((provider) => `${provider.label} / ${provider.model} / ${provider.key_hint}`)
                         .join('; ');
                     el('llmStatus').textContent = `Configured providers: ${providers}`;
+                    el('useLlm').checked = true;
                 } else {
                     el('llmStatus').textContent = 'No LLM API key detected; template fallback mode is available.';
+                    el('useLlm').checked = false;
                 }
                 const preset = el('preset');
                 preset.innerHTML = '';
@@ -658,7 +660,7 @@
                 lastComparison = data;
                 renderComparisonV2(data);
                 el('exportComparisonBtn').disabled = false;
-                el('chatStatus').textContent = 'Provider comparison generated. This does not save turns into the session log.';
+                el('chatStatus').textContent = 'Provider comparison generated.';
             } catch (error) {
                 el('chatStatus').innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
             } finally {
@@ -721,7 +723,7 @@
                     </div>
                 `;
             }).join('');
-            container.innerHTML = `<div class="meta">Provider comparison. This area scrolls separately and is not saved into the chat log.</div>` + summaryHtml + responseHtml;
+            container.innerHTML = summaryHtml + responseHtml;
             container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
