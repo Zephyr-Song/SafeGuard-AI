@@ -101,6 +101,18 @@ class LLMClient:
                 model=os.getenv("DEEPSEEK_MODEL", "deepseek-reasoner"),
             )
 
+        if os.getenv("XFYUN_MAAS_API_KEY"):
+            providers["xfyun_maas"] = LLMProvider(
+                id="xfyun_maas",
+                label=os.getenv("XFYUN_MAAS_LABEL", "Xunfei MaaS DeepSeek V4 Flash"),
+                api_key=os.getenv("XFYUN_MAAS_API_KEY", ""),
+                base_url=os.getenv(
+                    "XFYUN_MAAS_BASE_URL",
+                    "https://maas-api.cn-huabei-1.xf-yun.com/v2",
+                ).rstrip("/"),
+                model=os.getenv("XFYUN_MAAS_MODEL", "xopdeepseekv4flash"),
+            )
+
         if os.getenv("OPENAI_API_KEY") and os.getenv("ENABLE_OPENAI_PROVIDER") == "1":
             providers["openai_compatible"] = LLMProvider(
                 id="openai_compatible",
@@ -136,6 +148,7 @@ class LLMClient:
             "zhipu",
             "aliyun_bailian",
             "tencent_hunyuan",
+            "xfyun_maas",
             "deepseek",
             "openai_compatible",
             "profile_a",

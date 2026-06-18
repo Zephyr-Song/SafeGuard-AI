@@ -40,3 +40,11 @@ services:
         value: deepseek-reasoner
       - key: DEEPSEEK_LABEL
         value: DeepSeek Reasoner
+      - key: XFYUN_MAAS_API_KEY
+        sync: false
+      - key: XFYUN_MAAS_BASE_URL
+        value: https://maas-api.cn-huabei-1.xf-yun.com/v2
+      - key: XFYUN_MAAS_MODEL
+        value: xopdeepseekv4flash
+      - key: XFYUN_MAAS_LABEL
+        value: Xunfei MaaS DeepSeek V4 Flash
