@@ -101,9 +101,9 @@ class StakeholderAgent:
 
     def _detect_flags(self, message_lower: str) -> List[str]:
         flags = []
-        if any(term in message_lower for term in ["mistake", "fault", "why did you", "careless"]):
+        if any(term in message_lower for term in ["mistake", "fault", "wrong", "why did you", "why you believed", "why they believed", "careless"]):
             flags.append("potential victim-blaming")
-        if any(term in message_lower for term in ["record", "recording", "data", "share", "name", "amount", "money lost"]):
+        if any(term in message_lower for term in ["record", "recording", "data", "share", "name", "amount", "money", "money lost"]):
             flags.append("privacy concern")
         if any(term in message_lower for term in ["two-hour", "2 hour", "long interview", "workshop", "same day"]):
             flags.append("participant burden")
@@ -113,6 +113,10 @@ class StakeholderAgent:
             flags.append("distress risk")
         if any(term in message_lower for term in ["consent", "withdraw", "skip", "anonymous", "anonymized"]):
             flags.append("consent issue")
+        if any(term in message_lower for term in ["speak over", "autonomy", "convince", "permission"]):
+            flags.append("autonomy concern")
+        if any(term in message_lower for term in ["support", "follow-up", "resource", "referral", "after the session"]):
+            flags.append("support resource gap")
         return flags
 
     def _asks_for_replacement(self, message_lower: str) -> bool:
@@ -155,6 +159,13 @@ class StakeholderAgent:
         )
 
     def _family_helper_response(self, message_lower: str, flags: List[str]):
+        if "autonomy concern" in flags:
+            return (
+                "That is important. Family members can help, but we should not become the voice of the older adult. "
+                "The study should ask how support happens while still protecting the affected person's choice, privacy, and right to disagree.\n\n"
+                "You might need separate consent boundaries for family helpers and affected older adults.",
+                "missing context",
+            )
         if self.bias_profile.victim_blaming_risk >= 3 and "potential victim-blaming" in flags:
             return (
                 "As a family member, I might also feel frustrated and ask why they believed the scam, but that can quickly sound blaming. "
@@ -175,6 +186,13 @@ class StakeholderAgent:
         )
 
     def _community_worker_response(self, message_lower: str, flags: List[str]):
+        if "support resource gap" in flags:
+            return (
+                "You should plan what happens after the workshop, not only what happens during it. "
+                "If someone becomes upset or reveals an active scam, staff need a clear referral path, privacy boundary, and realistic follow-up plan.\n\n"
+                "Please check what resources the community center can actually offer before promising support.",
+                "missing context",
+            )
         if "participant burden" in flags or self.bias_profile.participant_burden_sensitivity >= 3:
             return (
                 "I would worry about participant burden. A long session or detailed story collection may be difficult, especially for people who feel embarrassed or distressed. "
@@ -215,4 +233,3 @@ class StakeholderFactory:
     @staticmethod
     def roles() -> Dict[str, Dict[str, Any]]:
         return ROLE_DEFINITIONS
-
