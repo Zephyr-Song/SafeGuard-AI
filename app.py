@@ -35,6 +35,9 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY") or os.urandom(24)
 @app.before_request
 def protect_public_demo():
     """Optional HTTP Basic Auth for public demos on Render."""
+    if os.getenv("ENABLE_DEMO_AUTH", "0") != "1":
+        return None
+
     demo_password = os.getenv("SAFEBARS_DEMO_PASSWORD")
     if not demo_password or request.path == "/healthz":
         return None

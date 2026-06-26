@@ -12,10 +12,6 @@ services:
         value: "0"
       - key: FLASK_SECRET_KEY
         sync: false
-      - key: SAFEBARS_DEMO_USER
-        value: safebars
-      - key: SAFEBARS_DEMO_PASSWORD
-        sync: false
       - key: ZHI_KEY
         sync: false
       - key: BAILIAN_API_KEY
