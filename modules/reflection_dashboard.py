@@ -23,31 +23,44 @@ class ReflectionReport:
 
 
 class ReflectionDashboard:
-    """Heuristic v0.1 reflection analysis."""
+    """Heuristic reflection analysis for turning rehearsal logs into revision prompts."""
 
     def generate_report(self, session_data: Dict[str, Any]) -> ReflectionReport:
         plan = session_data.get("research_plan", {})
         turns = session_data.get("turns", [])
         revised_plan = session_data.get("revised_plan", "")
+        stakeholder = session_data.get("stakeholder", {})
         text_blob = " ".join(
-            [plan.get("draft_materials", ""), plan.get("known_risks", ""), revised_plan]
+            [
+                plan.get("title", ""),
+                plan.get("goal", ""),
+                plan.get("target_community", ""),
+                plan.get("planned_method", ""),
+                plan.get("draft_materials", ""),
+                plan.get("known_risks", ""),
+                plan.get("rehearsal_focus", ""),
+                revised_plan,
+            ]
             + [turn.get("text", "") for turn in turns]
         ).lower()
+        flags = self._all_flags(turns)
         signals = [
             turn.get("metadata", {}).get("rehearsal_signal")
             for turn in turns
             if turn.get("metadata", {}).get("rehearsal_signal")
         ]
 
-        missing = self._missing_stakeholders(text_blob)
+        missing = self._missing_stakeholders(text_blob, stakeholder.get("role", ""))
         assumptions = self._hidden_assumptions(text_blob)
-        ethical = self._ethical_risks(text_blob, signals)
-        safety = self._safety_gaps(text_blob, signals)
-        burden = self._participant_burden(text_blob, signals)
+        ethical = self._ethical_risks(text_blob, signals, flags)
+        safety = self._safety_gaps(text_blob, signals, flags)
+        burden = self._participant_burden(text_blob, signals, flags)
         trust = [
             "Synthetic stakeholder responses are rehearsal prompts, not evidence about real participants.",
             "Use this session to identify questions that should be verified with real participants or community partners.",
         ]
+        if len(set(signals)) > 1:
+            trust.append("Different rehearsal turns surfaced different signals, so avoid treating one response as the full risk picture.")
         if revised_plan:
             trust.append("Compare the initial and revised plans as evidence of researcher reflection, not as evidence about the community.")
         revisions = self._recommended_revisions(ethical, safety, burden, missing)
@@ -66,22 +79,32 @@ class ReflectionDashboard:
             evidence_notes=evidence_notes,
         )
 
+    def _all_flags(self, turns: List[Dict[str, Any]]) -> List[str]:
+        flags = []
+        for turn in turns:
+            flags.extend(turn.get("metadata", {}).get("safety_flags", []))
+        return sorted(set(flags))
+
     def _evidence_notes(self, turns: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         notes = []
+        latest_researcher_prompt = ""
         for turn in turns:
+            if turn.get("speaker") == "researcher":
+                latest_researcher_prompt = turn.get("text", "").replace("\n", " ").strip()
+                continue
             if turn.get("speaker") != "stakeholder":
                 continue
             metadata = turn.get("metadata", {})
             signal = metadata.get("rehearsal_signal")
             flags = metadata.get("safety_flags", [])
-            if not signal or signal == "none":
+            if not signal or signal in ["none", "useful question"] and not flags:
                 continue
             text = turn.get("text", "").replace("\n", " ").strip()
             notes.append({
                 "signal": signal,
                 "flags": flags,
                 "quote": self._short_quote(text),
-                "interpretation": self._interpret_signal(signal, flags),
+                "interpretation": self._interpret_signal(signal, flags, latest_researcher_prompt),
             })
         return notes[:8]
 
@@ -93,7 +116,24 @@ class ReflectionDashboard:
             return text
         return text[:217].rstrip() + "..."
 
-    def _interpret_signal(self, signal: str, flags: List[str]) -> str:
+    def _interpret_signal(self, signal: str, flags: List[str], researcher_prompt: str = "") -> str:
+        prompt = researcher_prompt.lower()
+        if "potential victim-blaming" in flags:
+            return "The researcher prompt may make responsibility or judgment too salient; revise toward context, trust cues, and optional disclosure."
+        if "privacy concern" in flags:
+            return "The prompt asks for sensitive information or mentions data/recording; clarify purpose, access, anonymization, and skip options."
+        if "support resource gap" in flags:
+            return "The plan needs a concrete after-session support or referral path before promising help."
+        if "autonomy concern" in flags:
+            return "The plan should protect the affected person's voice and consent boundaries, especially when family helpers are involved."
+        if "participant burden" in flags:
+            return "The planned activity may be too long or intensive; consider shorter formats, breaks, or lower-disclosure alternatives."
+        if "consent issue" in flags:
+            return "The plan should make consent, withdrawal, anonymity, and recording choices more explicit."
+        if "authority or institution issue" in flags:
+            return "The plan may assume institutional endorsement creates trust; explain consequences, reporting paths, and data boundaries."
+        if "how much" in prompt or "money" in prompt:
+            return "Exact financial loss may not be necessary; make it optional or ask for ranges/examples only if justified."
         if signal == "privacy concern":
             return "The plan may need clearer recording, data access, anonymization, or disclosure boundaries."
         if signal == "distress risk":
@@ -112,52 +152,68 @@ class ReflectionDashboard:
             return f"Review flagged issues: {', '.join(flags)}."
         return "Review this moment as a possible planning signal."
 
-    def _missing_stakeholders(self, text: str) -> List[str]:
+    def _missing_stakeholders(self, text: str, role: str) -> List[str]:
         missing = []
-        if "family" not in text and "caregiver" not in text:
+        fraud_context = any(term in text for term in ["fraud", "scam", "older adult", "online safety"])
+        if fraud_context and role != "family_helper" and "family" not in text and "caregiver" not in text:
             missing.append("Consider whether family helpers or caregivers shape disclosure and help-seeking.")
-        if "community" not in text and "staff" not in text and "worker" not in text:
+        if fraud_context and role != "community_worker" and "community worker" not in text and "staff" not in text and "local partner" not in text:
             missing.append("Consider involving a community worker or local partner before fieldwork.")
-        if "platform" not in text and "bank" not in text and "police" not in text:
+        if fraud_context and "platform" not in text and "bank" not in text and "police" not in text and "report" not in text:
             missing.append("Consider whether platform, bank, or authority stakeholders affect reporting pathways.")
         return missing
 
     def _hidden_assumptions(self, text: str) -> List[str]:
         assumptions = []
+        if "why did you believe" in text or "why you believed" in text:
+            assumptions.append("The plan may assume participants can explain scam belief without feeling blamed or embarrassed.")
+        if "how much money" in text or "exact" in text or "amount" in text:
+            assumptions.append("The plan may assume exact financial disclosure is necessary, even when a range or optional disclosure may be safer.")
         if "teach" in text or "educate" in text:
             assumptions.append("The plan may assume the main problem is lack of knowledge rather than trust, shame, or support barriers.")
         if "should" in text or "must" in text:
             assumptions.append("Directive language may assume participants can act on advice without social or practical constraints.")
         if "workshop" in text and "follow-up" not in text:
             assumptions.append("The plan may assume a one-time workshop is enough without follow-up support.")
+        if "record" in text and "optional" not in text and "anonymous" not in text and "anonymized" not in text:
+            assumptions.append("The plan may assume recording is acceptable without first giving participants meaningful choices.")
         return assumptions
 
-    def _ethical_risks(self, text: str, signals: List[str]) -> List[str]:
+    def _ethical_risks(self, text: str, signals: List[str], flags: List[str]) -> List[str]:
         risks = []
-        if "mistake" in text or "fault" in text:
+        if "potential victim-blaming" in flags or "mistake" in text or "fault" in text or "why did you believe" in text:
             risks.append("Some wording may sound victim-blaming; use neutral language about context and decision points.")
-        if "privacy concern" in signals or "record" in text or "data" in text:
+        if "privacy concern" in signals or "privacy concern" in flags or "record" in text or "data" in text or "money" in text:
             risks.append("Privacy and data-use explanation needs to be explicit before sensitive disclosure.")
-        if "distress risk" in signals or "victim" in text or "loss" in text:
+        if "distress risk" in signals or "distress risk" in flags or "victim" in text or "loss" in text or "embarrass" in text:
             risks.append("Discussion of harm or financial loss may create distress and should include skip/pause options.")
+        if "autonomy concern" in flags:
+            risks.append("Family-helper involvement may create autonomy risks if helpers speak for or pressure the affected person.")
+        if "authority or institution issue" in flags:
+            risks.append("Institutional reporting or endorsement may affect trust and should not be presented as automatically safe.")
         return risks
 
-    def _safety_gaps(self, text: str, signals: List[str]) -> List[str]:
+    def _safety_gaps(self, text: str, signals: List[str], flags: List[str]) -> List[str]:
         gaps = []
-        if "skip" not in text and "withdraw" not in text:
+        sensitive_topic = any(term in text for term in ["loss", "money", "victim", "distress", "record", "story", "fraud", "scam"])
+        if sensitive_topic and "skip" not in text and "withdraw" not in text and "pause" not in text:
             gaps.append("Add explicit skip, pause, and withdrawal options.")
-        if "resource" not in text and "support" not in text and "follow-up" not in text:
+        if ("support resource gap" in flags or "distress risk" in flags or "workshop" in text) and "resource" not in text and "support" not in text and "follow-up" not in text:
             gaps.append("Add support resources or follow-up procedures for participants who become distressed.")
-        if "consent" not in text:
+        if ("record" in text or "data" in text or "privacy concern" in flags) and "consent" not in text:
             gaps.append("Clarify consent language, recording choices, and data boundaries.")
+        if "authority or institution issue" in flags and "reporting path" not in text:
+            gaps.append("Clarify what happens if a participant reports an active scam or asks for institutional help.")
         return gaps
 
-    def _participant_burden(self, text: str, signals: List[str]) -> List[str]:
+    def _participant_burden(self, text: str, signals: List[str], flags: List[str]) -> List[str]:
         items = []
-        if "participant burden" in signals or "two-hour" in text or "2 hour" in text:
+        if "participant burden" in signals or "participant burden" in flags or "two-hour" in text or "2 hour" in text:
             items.append("Session length or activity load may be too high for sensitive topics.")
-        if "detailed stories" in text or "exact" in text:
+        if "detailed stories" in text or "exact" in text or "how much money" in text:
             items.append("Detailed disclosure may not be necessary and may increase burden.")
+        if "same day" in text:
+            items.append("Combining interview and workshop on the same day may be too intense for sensitive disclosure.")
         return items
 
     def _recommended_revisions(
