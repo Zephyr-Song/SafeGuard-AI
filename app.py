@@ -436,11 +436,93 @@ def safebars_reflection():
             "error": "Session not found"
         }), 404
 
-    report = reflection_dashboard.generate_report(rehearsal_session.to_dict())
+    session_data = rehearsal_session.to_dict()
+    report = reflection_dashboard.generate_report(session_data).to_dict()
+    report["llm_dynamic_reflection"] = build_llm_dynamic_reflection(session_data, report)
     return jsonify({
         "success": True,
-        "report": report.to_dict()
+        "report": report
     })
+
+
+def build_llm_dynamic_reflection(session_data, structured_report):
+    """Use the configured LLM to summarize this exact rehearsal session."""
+    llm_client = rehearsal_engine.llm_client
+    if not llm_client.is_configured():
+        return ["LLM dynamic reflection is unavailable because no LLM provider is configured."]
+
+    plan = session_data.get("research_plan", {})
+    stakeholder = session_data.get("stakeholder", {})
+    turns = session_data.get("turns", [])
+    transcript_lines = []
+    for turn in turns[-10:]:
+        speaker = turn.get("speaker", "unknown")
+        text = turn.get("text", "").replace("\n", " ").strip()
+        metadata = turn.get("metadata", {})
+        signal = metadata.get("rehearsal_signal", "")
+        flags = ", ".join(metadata.get("safety_flags", []))
+        if signal or flags:
+            transcript_lines.append(f"{speaker}: {text} [signal={signal}; flags={flags}]")
+        else:
+            transcript_lines.append(f"{speaker}: {text}")
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are SafeBARS reflection assistant. Summarize only this rehearsal session. "
+                "Do not claim to represent real participants, older adults, victims, or communities. "
+                "Treat synthetic stakeholder output as rehearsal evidence about the research plan, not participant evidence. "
+                "Be concrete, concise, and action-oriented."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                "Generate a dynamic reflection for this SafeBARS session.\n\n"
+                "Return exactly 4 bullets, each under 35 words:\n"
+                "1. Most session-specific risk surfaced.\n"
+                "2. Concrete wording or procedure change.\n"
+                "3. What the researcher should verify with real stakeholders.\n"
+                "4. One caution about trusting this synthetic rehearsal.\n\n"
+                f"Research plan title: {plan.get('title', '')}\n"
+                f"Goal: {plan.get('goal', '')}\n"
+                f"Target community: {plan.get('target_community', '')}\n"
+                f"Method: {plan.get('planned_method', '')}\n"
+                f"Draft materials: {plan.get('draft_materials', '')}\n"
+                f"Known risks: {plan.get('known_risks', '')}\n"
+                f"Stakeholder role: {stakeholder.get('display_name', stakeholder.get('role', ''))}\n\n"
+                "Recent rehearsal transcript:\n"
+                + "\n".join(transcript_lines)
+                + "\n\nStructured fallback report cues:\n"
+                f"Takeaways: {structured_report.get('session_specific_takeaways', [])}\n"
+                f"Rewrite suggestions: {structured_report.get('concrete_rewrite_suggestions', [])}\n"
+                f"Evidence notes: {structured_report.get('evidence_notes', [])}"
+            ),
+        },
+    ]
+
+    result = llm_client.chat_with_provider_detailed(
+        llm_client.active_provider_id,
+        messages,
+        temperature=0.2,
+        timeout=25,
+    )
+    if not result.get("ok"):
+        detail = result.get("error") or result.get("error_type") or "Unknown provider error."
+        return [f"LLM dynamic reflection unavailable; structured fallback is shown. Reason: {detail}"]
+
+    bullets = []
+    for line in result.get("text", "").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        line = line.lstrip("-*0123456789. ").strip()
+        if line:
+            bullets.append(line)
+    if not bullets:
+        bullets = [result.get("text", "").strip()]
+    return bullets[:4]
 
 @app.route('/api/safebars/revise', methods=['POST'])
 def safebars_revise():
@@ -485,6 +567,7 @@ def safebars_export(session_id):
 
     session_data = rehearsal_session.to_dict()
     report = reflection_dashboard.generate_report(session_data).to_dict()
+    report["llm_dynamic_reflection"] = build_llm_dynamic_reflection(session_data, report)
     json_path = rehearsal_logger.export_json(session_data)
     md_path = rehearsal_logger.export_markdown(session_data, report)
     return jsonify({

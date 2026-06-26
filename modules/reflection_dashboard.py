@@ -8,6 +8,7 @@ from typing import Dict, List, Any
 
 @dataclass
 class ReflectionReport:
+    llm_dynamic_reflection: List[str]
     session_specific_takeaways: List[str]
     concrete_rewrite_suggestions: List[str]
     missing_stakeholders: List[str]
@@ -72,6 +73,7 @@ class ReflectionDashboard:
         evidence_notes = self._evidence_notes(turns)
 
         return ReflectionReport(
+            llm_dynamic_reflection=[],
             session_specific_takeaways=takeaways,
             concrete_rewrite_suggestions=concrete_revisions,
             missing_stakeholders=missing,
