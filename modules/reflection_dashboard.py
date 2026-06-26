@@ -8,6 +8,8 @@ from typing import Dict, List, Any
 
 @dataclass
 class ReflectionReport:
+    session_specific_takeaways: List[str]
+    concrete_rewrite_suggestions: List[str]
     missing_stakeholders: List[str]
     hidden_assumptions: List[str]
     ethical_risks: List[str]
@@ -55,6 +57,8 @@ class ReflectionDashboard:
         ethical = self._ethical_risks(text_blob, signals, flags)
         safety = self._safety_gaps(text_blob, signals, flags)
         burden = self._participant_burden(text_blob, signals, flags)
+        takeaways = self._session_specific_takeaways(turns, flags, signals)
+        concrete_revisions = self._concrete_rewrite_suggestions(text_blob, flags)
         trust = [
             "Synthetic stakeholder responses are rehearsal prompts, not evidence about real participants.",
             "Use this session to identify questions that should be verified with real participants or community partners.",
@@ -68,6 +72,8 @@ class ReflectionDashboard:
         evidence_notes = self._evidence_notes(turns)
 
         return ReflectionReport(
+            session_specific_takeaways=takeaways,
+            concrete_rewrite_suggestions=concrete_revisions,
             missing_stakeholders=missing,
             hidden_assumptions=assumptions,
             ethical_risks=ethical,
@@ -78,6 +84,94 @@ class ReflectionDashboard:
             open_questions_for_real_fieldwork=fieldwork_questions,
             evidence_notes=evidence_notes,
         )
+
+    def _session_specific_takeaways(
+        self,
+        turns: List[Dict[str, Any]],
+        flags: List[str],
+        signals: List[str],
+    ) -> List[str]:
+        takeaways = []
+        researcher_text = " ".join(
+            turn.get("text", "")
+            for turn in turns
+            if turn.get("speaker") == "researcher"
+        ).lower()
+        stakeholder_text = " ".join(
+            turn.get("text", "")
+            for turn in turns
+            if turn.get("speaker") == "stakeholder"
+        ).lower()
+
+        if "why you believed" in researcher_text or "why did you believe" in researcher_text:
+            takeaways.append(
+                "This rehearsal specifically challenged the 'why did you believe it' wording because it can sound like blame."
+            )
+        if "how much money" in researcher_text or "money you lost" in researcher_text or "amount" in researcher_text:
+            takeaways.append(
+                "This rehearsal specifically challenged exact financial-loss disclosure; the plan should make this optional or justify why it is needed."
+            )
+        if "record" in researcher_text or "recording" in researcher_text:
+            takeaways.append(
+                "This rehearsal surfaced recording/data-use as a trust issue; participants need choices and clear access boundaries before sensitive questions."
+            )
+        if "speak over" in researcher_text or "convince" in researcher_text or "autonomy concern" in flags:
+            takeaways.append(
+                "This rehearsal focused on autonomy: family helpers should not become the voice of the affected older adult."
+            )
+        if "support resource gap" in flags or "follow-up" in researcher_text or "referral" in researcher_text:
+            takeaways.append(
+                "This rehearsal focused on after-session responsibility: the plan needs realistic support, referral, and follow-up procedures."
+            )
+        if "not sure what you're asking" in stakeholder_text or "need more context" in stakeholder_text:
+            takeaways.append(
+                "The stakeholder response suggests the prompt itself was underspecified; the researcher should ask one focused question at a time."
+            )
+        if "participant burden" in signals or "two-hour" in researcher_text or "2 hour" in researcher_text:
+            takeaways.append(
+                "This rehearsal surfaced burden concerns; session length, story-sharing, and activity load may need to be reduced."
+            )
+        if not takeaways and turns:
+            takeaways.append(
+                "This session did not surface a strong specific risk yet; ask a more concrete question about wording, consent, recording, distress, or follow-up."
+            )
+        if not turns:
+            takeaways.append(
+                "No rehearsal turn has been recorded yet; send at least one concrete question before generating the report."
+            )
+        return takeaways[:5]
+
+    def _concrete_rewrite_suggestions(self, text: str, flags: List[str]) -> List[str]:
+        suggestions = []
+        if "why did you believe" in text or "why you believed" in text or "potential victim-blaming" in flags:
+            suggestions.append(
+                "Replace 'Why did you believe the message?' with 'What made the message seem trustworthy at the time, and what warning signs became clearer later?'"
+            )
+        if "how much money" in text or "money you lost" in text or "amount" in text:
+            suggestions.append(
+                "Replace 'How much money did you lose?' with 'You may skip financial details. If useful, you can share a rough range or describe the impact in your own words.'"
+            )
+        if "record" in text or "recording" in text or "privacy concern" in flags:
+            suggestions.append(
+                "Before recording, add: 'Recording is optional. You can participate without being recorded, stop recording at any time, and ask us not to include any part of your response.'"
+            )
+        if "autonomy concern" in flags:
+            suggestions.append(
+                "For family-helper interviews, add a separate consent boundary: 'Please describe your own support role, but do not answer on behalf of the older adult unless they explicitly agree.'"
+            )
+        if "support resource gap" in flags:
+            suggestions.append(
+                "Add a safety step: 'If a participant becomes distressed or reveals an active scam, pause the activity and offer a prepared referral/resource list.'"
+            )
+        if "participant burden" in flags or "two-hour" in text or "2 hour" in text:
+            suggestions.append(
+                "Offer a shorter version of the session, breaks, and a no-story-sharing option for participants who do not want to disclose personal experiences."
+            )
+        if not suggestions:
+            suggestions.append(
+                "Ask a more targeted rehearsal question to generate a concrete rewrite, such as: 'Does this consent script make recording and withdrawal clear?'"
+            )
+        return suggestions[:6]
 
     def _all_flags(self, turns: List[Dict[str, Any]]) -> List[str]:
         flags = []

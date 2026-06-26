@@ -858,6 +858,8 @@
 
         function renderReport(report) {
             const sections = [
+                ['Session-specific takeaways', report.session_specific_takeaways],
+                ['Concrete rewrite suggestions', report.concrete_rewrite_suggestions],
                 ['Missing stakeholders', report.missing_stakeholders],
                 ['Hidden assumptions', report.hidden_assumptions],
                 ['Ethical risks', report.ethical_risks],
@@ -869,7 +871,7 @@
                 ['Evidence from rehearsal', report.evidence_notes]
             ];
             el('report').innerHTML = `<div class="report-grid">${sections.map(([title, items]) => {
-                const list = items && items.length ? items : ['No issue detected by this v0.1 heuristic. Verify with real stakeholders.'];
+                const list = items && items.length ? items : ['No specific issue surfaced in this section.'];
                 return `<div class="report-section-card"><h3 class="report-heading">${title}</h3><ul class="report-list">${list.map(item => {
                     if (typeof item === 'object') {
                         return `<li><strong>${escapeHtml(item.signal || 'note')}</strong>: ${escapeHtml(item.interpretation || '')}<br><span class="meta">Evidence: ${escapeHtml(item.quote || '')}</span></li>`;
