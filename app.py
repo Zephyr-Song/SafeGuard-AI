@@ -26,10 +26,12 @@ from modules.ai_analyzer import AIAnalyzer
 from modules.rehearsal_engine import RehearsalEngine
 from modules.reflection_dashboard import ReflectionDashboard
 from modules.rehearsal_logger import RehearsalLogger
+from modules.encounter_api import encounter_api
 from config import FRAUD_CATEGORIES, DIFFICULTY_LEVELS, SAFETY_CONFIG, ACTIVE_MODEL
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates'))
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or os.urandom(24)
+app.register_blueprint(encounter_api)
 
 
 @app.before_request
@@ -94,11 +96,21 @@ def diagnostic_page():
 @app.route('/safebars')
 def safebars_page():
     """SafeBARS研究者预演界面"""
-    return render_template('safebars.html', study_mode=False)
+    return render_template('safebars_v2.html', study_mode=False)
 
 @app.route('/safebars/study')
 def safebars_study_page():
     """SafeBARS参与者研究模式界面"""
+    return render_template('safebars_v2.html', study_mode=True)
+
+@app.route('/safebars/v1')
+def safebars_v1_page():
+    """Preserved v1 synthetic stakeholder rehearsal interface."""
+    return render_template('safebars.html', study_mode=False)
+
+@app.route('/safebars/v1/study')
+def safebars_v1_study_page():
+    """Preserved v1 study interface."""
     return render_template('safebars.html', study_mode=True)
 
 @app.route('/safebars/brief')

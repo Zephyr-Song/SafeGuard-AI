@@ -6,4 +6,7 @@ __pycache__/
 *.pyc
 data/safebars/
 data/safebars_study/
+data/*.db
+data/*.db-shm
+data/*.db-wal
 research/chi2027/screenshots/

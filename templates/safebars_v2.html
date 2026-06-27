@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBARS Encounter Workspace</title>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <style>
+        :root {
+            --canvas: #f5f6f7;
+            --surface: #ffffff;
+            --surface-subtle: #f9fafb;
+            --ink: #17202a;
+            --muted: #66727f;
+            --line: #d9dee3;
+            --line-strong: #bcc5cd;
+            --green: #246b49;
+            --green-soft: #e9f5ee;
+            --teal: #176f73;
+            --teal-soft: #e7f4f4;
+            --amber: #8a5b12;
+            --amber-soft: #fbf2df;
+            --red: #a93a32;
+            --red-soft: #faecea;
+            --blue: #315f87;
+            --blue-soft: #eaf1f7;
+            --shadow: 0 1px 2px rgba(23, 32, 42, 0.06);
+        }
+
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+            background: var(--canvas);
+            color: var(--ink);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 14px;
+            line-height: 1.45;
+            letter-spacing: 0;
+        }
+
+        button, input, textarea { font: inherit; letter-spacing: 0; }
+        button { cursor: pointer; }
+
+        .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            min-height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 8px 20px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.97);
+        }
+
+        .brand-wrap, .header-actions, .inline, .button-row, .agent-name, .issue-meta {
+            display: flex;
+            align-items: center;
+        }
+
+        .brand-wrap { gap: 11px; min-width: 0; }
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border: 1px solid #b8d2c3;
+            border-radius: 7px;
+            color: var(--green);
+            background: var(--green-soft);
+        }
+
+        .brand-title { margin: 0; font-size: 16px; font-weight: 720; }
+        .brand-subtitle { margin: 1px 0 0; color: var(--muted); font-size: 12px; }
+        .header-actions { gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+        .workspace {
+            width: min(1800px, 100%);
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(290px, 340px) minmax(0, 1fr);
+            min-height: calc(100vh - 58px);
+        }
+
+        .intake-panel {
+            border-right: 1px solid var(--line);
+            background: var(--surface);
+            padding: 18px;
+        }
+
+        .main-panel { min-width: 0; padding: 18px 20px 44px; }
+
+        .section-heading {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 720;
+        }
+
+        .section-kicker {
+            margin: 3px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .panel-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .field { margin-bottom: 12px; }
+        .field label {
+            display: block;
+            margin-bottom: 5px;
+            color: #35414c;
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        input[type="text"], textarea, select {
+            width: 100%;
+            border: 1px solid var(--line-strong);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--ink);
+            padding: 9px 10px;
+            outline: none;
+            transition: border-color 120ms, box-shadow 120ms;
+        }
+
+        input[type="text"]:focus, textarea:focus, select:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(23, 111, 115, 0.11);
+        }
+
+        textarea { min-height: 84px; resize: vertical; }
+        .textarea-short { min-height: 64px; }
+
+        .artifact-group {
+            margin: 12px 0 14px;
+            border-top: 1px solid var(--line);
+        }
+
+        details.artifact {
+            border-bottom: 1px solid var(--line);
+            padding: 0;
+        }
+
+        details.artifact summary {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            min-height: 42px;
+            font-size: 12px;
+            font-weight: 650;
+            cursor: pointer;
+        }
+
+        details.artifact summary::-webkit-details-marker { display: none; }
+        details.artifact[open] summary .chevron { transform: rotate(90deg); }
+        .chevron { transition: transform 120ms; }
+        .artifact-body { padding: 0 0 11px; }
+        .artifact-body textarea { min-height: 96px; }
+
+        .btn {
+            min-height: 36px;
+            border: 1px solid var(--line-strong);
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 7px 11px;
+            background: var(--surface);
+            color: var(--ink);
+            font-weight: 650;
+            white-space: nowrap;
+        }
+
+        .btn:hover { background: var(--surface-subtle); border-color: #9faab3; }
+        .btn:disabled { opacity: 0.48; cursor: not-allowed; }
+        .btn-primary { background: var(--green); border-color: var(--green); color: #fff; }
+        .btn-primary:hover { background: #1d593d; border-color: #1d593d; }
+        .btn-teal { background: var(--teal); border-color: var(--teal); color: #fff; }
+        .btn-teal:hover { background: #125d60; border-color: #125d60; }
+        .btn-quiet { min-height: 32px; padding: 5px 8px; background: transparent; }
+        .btn-icon { width: 36px; padding: 0; }
+        .full { width: 100%; }
+
+        .switch-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 12px 0;
+            color: #35414c;
+            font-size: 12px;
+        }
+
+        .switch {
+            position: relative;
+            width: 38px;
+            height: 22px;
+            flex: 0 0 auto;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .switch span {
+            position: absolute;
+            inset: 0;
+            border-radius: 11px;
+            background: #b9c1c8;
+            transition: 120ms;
+        }
+
+        .switch span::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: 3px;
+            top: 3px;
+            border-radius: 50%;
+            background: #fff;
+            transition: 120ms;
+        }
+
+        .switch input:checked + span { background: var(--teal); }
+        .switch input:checked + span::after { transform: translateX(16px); }
+
+        .boundary-note {
+            display: flex;
+            gap: 9px;
+            align-items: flex-start;
+            margin-top: 12px;
+            padding: 10px;
+            border-left: 3px solid var(--amber);
+            background: var(--amber-soft);
+            color: #5e481f;
+            font-size: 12px;
+        }
+
+        .workflow-bar {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: var(--surface);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .workflow-step {
+            min-height: 55px;
+            padding: 9px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-right: 1px solid var(--line);
+        }
+
+        .workflow-step:last-child { border-right: 0; }
+        .workflow-index {
+            width: 25px;
+            height: 25px;
+            flex: 0 0 auto;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #e8ecef;
+            color: #4f5d68;
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .workflow-step.active .workflow-index { background: var(--green); color: #fff; }
+        .workflow-step.complete .workflow-index { background: var(--teal); color: #fff; }
+        .workflow-label { font-weight: 680; font-size: 12px; }
+        .workflow-state { color: var(--muted); font-size: 11px; margin-top: 1px; }
+
+        .agent-strip {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .agent-item {
+            min-height: 62px;
+            padding: 9px 10px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--surface);
+        }
+
+        .agent-name { justify-content: space-between; gap: 8px; font-size: 11px; font-weight: 700; }
+        .agent-detail { margin-top: 5px; color: var(--muted); font-size: 11px; line-height: 1.3; }
+        .status-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: #aeb7bf; }
+        .status-dot.completed { background: var(--green); }
+        .status-dot.running { background: var(--blue); }
+        .status-dot.fallback { background: var(--amber); }
+
+        .tabbar {
+            margin-top: 18px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .tab {
+            min-height: 40px;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 12px;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 680;
+        }
+
+        .tab:hover { color: var(--ink); }
+        .tab.active { color: var(--green); border-bottom-color: var(--green); }
+        .count {
+            min-width: 20px;
+            height: 19px;
+            padding: 1px 6px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 10px;
+            background: #e8ecef;
+            color: #4c5964;
+            font-size: 10px;
+        }
+
+        .tabview { display: none; padding-top: 16px; }
+        .tabview.active { display: block; }
+
+        .empty-state {
+            min-height: 330px;
+            display: grid;
+            place-items: center;
+            border: 1px dashed var(--line-strong);
+            border-radius: 7px;
+            background: rgba(255,255,255,0.55);
+            text-align: center;
+            color: var(--muted);
+            padding: 28px;
+        }
+
+        .empty-state svg { color: #8b979f; margin-bottom: 10px; }
+        .empty-title { color: #3a4650; font-weight: 700; margin-bottom: 3px; }
+        .empty-copy { max-width: 430px; font-size: 12px; }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .stage-card {
+            min-height: 145px;
+            padding: 11px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .stage-card.disabled { opacity: 0.58; background: #f2f4f5; }
+        .stage-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .stage-number { color: var(--muted); font-size: 10px; font-weight: 750; }
+        .stage-name { margin: 4px 0 8px; font-size: 13px; font-weight: 720; }
+        .stage-sources { min-height: 28px; color: var(--muted); font-size: 11px; }
+        .stage-note { margin-top: 8px; min-height: 31px !important; padding: 6px 7px !important; font-size: 11px; }
+
+        .coverage, .severity, .decision-badge, .trace-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border-radius: 10px;
+            padding: 3px 7px;
+            font-size: 10px;
+            font-weight: 750;
+            text-transform: uppercase;
+        }
+
+        .coverage.covered, .trace-status.covered { color: var(--green); background: var(--green-soft); }
+        .coverage.partial { color: var(--amber); background: var(--amber-soft); }
+        .coverage.missing, .trace-status.gap, .trace-status.missing { color: var(--red); background: var(--red-soft); }
+        .trace-status.not_run { color: var(--muted); background: #edf0f2; }
+
+        .scenario-section { margin-top: 18px; }
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .scenario-option {
+            position: relative;
+            min-height: 112px;
+            padding: 11px 11px 11px 38px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--surface);
+        }
+
+        .scenario-option:has(input:checked) { border-color: #84aaa1; background: #f7fbf8; }
+        .scenario-option input { position: absolute; left: 12px; top: 14px; width: 16px; height: 16px; accent-color: var(--green); }
+        .scenario-title { font-size: 12px; font-weight: 700; }
+        .scenario-trigger { margin-top: 5px; color: var(--muted); font-size: 11px; }
+        .scenario-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+
+        .trace-layout {
+            display: grid;
+            grid-template-columns: minmax(220px, 285px) minmax(0, 1fr);
+            gap: 12px;
+        }
+
+        .trace-list { display: grid; gap: 7px; align-content: start; }
+        .trace-button {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--surface);
+            padding: 10px;
+            text-align: left;
+        }
+
+        .trace-button:hover, .trace-button.active { border-color: #83a79d; background: #f7fbf8; }
+        .trace-button-title { margin-top: 6px; font-size: 12px; font-weight: 700; }
+        .trace-detail {
+            min-height: 360px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: var(--surface);
+            padding: 15px;
+        }
+
+        .trace-detail h3 { margin: 0; font-size: 15px; }
+        .trace-limitation { margin-top: 5px; color: var(--muted); font-size: 11px; }
+        .trace-steps { margin-top: 17px; }
+        .trace-step {
+            position: relative;
+            display: grid;
+            grid-template-columns: 26px minmax(0, 1fr);
+            gap: 10px;
+            padding-bottom: 20px;
+        }
+
+        .trace-step:not(:last-child)::before {
+            content: "";
+            position: absolute;
+            left: 12px;
+            top: 25px;
+            bottom: 1px;
+            width: 1px;
+            background: var(--line-strong);
+        }
+
+        .step-marker {
+            width: 25px;
+            height: 25px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--line-strong);
+            border-radius: 50%;
+            background: #fff;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 750;
+            z-index: 1;
+        }
+
+        .trace-step.unsupported .step-marker, .trace-step.handoff .step-marker { color: var(--red); border-color: #d99b95; background: var(--red-soft); }
+        .trace-step.supported .step-marker { color: var(--green); border-color: #9ac5aa; background: var(--green-soft); }
+        .step-label { font-size: 11px; font-weight: 750; text-transform: uppercase; color: var(--muted); }
+        .step-text { margin-top: 3px; }
+
+        .source-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+        .source-chip {
+            border: 1px solid #b7c8d5;
+            border-radius: 4px;
+            padding: 2px 6px;
+            background: var(--blue-soft);
+            color: var(--blue);
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .gap-banner {
+            margin-top: 4px;
+            padding: 10px;
+            border-left: 3px solid var(--red);
+            background: var(--red-soft);
+            color: #6f2f2a;
+            font-size: 12px;
+        }
+
+        .filterbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .filterbar select { width: auto; min-width: 145px; min-height: 34px; padding: 6px 28px 6px 8px; font-size: 12px; }
+        .issue-list { display: grid; gap: 10px; }
+        .issue-card {
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .issue-header {
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .issue-title { margin: 0; font-size: 14px; }
+        .issue-meta { gap: 6px; margin-top: 6px; flex-wrap: wrap; color: var(--muted); font-size: 10px; }
+        .severity.high { color: var(--red); background: var(--red-soft); }
+        .severity.medium { color: var(--amber); background: var(--amber-soft); }
+        .severity.low { color: var(--blue); background: var(--blue-soft); }
+        .decision-badge.pending { color: var(--muted); background: #edf0f2; }
+        .decision-badge.accept { color: var(--green); background: var(--green-soft); }
+        .decision-badge.edit { color: var(--blue); background: var(--blue-soft); }
+        .decision-badge.reject { color: var(--red); background: var(--red-soft); }
+        .decision-badge.defer { color: var(--amber); background: var(--amber-soft); }
+
+        .issue-body {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+        }
+
+        .issue-analysis, .issue-decision { padding: 13px 14px; min-width: 0; }
+        .issue-decision { border-left: 1px solid var(--line); background: var(--surface-subtle); }
+        .subhead { margin: 0 0 5px; color: var(--muted); font-size: 10px; font-weight: 760; text-transform: uppercase; }
+        .issue-copy { margin: 0 0 12px; }
+        .suggestion { padding: 9px; border-left: 3px solid var(--teal); background: var(--teal-soft); color: #244f51; }
+        .uncertainty { margin-top: 9px; color: var(--muted); font-size: 11px; }
+        .passage-quote { margin-top: 7px; padding: 7px 9px; border-left: 2px solid #9fb1c0; color: #46535f; background: #f3f6f8; font-size: 11px; }
+        .issue-decision textarea { min-height: 66px; font-size: 12px; }
+        .issue-decision .button-row { gap: 5px; flex-wrap: wrap; }
+        .decision-btn { min-height: 31px; padding: 5px 8px; font-size: 11px; }
+        .decision-btn.selected { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
+
+        .handoff-list { display: grid; gap: 9px; }
+        .handoff-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(190px, 260px);
+            gap: 14px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--surface);
+            padding: 12px 14px;
+        }
+        .handoff-question { font-weight: 700; }
+        .handoff-reason { margin-top: 5px; color: var(--muted); font-size: 11px; }
+        .handoff-owner { color: var(--teal); font-weight: 700; }
+        .handoff-method { margin-top: 5px; color: var(--muted); font-size: 11px; }
+
+        .toast {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 50;
+            max-width: min(420px, calc(100vw - 36px));
+            display: none;
+            align-items: flex-start;
+            gap: 9px;
+            padding: 11px 13px;
+            border: 1px solid var(--line-strong);
+            border-radius: 7px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(23, 32, 42, 0.16);
+        }
+        .toast.show { display: flex; }
+        .toast.error { border-color: #d69a94; background: #fff8f7; }
+        .toast-copy { font-size: 12px; }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 40;
+            display: none;
+            place-items: center;
+            background: rgba(245, 246, 247, 0.78);
+        }
+        .loading-overlay.show { display: grid; }
+        .loading-box {
+            width: min(360px, calc(100vw - 32px));
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: #fff;
+            box-shadow: 0 10px 28px rgba(23, 32, 42, 0.12);
+            text-align: center;
+        }
+        .spinner { animation: spin 0.9s linear infinite; color: var(--teal); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 1050px) {
+            .workspace { grid-template-columns: 290px minmax(0, 1fr); }
+            .map-grid, .scenario-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .agent-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .issue-body { grid-template-columns: 1fr; }
+            .issue-decision { border-left: 0; border-top: 1px solid var(--line); }
+        }
+
+        @media (max-width: 780px) {
+            .app-header { position: static; align-items: flex-start; padding: 10px 12px; }
+            .header-actions .btn span { display: none; }
+            .workspace { display: block; }
+            .intake-panel { border-right: 0; border-bottom: 1px solid var(--line); }
+            .main-panel { padding: 14px 12px 36px; }
+            .workflow-bar { grid-template-columns: 1fr; }
+            .workflow-step { border-right: 0; border-bottom: 1px solid var(--line); }
+            .workflow-step:last-child { border-bottom: 0; }
+            .map-grid, .scenario-grid, .agent-strip { grid-template-columns: 1fr; }
+            .trace-layout { grid-template-columns: 1fr; }
+            .handoff-item { grid-template-columns: 1fr; }
+            .tabbar {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0;
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                overflow: hidden;
+            }
+            .tab {
+                width: 100%;
+                min-width: 0;
+                justify-content: flex-start;
+                padding: 8px;
+                border-right: 1px solid var(--line);
+                border-bottom: 1px solid var(--line);
+                font-size: 12px;
+            }
+            .tab:nth-child(2n) { border-right: 0; }
+            .tab:nth-last-child(-n + 2) { border-bottom-color: transparent; }
+            .tab.active { border-bottom-color: var(--green); }
+        }
+    </style>
+</head>
+<body data-study-mode="{{ 'true' if study_mode else 'false' }}">
+    <header class="app-header">
+        <div class="brand-wrap">
+            <div class="brand-mark"><i data-lucide="route" size="19"></i></div>
+            <div>
+                <h1 class="brand-title">SafeBARS</h1>
+                <p class="brand-subtitle">Encounter stress-testing workspace{% if study_mode %} · Study mode{% endif %}</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-quiet" id="sampleButton" title="Load sample protocol">
+                <i data-lucide="file-input" size="16"></i><span>Load sample</span>
+            </button>
+            <button class="btn btn-quiet" id="exportButton" title="Export decision record" disabled>
+                <i data-lucide="download" size="16"></i><span>Export</span>
+            </button>
+            <a class="btn btn-quiet" href="/safebars/v1" title="Open the preserved v1 rehearsal interface">
+                <i data-lucide="history" size="16"></i><span>V1</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <aside class="intake-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2 class="section-heading">Protocol materials</h2>
+                    <p class="section-kicker">Session <span id="sessionLabel">not started</span></p>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="projectTitle">Project title</label>
+                <input id="projectTitle" type="text" value="Sensitive fieldwork plan">
+            </div>
+            <div class="field">
+                <label for="projectContext">Context</label>
+                <textarea id="projectContext" class="textarea-short" placeholder="Research goal, setting, and planned method"></textarea>
+            </div>
+            <div class="field">
+                <label for="targetPeople">People and relationships</label>
+                <textarea id="targetPeople" class="textarea-short" placeholder="Participants, helpers, partners, gatekeepers, services"></textarea>
+            </div>
+
+            <div class="artifact-group" id="artifactGroup">
+                <details class="artifact" open>
+                    <summary><span>Recruitment message</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
+                    <div class="artifact-body"><textarea id="artifactRecruitment" placeholder="Invitation, eligibility, contact, compensation"></textarea></div>
+                </details>
+                <details class="artifact">
+                    <summary><span>Consent language</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
+                    <div class="artifact-body"><textarea id="artifactConsent" placeholder="Consent, recording, privacy, withdrawal"></textarea></div>
+                </details>
+                <details class="artifact">
+                    <summary><span>Interview questions</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
+                    <div class="artifact-body"><textarea id="artifactInterview" placeholder="One question per line"></textarea></div>
+                </details>
+                <details class="artifact">
+                    <summary><span>Workshop or activity plan</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
+                    <div class="artifact-body"><textarea id="artifactActivity" placeholder="Activities, duration, materials, transitions"></textarea></div>
+                </details>
+                <details class="artifact">
+                    <summary><span>Safety procedure</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
+                    <div class="artifact-body"><textarea id="artifactSafety" placeholder="Pause, distress, support, escalation, responsibility"></textarea></div>
+                </details>
+                <details class="artifact">
+                    <summary><span>Follow-up and data use</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
+                    <div class="artifact-body"><textarea id="artifactFollowUp" placeholder="Debrief, follow-up, storage, reporting, deletion"></textarea></div>
+                </details>
+            </div>
+
+            <div class="switch-row">
+                <span id="llmLabel">Bounded LLM critic</span>
+                <label class="switch" title="Use the configured provider for up to two additional passage-grounded issues">
+                    <input id="useLlm" type="checkbox">
+                    <span></span>
+                </label>
+            </div>
+            <button class="btn btn-primary full" id="buildMapButton">
+                <i data-lucide="network" size="17"></i>Build encounter map
+            </button>
+            <div class="boundary-note">
+                <i data-lucide="shield-alert" size="16"></i>
+                <span>Planning hypotheses only. No participant evidence, community representation, compliance verdict, or ethics approval.</span>
+            </div>
+        </aside>
+
+        <main class="main-panel">
+            <div class="workflow-bar">
+                <div class="workflow-step active" id="workflowMap">
+                    <div class="workflow-index">1</div>
+                    <div><div class="workflow-label">Map the encounter</div><div class="workflow-state">Awaiting materials</div></div>
+                </div>
+                <div class="workflow-step" id="workflowTrace">
+                    <div class="workflow-index">2</div>
+                    <div><div class="workflow-label">Trace breakdowns</div><div class="workflow-state">Not run</div></div>
+                </div>
+                <div class="workflow-step" id="workflowDecide">
+                    <div class="workflow-index">3</div>
+                    <div><div class="workflow-label">Decide and hand off</div><div class="workflow-state">No issues</div></div>
+                </div>
+            </div>
+
+            <div class="agent-strip" id="agentStrip">
+                <div class="agent-item"><div class="agent-name"><span>Encounter Orchestrator</span><span class="status-dot"></span></div><div class="agent-detail">Waiting for protocol materials.</div></div>
+                <div class="agent-item"><div class="agent-name"><span>Breakdown Scenario Agent</span><span class="status-dot"></span></div><div class="agent-detail">No scenario queue.</div></div>
+                <div class="agent-item"><div class="agent-name"><span>Relationship and Power Agent</span><span class="status-dot"></span></div><div class="agent-detail">No relationship check.</div></div>
+                <div class="agent-item"><div class="agent-name"><span>Boundary and Handoff Agent</span><span class="status-dot"></span></div><div class="agent-detail">No boundary review.</div></div>
+            </div>
+
+            <nav class="tabbar" aria-label="Workspace views">
+                <button class="tab active" data-tab="map"><i data-lucide="map" size="15"></i>Encounter map <span class="count" id="mapCount">0</span></button>
+                <button class="tab" data-tab="traces"><i data-lucide="git-branch" size="15"></i>Breakdown traces <span class="count" id="traceCount">0</span></button>
+                <button class="tab" data-tab="issues"><i data-lucide="list-checks" size="15"></i>Issue ledger <span class="count" id="issueCount">0</span></button>
+                <button class="tab" data-tab="handoffs"><i data-lucide="send" size="15"></i>Handoffs <span class="count" id="handoffCount">0</span></button>
+            </nav>
+
+            <section class="tabview active" id="tab-map">
+                <div class="empty-state" id="mapEmpty">
+                    <div>
+                        <i data-lucide="waypoints" size="34"></i>
+                        <div class="empty-title">No encounter map yet</div>
+                        <div class="empty-copy">Add protocol materials or load the sample, then build the map.</div>
+                    </div>
+                </div>
+                <div id="mapContent" hidden>
+                    <div class="panel-heading">
+                        <div><h2 class="section-heading">Encounter stages</h2><p class="section-kicker">Edit scope and responsibility before running scenarios.</p></div>
+                        <button class="btn btn-quiet" id="saveMapButton"><i data-lucide="save" size="15"></i>Save scope</button>
+                    </div>
+                    <div class="map-grid" id="mapGrid"></div>
+                    <div class="scenario-section">
+                        <div class="panel-heading">
+                            <div><h2 class="section-heading">Scenario queue</h2><p class="section-kicker">Bounded test conditions, not predictions.</p></div>
+                        </div>
+                        <div class="scenario-grid" id="scenarioGrid"></div>
+                        <div class="scenario-actions">
+                            <button class="btn btn-teal" id="runAuditButton"><i data-lucide="play" size="16"></i>Run selected traces</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="tabview" id="tab-traces">
+                <div class="empty-state" id="traceEmpty"><div><i data-lucide="git-branch" size="34"></i><div class="empty-title">No traces yet</div><div class="empty-copy">Select scenarios in the encounter map and run the audit.</div></div></div>
+                <div class="trace-layout" id="traceContent" hidden>
+                    <div class="trace-list" id="traceList"></div>
+                    <div class="trace-detail" id="traceDetail"></div>
+                </div>
+            </section>
+
+            <section class="tabview" id="tab-issues">
+                <div class="empty-state" id="issueEmpty"><div><i data-lucide="list-checks" size="34"></i><div class="empty-title">No issues to decide</div><div class="empty-copy">Issues appear only when a trace reaches an unsupported or ambiguous protocol transition.</div></div></div>
+                <div id="issueContent" hidden>
+                    <div class="filterbar">
+                        <select id="severityFilter" aria-label="Filter by severity"><option value="all">All severities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+                        <select id="decisionFilter" aria-label="Filter by decision"><option value="all">All decisions</option><option value="pending">Pending</option><option value="accept">Accepted</option><option value="edit">Edited</option><option value="reject">Rejected</option><option value="defer">Deferred</option></select>
+                    </div>
+                    <div class="issue-list" id="issueList"></div>
+                </div>
+            </section>
+
+            <section class="tabview" id="tab-handoffs">
+                <div class="empty-state" id="handoffEmpty"><div><i data-lucide="send" size="34"></i><div class="empty-title">No real-person handoffs</div><div class="empty-copy">Unresolved situated questions will be assigned to a real stakeholder or reviewer.</div></div></div>
+                <div class="handoff-list" id="handoffList" hidden></div>
+            </section>
+        </main>
+    </div>
+
+    <div class="toast" id="toast"><i data-lucide="info" size="17"></i><div class="toast-copy" id="toastCopy"></div></div>
+    <div class="loading-overlay" id="loadingOverlay"><div class="loading-box"><i class="spinner" data-lucide="loader-circle" size="26"></i><div class="empty-title" id="loadingTitle">Working</div><div class="empty-copy" id="loadingCopy">SafeBARS is updating the shared audit state.</div></div></div>
+
+    <script>
+        const state = {
+            options: null,
+            session: null,
+            selectedTraceId: null,
+        };
+
+        const artifactInputs = {
+            recruitment: "artifactRecruitment",
+            consent: "artifactConsent",
+            interview: "artifactInterview",
+            activity: "artifactActivity",
+            safety: "artifactSafety",
+            follow_up: "artifactFollowUp",
+        };
+
+        const $ = (id) => document.getElementById(id);
+        const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+
+        async function api(url, options = {}) {
+            const response = await fetch(url, {
+                headers: {"Content-Type": "application/json", ...(options.headers || {})},
+                ...options,
+            });
+            const text = await response.text();
+            let payload;
+            try { payload = JSON.parse(text); }
+            catch { throw new Error(`API returned ${response.status} instead of JSON. ${text.slice(0, 140)}`); }
+            if (!response.ok || payload.success === false) throw new Error(payload.error || `Request failed with ${response.status}`);
+            return payload;
+        }
+
+        function setLoading(show, title = "Working", copy = "SafeBARS is updating the shared audit state.") {
+            $("loadingTitle").textContent = title;
+            $("loadingCopy").textContent = copy;
+            $("loadingOverlay").classList.toggle("show", show);
+        }
+
+        let toastTimer;
+        function toast(message, isError = false) {
+            clearTimeout(toastTimer);
+            $("toastCopy").textContent = message;
+            $("toast").classList.toggle("error", isError);
+            $("toast").classList.add("show");
+            toastTimer = setTimeout(() => $("toast").classList.remove("show"), 5000);
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll(".tab").forEach(button => button.classList.toggle("active", button.dataset.tab === name));
+            document.querySelectorAll(".tabview").forEach(view => view.classList.toggle("active", view.id === `tab-${name}`));
+        }
+
+        function collectPayload() {
+            const artifacts = {};
+            Object.entries(artifactInputs).forEach(([key, id]) => artifacts[key] = $(id).value.trim());
+            return {
+                project: {
+                    title: $("projectTitle").value.trim(),
+                    context: $("projectContext").value.trim(),
+                    target_people: $("targetPeople").value.trim(),
+                },
+                artifacts,
+                selected_scenarios: selectedScenarioIds(),
+                use_llm: $("useLlm").checked,
+            };
+        }
+
+        function selectedScenarioIds() {
+            return [...document.querySelectorAll("input[name='scenario']:checked")].map(input => input.value);
+        }
+
+        function loadSample() {
+            const sample = state.options.sample_project;
+            $("projectTitle").value = sample.project.title;
+            $("projectContext").value = sample.project.context;
+            $("targetPeople").value = sample.project.target_people;
+            Object.entries(artifactInputs).forEach(([key, id]) => $(id).value = sample.artifacts[key] || "");
+            document.querySelectorAll("details.artifact").forEach((details, index) => details.open = index < 3);
+            toast("Sample protocol loaded.");
+        }
+
+        async function buildMap() {
+            setLoading(true, "Building encounter map", "The Orchestrator is indexing passages and mapping stages.");
+            try {
+                const result = await api("/api/safebars/v2/sessions", {method: "POST", body: JSON.stringify(collectPayload())});
+                state.session = result.session;
+                state.selectedTraceId = null;
+                renderAll();
+                switchTab("map");
+                toast("Encounter map created. Confirm scope before running traces.");
+            } catch (error) { toast(error.message, true); }
+            finally { setLoading(false); }
+        }
+
+        function mapPayload() {
+            return state.session.encounter_map.map(stage => ({
+                ...stage,
+                included: $(`stage-${stage.id}-included`).checked,
+                notes: $(`stage-${stage.id}-notes`).value.trim(),
+            }));
+        }
+
+        async function saveMap(silent = false) {
+            if (!state.session) return;
+            try {
+                const result = await api(`/api/safebars/v2/sessions/${state.session.id}/map`, {method: "PATCH", body: JSON.stringify({stages: mapPayload()})});
+                state.session = result.session;
+                if (!silent) toast("Encounter scope saved.");
+            } catch (error) { toast(error.message, true); throw error; }
+        }
+
+        async function runAudit() {
+            const scenarioIds = selectedScenarioIds();
+            if (!scenarioIds.length) return toast("Select at least one scenario.", true);
+            setLoading(true, "Tracing breakdown scenarios", "Agents are following protocol paths, checking boundaries, and preparing handoffs.");
+            try {
+                await saveMap(true);
+                const result = await api(`/api/safebars/v2/sessions/${state.session.id}/audit`, {method: "POST", body: JSON.stringify({scenario_ids: scenarioIds})});
+                state.session = result.session;
+                state.selectedTraceId = state.session.traces[0]?.id || null;
+                renderAll();
+                switchTab("traces");
+                toast(`Audit completed with ${state.session.issues.length} contestable issue(s).`);
+            } catch (error) { toast(error.message, true); }
+            finally { setLoading(false); }
+        }
+
+        async function decide(issueId, decision) {
+            const rationale = $(`rationale-${issueId}`).value.trim();
+            const revisedText = $(`revision-${issueId}`).value.trim();
+            try {
+                const result = await api(`/api/safebars/v2/sessions/${state.session.id}/issues/${issueId}/decision`, {
+                    method: "POST",
+                    body: JSON.stringify({decision, rationale, revised_text: revisedText}),
+                });
+                state.session = result.session;
+                renderCounts();
+                renderIssues();
+                renderHandoffs();
+                renderWorkflow();
+                toast(`Decision saved: ${decision}.`);
+            } catch (error) { toast(error.message, true); }
+        }
+
+        function passage(id) { return state.session?.passages.find(item => item.id === id); }
+        function sourceChips(ids = []) { return ids.length ? `<div class="source-row">${ids.map(id => `<span class="source-chip">${escapeHtml(id)}</span>`).join("")}</div>` : ""; }
+        function sourceQuotes(ids = []) {
+            return ids.map(id => passage(id)).filter(Boolean).map(item => `<div class="passage-quote"><strong>${escapeHtml(item.id)}</strong> · ${escapeHtml(item.artifact_label)}<br>${escapeHtml(item.text)}</div>`).join("");
+        }
+
+        function renderAll() {
+            renderCounts();
+            renderWorkflow();
+            renderAgents();
+            renderMap();
+            renderTraces();
+            renderIssues();
+            renderHandoffs();
+            $("exportButton").disabled = !state.session;
+            $("sessionLabel").textContent = state.session ? state.session.id.replace("encounter_", "") : "not started";
+            lucide.createIcons();
+        }
+
+        function renderCounts() {
+            $("mapCount").textContent = state.session?.encounter_map?.length || 0;
+            $("traceCount").textContent = state.session?.traces?.length || 0;
+            $("issueCount").textContent = state.session?.issues?.length || 0;
+            $("handoffCount").textContent = state.session?.handoffs?.length || 0;
+        }
+
+        function renderWorkflow() {
+            const mapped = !!state.session;
+            const audited = state.session?.status === "audited";
+            const decisions = state.session?.issues?.filter(issue => issue.decision !== "pending").length || 0;
+            const total = state.session?.issues?.length || 0;
+            $("workflowMap").className = `workflow-step ${mapped ? "complete" : "active"}`;
+            $("workflowTrace").className = `workflow-step ${audited ? "complete" : (mapped ? "active" : "")}`;
+            $("workflowDecide").className = `workflow-step ${audited ? "active" : ""}`;
+            $("workflowMap").querySelector(".workflow-state").textContent = mapped ? `${state.session.passages.length} passages indexed` : "Awaiting materials";
+            $("workflowTrace").querySelector(".workflow-state").textContent = audited ? `${state.session.traces.length} traces completed` : "Not run";
+            $("workflowDecide").querySelector(".workflow-state").textContent = total ? `${decisions} of ${total} decided` : "No issues";
+        }
+
+        function renderAgents() {
+            if (!state.session?.agent_activity?.length) return;
+            const latestByAgent = {};
+            state.session.agent_activity.forEach(item => latestByAgent[item.agent] = item);
+            const ordered = ["Encounter Orchestrator", "Breakdown Scenario Agent", "Relationship and Power Agent", "Boundary and Handoff Agent"];
+            $("agentStrip").innerHTML = ordered.map(agent => {
+                const item = latestByAgent[agent] || {status: "", detail: "Waiting."};
+                return `<div class="agent-item"><div class="agent-name"><span>${escapeHtml(agent)}</span><span class="status-dot ${escapeHtml(item.status)}"></span></div><div class="agent-detail">${escapeHtml(item.detail)}</div></div>`;
+            }).join("");
+        }
+
+        function renderMap() {
+            const stages = state.session?.encounter_map || [];
+            $("mapEmpty").hidden = stages.length > 0;
+            $("mapContent").hidden = stages.length === 0;
+            if (!stages.length) return;
+            $("mapGrid").innerHTML = stages.map((stage, index) => `<div class="stage-card ${stage.included ? "" : "disabled"}" id="stage-card-${escapeHtml(stage.id)}">
+                <div class="stage-top"><span class="stage-number">${String(index + 1).padStart(2, "0")}</span><label class="switch" title="Include stage in audit"><input id="stage-${escapeHtml(stage.id)}-included" type="checkbox" ${stage.included ? "checked" : ""}><span></span></label></div>
+                <div class="stage-name">${escapeHtml(stage.name)}</div>
+                <div class="coverage ${escapeHtml(stage.coverage)}">${escapeHtml(stage.coverage)}</div>
+                <div class="stage-sources">${stage.source_passage_ids.length ? sourceChips(stage.source_passage_ids) : "No source passage located"}</div>
+                <input class="stage-note" id="stage-${escapeHtml(stage.id)}-notes" type="text" value="${escapeHtml(stage.notes || "")}" placeholder="Responsibility or local note">
+            </div>`).join("");
+            document.querySelectorAll("[id$='-included']").forEach(input => input.addEventListener("change", event => event.target.closest(".stage-card").classList.toggle("disabled", !event.target.checked)));
+        }
+
+        function renderScenarioOptions() {
+            const selected = new Set(state.session?.selected_scenarios?.length ? state.session.selected_scenarios : state.options.scenarios.map(item => item.id));
+            $("scenarioGrid").innerHTML = state.options.scenarios.map(item => `<label class="scenario-option">
+                <input type="checkbox" name="scenario" value="${escapeHtml(item.id)}" ${selected.has(item.id) ? "checked" : ""}>
+                <div class="scenario-title">${escapeHtml(item.title)}</div>
+                <div class="scenario-trigger">${escapeHtml(item.trigger)}</div>
+            </label>`).join("");
+        }
+
+        function renderTraces() {
+            const traces = state.session?.traces || [];
+            $("traceEmpty").hidden = traces.length > 0;
+            $("traceContent").hidden = traces.length === 0;
+            if (!traces.length) return;
+            if (!state.selectedTraceId || !traces.some(trace => trace.id === state.selectedTraceId)) state.selectedTraceId = traces[0].id;
+            $("traceList").innerHTML = traces.map(trace => `<button class="trace-button ${trace.id === state.selectedTraceId ? "active" : ""}" data-trace-id="${escapeHtml(trace.id)}">
+                <span class="trace-status ${escapeHtml(trace.status)}">${escapeHtml(trace.status.replace("_", " "))}</span>
+                <div class="trace-button-title">${escapeHtml(trace.title)}</div>
+            </button>`).join("");
+            document.querySelectorAll("[data-trace-id]").forEach(button => button.addEventListener("click", () => { state.selectedTraceId = button.dataset.traceId; renderTraces(); lucide.createIcons(); }));
+            const trace = traces.find(item => item.id === state.selectedTraceId);
+            $("traceDetail").innerHTML = `<div class="inline" style="justify-content:space-between;gap:12px"><h3>${escapeHtml(trace.title)}</h3><span class="trace-status ${escapeHtml(trace.status)}">${escapeHtml(trace.status.replace("_", " "))}</span></div>
+                <div class="trace-limitation">${escapeHtml(trace.uncertainty)}</div>
+                <div class="trace-steps">${trace.steps.map(step => `<div class="trace-step ${escapeHtml(step.state)}"><div class="step-marker">${step.order}</div><div><div class="step-label">${escapeHtml(step.label)}</div><div class="step-text">${escapeHtml(step.text)}</div>${sourceChips(step.source_passage_ids)}</div></div>`).join("")}</div>
+                <div class="gap-banner">${escapeHtml(trace.first_gap)}</div>`;
+        }
+
+        function filteredIssues() {
+            const severity = $("severityFilter").value;
+            const decision = $("decisionFilter").value;
+            return (state.session?.issues || []).filter(issue => (severity === "all" || issue.severity === severity) && (decision === "all" || issue.decision === decision));
+        }
+
+        function renderIssues() {
+            const allIssues = state.session?.issues || [];
+            $("issueEmpty").hidden = allIssues.length > 0;
+            $("issueContent").hidden = allIssues.length === 0;
+            if (!allIssues.length) return;
+            const issues = filteredIssues();
+            $("issueList").innerHTML = issues.length ? issues.map(issue => `<article class="issue-card">
+                <header class="issue-header"><div><h3 class="issue-title">${escapeHtml(issue.title)}</h3><div class="issue-meta"><span class="severity ${escapeHtml(issue.severity)}">${escapeHtml(issue.severity)}</span><span>${escapeHtml(issue.agent)}</span><span>${escapeHtml(issue.category.replaceAll("_", " "))}</span></div></div><span class="decision-badge ${escapeHtml(issue.decision)}">${escapeHtml(issue.decision)}</span></header>
+                <div class="issue-body"><div class="issue-analysis"><div class="subhead">Observation</div><p class="issue-copy">${escapeHtml(issue.observation)}</p><div class="subhead">Source material</div>${sourceQuotes(issue.source_passage_ids) || `<div class="passage-quote">No exact passage. This issue is based on an absent protocol transition.</div>`}<div class="subhead" style="margin-top:12px">Proposed change</div><div class="suggestion">${escapeHtml(issue.suggestion)}</div><div class="uncertainty"><strong>Boundary:</strong> ${escapeHtml(issue.uncertainty)}</div></div>
+                <div class="issue-decision"><div class="field"><label for="revision-${escapeHtml(issue.id)}">Revision text</label><textarea id="revision-${escapeHtml(issue.id)}" placeholder="Edit the affected wording or procedure">${escapeHtml(issue.revised_text || "")}</textarea></div><div class="field"><label for="rationale-${escapeHtml(issue.id)}">Decision rationale</label><textarea class="textarea-short" id="rationale-${escapeHtml(issue.id)}" placeholder="Why this decision fits the real project">${escapeHtml(issue.decision_rationale || "")}</textarea></div><div class="button-row"><button class="btn decision-btn ${issue.decision === "accept" ? "selected" : ""}" data-issue="${escapeHtml(issue.id)}" data-decision="accept"><i data-lucide="check" size="14"></i>Accept</button><button class="btn decision-btn ${issue.decision === "edit" ? "selected" : ""}" data-issue="${escapeHtml(issue.id)}" data-decision="edit"><i data-lucide="pencil" size="14"></i>Edit</button><button class="btn decision-btn ${issue.decision === "reject" ? "selected" : ""}" data-issue="${escapeHtml(issue.id)}" data-decision="reject"><i data-lucide="x" size="14"></i>Reject</button><button class="btn decision-btn ${issue.decision === "defer" ? "selected" : ""}" data-issue="${escapeHtml(issue.id)}" data-decision="defer"><i data-lucide="send" size="14"></i>Defer</button></div></div></div>
+            </article>`).join("") : `<div class="empty-state"><div><div class="empty-title">No issues match these filters</div></div></div>`;
+            document.querySelectorAll("[data-decision]").forEach(button => button.addEventListener("click", () => decide(button.dataset.issue, button.dataset.decision)));
+            lucide.createIcons();
+        }
+
+        function renderHandoffs() {
+            const handoffs = state.session?.handoffs || [];
+            $("handoffEmpty").hidden = handoffs.length > 0;
+            $("handoffList").hidden = handoffs.length === 0;
+            if (!handoffs.length) return;
+            $("handoffList").innerHTML = handoffs.map(item => `<div class="handoff-item"><div><div class="handoff-question">${escapeHtml(item.question)}</div><div class="handoff-reason">${escapeHtml(item.why_ai_cannot_resolve)}</div></div><div><div class="subhead">Real-world owner</div><div class="handoff-owner">${escapeHtml(item.owner)}</div><div class="handoff-method">${escapeHtml(item.suggested_method)}<br>${escapeHtml(item.deadline_stage)}</div></div></div>`).join("");
+        }
+
+        function exportSession() {
+            if (state.session) window.location.href = `/api/safebars/v2/sessions/${state.session.id}/export`;
+        }
+
+        async function initialize() {
+            try {
+                state.options = await api("/api/safebars/v2/options");
+                const provider = state.options.active_provider;
+                $("useLlm").disabled = !state.options.llm_configured;
+                $("useLlm").checked = !!state.options.llm_configured;
+                $("llmLabel").textContent = provider ? `Bounded LLM critic · ${provider.label}` : "Bounded LLM critic · unavailable";
+                renderScenarioOptions();
+            } catch (error) { toast(error.message, true); }
+            lucide.createIcons();
+        }
+
+        document.querySelectorAll(".tab").forEach(button => button.addEventListener("click", () => switchTab(button.dataset.tab)));
+        $("sampleButton").addEventListener("click", loadSample);
+        $("exportButton").addEventListener("click", exportSession);
+        $("buildMapButton").addEventListener("click", buildMap);
+        $("saveMapButton").addEventListener("click", () => saveMap(false));
+        $("runAuditButton").addEventListener("click", runAudit);
+        $("severityFilter").addEventListener("change", renderIssues);
+        $("decisionFilter").addEventListener("change", renderIssues);
+        initialize();
+    </script>
+</body>
+</html>
