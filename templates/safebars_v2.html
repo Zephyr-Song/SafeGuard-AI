@@ -572,7 +572,6 @@
         .handoff-question { font-weight: 700; }
         .handoff-reason { margin-top: 5px; color: var(--muted); font-size: 11px; }
         .handoff-owner { color: var(--teal); font-weight: 700; }
-        .handoff-method { margin-top: 5px; color: var(--muted); font-size: 11px; }
 
         .toast {
             position: fixed;
@@ -1169,7 +1168,7 @@
             $("handoffEmpty").hidden = handoffs.length > 0;
             $("handoffList").hidden = handoffs.length === 0;
             if (!handoffs.length) return;
-            $("handoffList").innerHTML = handoffs.map(item => `<div class="handoff-item"><div><div class="handoff-question">${escapeHtml(item.question)}</div><div class="handoff-reason">${escapeHtml(item.why_ai_cannot_resolve)}</div></div><div><div class="subhead">Real-world owner</div><div class="handoff-owner">${escapeHtml(item.owner)}</div><div class="handoff-method">${escapeHtml(item.suggested_method)}<br>${escapeHtml(item.deadline_stage)}</div></div></div>`).join("");
+            $("handoffList").innerHTML = handoffs.map(item => `<div class="handoff-item"><div><div class="handoff-question">${escapeHtml(item.question)}</div><div class="handoff-reason">${escapeHtml(item.why_ai_cannot_resolve)}</div></div><div><div class="subhead">Real-world owner</div><div class="handoff-owner">${escapeHtml(item.owner)}</div></div></div>`).join("");
         }
 
         function exportSession() {
