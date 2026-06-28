@@ -679,7 +679,7 @@ class EncounterEngine:
                 "content": (
                     "Find at most two concrete relational or procedural gaps not already obvious from a generic checklist. "
                     "Each gap must cite existing passage IDs. Return a JSON array with keys: title, category, severity "
-                    "(high/medium/low), source_passage_ids, observation, suggestion, uncertainty, handoff_owner. "
+                    "(high/medium/low), source_passage_ids, observation, suggestion, handoff_owner. "
                     "If no passage-grounded gap is justified, return [].\n\n"
                     + "\n".join(passage_lines)
                 ),
@@ -709,11 +709,14 @@ class EncounterEngine:
             observation = str(item.get("observation", "")).strip()
             if not observation:
                 continue
+            title = str(item.get("title", "Additional passage-grounded gap"))[:120]
+            category = str(item.get("category", "additional_gap"))[:60]
+            handoff_owner = str(item.get("handoff_owner", "relevant real stakeholder"))[:120]
             issues.append(
                 {
                     "id": f"issue_llm_{index + 1}_{uuid.uuid4().hex[:5]}",
-                    "title": str(item.get("title", "Additional passage-grounded gap"))[:120],
-                    "category": str(item.get("category", "additional_gap"))[:60],
+                    "title": title,
+                    "category": category,
                     "severity": item.get("severity") if item.get("severity") in {"high", "medium", "low"} else "medium",
                     "agent": "Bounded LLM Critic",
                     "source_passage_ids": source_ids[:4],
@@ -721,9 +724,9 @@ class EncounterEngine:
                     "observation": observation[:700],
                     "evidence_type": "LLM inference grounded to submitted passages",
                     "suggestion": str(item.get("suggestion", "Review and clarify the cited passages."))[:700],
-                    "uncertainty": str(item.get("uncertainty", "Verify this inference with a real stakeholder."))[:500],
+                    "uncertainty": self._llm_boundary_explanation(title, category, handoff_owner),
                     "requires_handoff": True,
-                    "handoff_owner": str(item.get("handoff_owner", "relevant real stakeholder"))[:120],
+                    "handoff_owner": handoff_owner,
                     "decision": "pending",
                     "decision_rationale": "",
                     "revised_text": "",
@@ -733,6 +736,31 @@ class EncounterEngine:
                 }
             )
         return issues, f"Added {len(issues)} passage-grounded LLM issue(s) after boundary checks."
+
+    def _llm_boundary_explanation(self, title: str, category: str, owner: str) -> str:
+        topic = f"{title} {category}".lower()
+        if any(term in topic for term in ["psycholog", "mental", "distress", "emotional"]):
+            return (
+                "This review can check whether the cited materials define a response when distress or "
+                f"psychological support needs arise. It cannot determine what support is appropriate or "
+                f"available in this setting; confirm that with {owner}."
+            )
+        if any(term in topic for term in ["data", "privacy", "security", "confidential", "record"]):
+            return (
+                "This review can check whether the cited materials specify access, storage, retention, and "
+                f"deletion. It cannot determine whether those measures satisfy institutional or legal "
+                f"requirements; confirm that with {owner}."
+            )
+        if any(term in topic for term in ["consent", "autonomy", "withdraw"]):
+            return (
+                "This review can check whether consent and withdrawal choices are written into the cited "
+                f"materials. It cannot determine how those choices should work in the local relationship or "
+                f"institutional context; confirm that with {owner}."
+            )
+        return (
+            f"This review can flag that '{title}' is not clearly addressed in the cited materials. "
+            f"It cannot determine the appropriate response in this study context; confirm that with {owner}."
+        )
 
     def _deduplicate_issues(self, issues: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         seen = set()

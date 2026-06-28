@@ -83,6 +83,24 @@ class EncounterEngineTest(unittest.TestCase):
         self.assertIn("safeguarding advisor", saved_issue["decision_rationale"])
         self.assertEqual(decided["event_log"][-1]["event_type"], "issue_decision")
 
+    def test_llm_handoff_boundaries_are_contextual_and_not_severity_labels(self):
+        psychological = self.engine._llm_boundary_explanation(
+            "Lack of psychological support protocol",
+            "psychological_safety",
+            "research psychologist or mental health professional",
+        )
+        data_protection = self.engine._llm_boundary_explanation(
+            "Insufficient data protection measures",
+            "data_protection",
+            "data protection officer or IT security specialist",
+        )
+
+        self.assertIn("psychological support", psychological)
+        self.assertIn("access, storage, retention, and deletion", data_protection)
+        self.assertNotEqual(psychological, data_protection)
+        self.assertNotIn(psychological.strip().lower(), {"high", "medium", "low"})
+        self.assertNotIn(data_protection.strip().lower(), {"high", "medium", "low"})
+
 
 if __name__ == "__main__":
     unittest.main()
