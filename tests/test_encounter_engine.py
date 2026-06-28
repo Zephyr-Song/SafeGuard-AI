@@ -42,6 +42,11 @@ class EncounterEngineTest(unittest.TestCase):
         self.assertGreaterEqual(len(audited["issues"]), 1)
         self.assertGreaterEqual(len(audited["handoffs"]), 1)
         self.assertEqual(audited["status"], "audited")
+        self.assertEqual(
+            len({trace["uncertainty"] for trace in audited["traces"]}),
+            3,
+            "Each scenario should explain its own epistemic boundary.",
+        )
 
         source_ids = {
             passage_id

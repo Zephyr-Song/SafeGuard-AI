@@ -95,6 +95,7 @@ SCENARIO_LIBRARY = [
         "severity": "high",
         "suggestion": "Add a private consent check and state that declining will not affect services, relationships, or compensation.",
         "handoff_owner": "community partner or participant advisory group",
+        "boundary_explanation": "This trace can check whether private, voluntary consent is written into the protocol. It cannot tell how a particular helper relationship affects someone's choice; review that question with a community partner or participant advisor.",
     },
     {
         "id": "unexpected_disclosure",
@@ -107,6 +108,7 @@ SCENARIO_LIBRARY = [
         "severity": "high",
         "suggestion": "Specify how unrequested sensitive information will be handled, who can access it, and whether it can be redacted or deleted.",
         "handoff_owner": "data protection or ethics reviewer",
+        "boundary_explanation": "This trace can check the protocol's rules for unexpected disclosures. It cannot anticipate what people may disclose or decide which handling is acceptable in context; confirm that with a data protection or ethics reviewer.",
     },
     {
         "id": "participant_distress",
@@ -119,6 +121,7 @@ SCENARIO_LIBRARY = [
         "severity": "high",
         "suggestion": "Add an observable pause rule, a neutral check-in script, and a named support or referral action with a responsible team member.",
         "handoff_owner": "safeguarding or domain advisor",
+        "boundary_explanation": "This trace can check whether pause and support actions are defined. It cannot identify how a particular person will show distress or what support will be appropriate; confirm that with a safeguarding or domain advisor.",
     },
     {
         "id": "partial_withdrawal",
@@ -131,6 +134,7 @@ SCENARIO_LIBRARY = [
         "severity": "high",
         "suggestion": "Explain partial participation and what happens to notes, recordings, and quotations after withdrawal at different stages.",
         "handoff_owner": "ethics reviewer or data governance lead",
+        "boundary_explanation": "This trace can check whether withdrawal and data handling are specified. It cannot decide what participants will expect or what retention rules permit; confirm that with an ethics reviewer or data governance lead.",
     },
     {
         "id": "institutional_distrust",
@@ -143,6 +147,7 @@ SCENARIO_LIBRARY = [
         "severity": "medium",
         "suggestion": "Offer more than one support pathway and ask a real partner which options are locally credible and accessible.",
         "handoff_owner": "local service partner or community organization",
+        "boundary_explanation": "This trace can check whether the protocol offers alternative support pathways. It cannot know which services are trusted or accessible locally; ask a local service partner or community organization.",
     },
     {
         "id": "access_burden",
@@ -155,6 +160,7 @@ SCENARIO_LIBRARY = [
         "severity": "medium",
         "suggestion": "Add lower-burden alternatives, breaks, accessible formats, and a way to continue without completing every activity.",
         "handoff_owner": "accessibility advisor or target-user representative",
+        "boundary_explanation": "This trace can check whether breaks and accessible alternatives are written into the plan. It cannot know which burdens people will actually face; review the plan with an accessibility advisor or target-user representative.",
     },
 ]
 
@@ -555,7 +561,7 @@ class EncounterEngine:
             "status": status,
             "steps": steps,
             "first_gap": gap,
-            "uncertainty": "This trace tests protocol coverage; it does not predict how a real person will respond.",
+            "uncertainty": scenario["boundary_explanation"],
         }
 
     def _issue_from_trace(
