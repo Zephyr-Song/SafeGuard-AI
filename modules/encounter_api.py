@@ -7,6 +7,7 @@ import json
 from flask import Blueprint, Response, jsonify, request
 
 from .encounter_engine import EncounterEngine
+from .encounter_report import build_docx_report, build_pdf_report
 
 
 encounter_api = Blueprint("encounter_v2", __name__, url_prefix="/api/safebars/v2")
@@ -90,3 +91,36 @@ def export_session(session_id: str):
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
+
+@encounter_api.get("/sessions/<session_id>/export.docx")
+def export_session_docx(session_id: str):
+    encounter_session = encounter_engine.get_session(session_id)
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    try:
+        report = build_docx_report(encounter_session)
+    except Exception as exc:
+        return jsonify({"success": False, "error": f"Could not create Word report: {str(exc)[:400]}"}), 500
+    filename = f"safebars_{session_id}.docx"
+    return Response(
+        report,
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@encounter_api.get("/sessions/<session_id>/export.pdf")
+def export_session_pdf(session_id: str):
+    encounter_session = encounter_engine.get_session(session_id)
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    try:
+        report = build_pdf_report(encounter_session)
+    except Exception as exc:
+        return jsonify({"success": False, "error": f"Could not create PDF report: {str(exc)[:400]}"}), 500
+    filename = f"safebars_{session_id}.pdf"
+    return Response(
+        report,
+        mimetype="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

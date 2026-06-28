@@ -197,6 +197,39 @@
         .btn-icon { width: 36px; padding: 0; }
         .full { width: 100%; }
 
+        .export-control { position: relative; }
+        .export-menu {
+            position: absolute;
+            top: calc(100% + 5px);
+            right: 0;
+            z-index: 40;
+            width: 190px;
+            overflow: hidden;
+            border: 1px solid var(--line-strong);
+            border-radius: 6px;
+            background: var(--surface);
+            box-shadow: 0 8px 22px rgba(23, 32, 42, 0.14);
+            padding: 4px;
+        }
+        .export-option {
+            width: 100%;
+            min-height: 38px;
+            display: grid;
+            grid-template-columns: 22px minmax(0, 1fr);
+            align-items: center;
+            gap: 8px;
+            border: 0;
+            border-radius: 4px;
+            padding: 7px 9px;
+            background: transparent;
+            color: var(--ink);
+            text-align: left;
+        }
+        .export-option:hover { background: var(--surface-subtle); }
+        .export-option-copy { min-width: 0; }
+        .export-option-title { display: block; font-size: 12px; font-weight: 700; }
+        .export-option-note { display: block; margin-top: 1px; color: var(--muted); font-size: 10px; }
+
         .switch-row {
             display: flex;
             align-items: center;
@@ -669,9 +702,22 @@
             <button class="btn btn-quiet" id="sampleButton" title="Load sample protocol">
                 <i data-lucide="file-input" size="16"></i><span>Load sample</span>
             </button>
-            <button class="btn btn-quiet" id="exportButton" title="Export decision record" disabled>
-                <i data-lucide="download" size="16"></i><span>Export</span>
-            </button>
+            <div class="export-control">
+                <button class="btn btn-quiet" id="exportButton" title="Export session" aria-haspopup="menu" aria-expanded="false" disabled>
+                    <i data-lucide="download" size="16"></i><span>Export</span><i data-lucide="chevron-down" size="14"></i>
+                </button>
+                <div class="export-menu" id="exportMenu" role="menu" hidden>
+                    <button class="export-option" type="button" data-export-format="json" role="menuitem">
+                        <i data-lucide="braces" size="17"></i><span class="export-option-copy"><span class="export-option-title">JSON data</span><span class="export-option-note">Complete structured session</span></span>
+                    </button>
+                    <button class="export-option" type="button" data-export-format="docx" role="menuitem">
+                        <i data-lucide="file-text" size="17"></i><span class="export-option-copy"><span class="export-option-title">Word report</span><span class="export-option-note">Editable human-readable report</span></span>
+                    </button>
+                    <button class="export-option" type="button" data-export-format="pdf" role="menuitem">
+                        <i data-lucide="file-type" size="17"></i><span class="export-option-copy"><span class="export-option-title">PDF report</span><span class="export-option-note">Share-ready fixed layout</span></span>
+                    </button>
+                </div>
+            </div>
             <a class="btn btn-quiet" href="/safebars/v1" title="Open the preserved v1 rehearsal interface">
                 <i data-lucide="history" size="16"></i><span>V1</span>
             </a>
@@ -1171,8 +1217,19 @@
             $("handoffList").innerHTML = handoffs.map(item => `<div class="handoff-item"><div><div class="handoff-question">${escapeHtml(item.question)}</div><div class="handoff-reason">${escapeHtml(item.why_ai_cannot_resolve)}</div></div><div><div class="subhead">Real-world owner</div><div class="handoff-owner">${escapeHtml(item.owner)}</div></div></div>`).join("");
         }
 
-        function exportSession() {
-            if (state.session) window.location.href = `/api/safebars/v2/sessions/${state.session.id}/export`;
+        function toggleExportMenu(forceOpen) {
+            if (!state.session) return;
+            const menu = $("exportMenu");
+            const shouldOpen = forceOpen ?? menu.hidden;
+            menu.hidden = !shouldOpen;
+            $("exportButton").setAttribute("aria-expanded", String(shouldOpen));
+        }
+
+        function exportSession(format) {
+            if (!state.session) return;
+            const suffix = format === "json" ? "/export" : `/export.${format}`;
+            toggleExportMenu(false);
+            window.location.href = `/api/safebars/v2/sessions/${state.session.id}${suffix}`;
         }
 
         async function initialize() {
@@ -1189,7 +1246,17 @@
 
         document.querySelectorAll(".tab").forEach(button => button.addEventListener("click", () => switchTab(button.dataset.tab)));
         $("sampleButton").addEventListener("click", loadSample);
-        $("exportButton").addEventListener("click", exportSession);
+        $("exportButton").addEventListener("click", event => {
+            event.stopPropagation();
+            toggleExportMenu();
+        });
+        document.querySelectorAll("[data-export-format]").forEach(button => button.addEventListener("click", () => exportSession(button.dataset.exportFormat)));
+        document.addEventListener("click", event => {
+            if (!event.target.closest(".export-control")) toggleExportMenu(false);
+        });
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape") toggleExportMenu(false);
+        });
         $("buildMapButton").addEventListener("click", buildMap);
         $("saveMapButton").addEventListener("click", () => saveMap(false));
         $("runAuditButton").addEventListener("click", runAudit);

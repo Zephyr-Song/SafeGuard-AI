@@ -12,7 +12,7 @@ SafeBARS is no longer centered on free-form conversation with a synthetic stakeh
 4. inspect passage-grounded traces and first unsupported transitions;
 5. accept, edit, reject, or defer each issue;
 6. assign unresolved questions to real stakeholders through epistemic handoffs;
-7. export the complete session, decisions, handoffs, and event history.
+7. export the complete session, decisions, handoffs, and event history as JSON, an editable Word report, or a share-ready PDF report.
 
 The original rehearsal-chat interface remains available at `/safebars/v1` for comparison, but it is no longer the main research contribution.
 
@@ -49,6 +49,7 @@ Unresolved questions name why AI cannot settle them, who should be consulted, a 
 - Passage IDs preserve provenance from critique to submitted material.
 - An append-only event table records mapping, audit, and decision actions.
 - JSON export supports later qualitative coding of traces, decisions, rationales, and handoffs.
+- Word and PDF exports provide a human-readable report for supervisors, expert reviewers, and research partners while preserving the interpretation boundary.
 - The v1 route allows a future within-participant comparison between conversational rehearsal and encounter stress-testing.
 
 The automatic rebuild is a usability recovery mechanism, not durable research-data storage. Before collecting study data, deploy a persistent database or disk and verify backup, access, retention, and deletion procedures.
@@ -104,3 +105,4 @@ SafeBARS can support claims about protocol inspection, researcher decision-makin
 - An injected missing-session failure was recovered automatically before the pending decision was saved.
 - Desktop and mobile browser checks show no horizontal overflow.
 - The browser console showed no JavaScript errors during the tested workflow.
+- Word and PDF endpoints were downloaded through the browser; PDF pages passed visual inspection and the Word package passed page, style, table-geometry, header, footer, and content checks.
