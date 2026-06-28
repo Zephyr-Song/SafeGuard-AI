@@ -956,21 +956,99 @@
             finally { setLoading(false); }
         }
 
+        function sessionMissing(error) {
+            return /session not found/i.test(error?.message || "");
+        }
+
+        function currentMapSnapshot(session) {
+            return (session?.encounter_map || []).map(stage => {
+                const includedInput = $(`stage-${stage.id}-included`);
+                const notesInput = $(`stage-${stage.id}-notes`);
+                return {
+                    ...stage,
+                    included: includedInput ? includedInput.checked : stage.included,
+                    notes: notesInput ? notesInput.value.trim() : (stage.notes || ""),
+                };
+            });
+        }
+
+        async function rebuildExpiredSession(previous) {
+            const scenarioIds = previous.selected_scenarios?.length
+                ? previous.selected_scenarios
+                : previous.traces.map(trace => trace.scenario_id);
+            const created = await api("/api/safebars/v2/sessions", {
+                method: "POST",
+                body: JSON.stringify({
+                    project: previous.project,
+                    artifacts: previous.artifacts,
+                    selected_scenarios: scenarioIds,
+                    use_llm: previous.use_llm,
+                }),
+            });
+            state.session = created.session;
+
+            const stages = currentMapSnapshot(previous);
+            if (stages.length) {
+                const mapped = await api(`/api/safebars/v2/sessions/${state.session.id}/map`, {
+                    method: "PATCH",
+                    body: JSON.stringify({stages}),
+                });
+                state.session = mapped.session;
+            }
+
+            if (previous.traces?.length && scenarioIds.length) {
+                const audited = await api(`/api/safebars/v2/sessions/${state.session.id}/audit`, {
+                    method: "POST",
+                    body: JSON.stringify({scenario_ids: scenarioIds}),
+                });
+                state.session = audited.session;
+            }
+        }
+
+        async function submitDecision(issueId, decision, rationale, revisedText) {
+            return api(`/api/safebars/v2/sessions/${state.session.id}/issues/${issueId}/decision`, {
+                method: "POST",
+                body: JSON.stringify({decision, rationale, revised_text: revisedText}),
+            });
+        }
+
         async function decide(issueId, decision) {
             const rationale = $(`rationale-${issueId}`).value.trim();
             const revisedText = $(`revision-${issueId}`).value.trim();
+            const previous = state.session;
+            const previousIssue = previous.issues.find(issue => issue.id === issueId);
             try {
-                const result = await api(`/api/safebars/v2/sessions/${state.session.id}/issues/${issueId}/decision`, {
-                    method: "POST",
-                    body: JSON.stringify({decision, rationale, revised_text: revisedText}),
-                });
+                const result = await submitDecision(issueId, decision, rationale, revisedText);
                 state.session = result.session;
                 renderCounts();
                 renderIssues();
                 renderHandoffs();
                 renderWorkflow();
                 toast(`Decision saved: ${decision}.`);
-            } catch (error) { toast(error.message, true); }
+            } catch (error) {
+                if (!sessionMissing(error) || !previousIssue) {
+                    toast(error.message, true);
+                    return;
+                }
+                setLoading(true, "Restoring expired session", "The service restarted. SafeBARS is rebuilding this audit before saving your decision.");
+                try {
+                    await rebuildExpiredSession(previous);
+                    const restoredIssue = state.session.issues.find(issue => issue.id === issueId)
+                        || state.session.issues.find(issue => issue.title === previousIssue.title && issue.category === previousIssue.category);
+                    if (!restoredIssue) throw new Error("The session was restored, but this issue could not be reproduced. Please review the new issue ledger.");
+                    const result = await submitDecision(restoredIssue.id, decision, rationale, revisedText);
+                    state.session = result.session;
+                    renderAll();
+                    switchTab("issues");
+                    toast(`Session restored and decision saved: ${decision}.`);
+                } catch (restoreError) {
+                    renderAll();
+                    switchTab("issues");
+                    toast(restoreError.message, true);
+                } finally {
+                    setLoading(false);
+                }
+            }
         }
 
         function passage(id) { return state.session?.passages.find(item => item.id === id); }

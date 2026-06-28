@@ -44,11 +44,14 @@ Unresolved questions name why AI cannot settle them, who should be consulted, a 
 
 ## Technical Properties Relevant to the Study
 
-- SQLite persistence prevents sessions from disappearing when the web process restarts.
+- SQLite persistence preserves sessions while the current service filesystem remains available.
+- If a free Render deployment replaces its ephemeral filesystem, the decision interface can rebuild the visible audit from the current browser state and then save the pending decision under a new session ID.
 - Passage IDs preserve provenance from critique to submitted material.
 - An append-only event table records mapping, audit, and decision actions.
 - JSON export supports later qualitative coding of traces, decisions, rationales, and handoffs.
 - The v1 route allows a future within-participant comparison between conversational rehearsal and encounter stress-testing.
+
+The automatic rebuild is a usability recovery mechanism, not durable research-data storage. Before collecting study data, deploy a persistent database or disk and verify backup, access, retention, and deletion procedures.
 
 ## Demonstration Script
 
@@ -98,6 +101,6 @@ SafeBARS can support claims about protocol inspection, researcher decision-makin
 - Five automated engine and API tests pass.
 - A browser workflow produced 9 encounter stages, 6 breakdown traces, and 3 contestable sample issues.
 - Accept/edit/reject/defer decisions persist.
+- An injected missing-session failure was recovered automatically before the pending decision was saved.
 - Desktop and mobile browser checks show no horizontal overflow.
 - The browser console showed no JavaScript errors during the tested workflow.
-
