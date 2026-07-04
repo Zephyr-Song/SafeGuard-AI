@@ -158,7 +158,7 @@ def _add_page_number(paragraph) -> None:
     run._r.append(fld_char_end)
 
 
-def _add_label_paragraph(doc: Document, label: str, value: Any, *, after: float = 4) -> None:
+def _add_label_paragraph(doc: Document, label: str, value: Any, *, after: float = 4) -> Any:
     paragraph = doc.add_paragraph()
     paragraph.paragraph_format.space_before = Pt(0)
     paragraph.paragraph_format.space_after = Pt(after)
@@ -166,6 +166,7 @@ def _add_label_paragraph(doc: Document, label: str, value: Any, *, after: float 
     _set_run(label_run, bold=True, color=DARK_BLUE)
     value_run = paragraph.add_run(_text(value))
     _set_run(value_run)
+    return paragraph
 
 
 def _configure_docx(
@@ -252,7 +253,7 @@ def build_docx_report(session: Dict[str, Any]) -> bytes:
     title = document.add_paragraph()
     title.paragraph_format.space_before = Pt(12)
     title.paragraph_format.space_after = Pt(4)
-    title_run = title.add_run("SAFEBARS REPORT")
+    title_run = title.add_run("SAFEBARS FULL AUDIT REPORT")
     _set_run(title_run, size=23, color=INK, bold=True)
 
     subtitle = document.add_paragraph()
@@ -260,8 +261,6 @@ def build_docx_report(session: Dict[str, Any]) -> bytes:
     subtitle_run = subtitle.add_run(_text(session.get("project", {}).get("title"), "Untitled fieldwork plan"))
     _set_run(subtitle_run, size=14, color=MUTED)
 
-    metadata = document.add_table(rows=4, cols=2)
-    _set_table_geometry(metadata, [1800, 7560])
     metadata_rows = [
         ("Session", session.get("id")),
         ("Generated", _date(session.get("updated_at", ""))),
@@ -272,13 +271,12 @@ def build_docx_report(session: Dict[str, Any]) -> bytes:
             f"{len(session.get('issues', []))} issues | {len(session.get('handoffs', []))} handoffs",
         ),
     ]
-    for row, (label, value) in zip(metadata.rows, metadata_rows):
-        label_p = row.cells[0].paragraphs[0]
-        label_p.paragraph_format.space_after = Pt(0)
-        _set_run(label_p.add_run(label), bold=True, color=DARK_BLUE)
-        value_p = row.cells[1].paragraphs[0]
-        value_p.paragraph_format.space_after = Pt(0)
-        _set_run(value_p.add_run(_text(value)))
+    for label, value in metadata_rows:
+        metadata_line = document.add_paragraph()
+        metadata_line.paragraph_format.space_after = Pt(4)
+        metadata_line.paragraph_format.tab_stops.add_tab_stop(Inches(1.5))
+        _set_run(metadata_line.add_run(label), bold=True, color=DARK_BLUE)
+        _set_run(metadata_line.add_run(f"\t{_text(value)}"))
     document.add_paragraph().paragraph_format.space_after = Pt(2)
     _add_docx_boundary_callout(document)
 
@@ -375,10 +373,14 @@ def build_docx_report(session: Dict[str, Any]) -> bytes:
         _add_label_paragraph(document, "Recommended real-world owner", handoff.get("recommended_role_label", handoff.get("owner")))
         _add_label_paragraph(document, "Expert advice", handoff.get("expert_advice", ""))
         _add_label_paragraph(document, "Expert rationale", handoff.get("expert_rationale", ""), after=8)
-        _add_label_paragraph(document, "Researcher response", handoff.get("researcher_response", ""))
+        researcher_response = _add_label_paragraph(
+            document,
+            "Researcher response",
+            handoff.get("researcher_response", ""),
+        )
+        researcher_response.paragraph_format.keep_with_next = True
         _add_label_paragraph(document, "Linked protocol revision", handoff.get("researcher_revised_text", ""), after=8)
 
-    document.add_page_break()
     document.add_heading("Appendix A. Framework-grounded ethics map", level=1)
     assessment = session.get("framework_assessment", {})
     _add_label_paragraph(document, "Pathway", assessment.get("pathway"))
@@ -533,7 +535,7 @@ def build_pdf_report(session: Dict[str, Any]) -> bytes:
     )
     story: List[Any] = []
     story.append(Spacer(1, 0.12 * inch))
-    story.append(Paragraph("SAFEBARS REPORT", styles["title"]))
+    story.append(Paragraph("SAFEBARS FULL AUDIT REPORT", styles["title"]))
     story.append(_p(session.get("project", {}).get("title", "Untitled fieldwork plan"), styles["subtitle"]))
     story.append(_pdf_meta_table(session, styles))
     story.append(Spacer(1, 0.14 * inch))
