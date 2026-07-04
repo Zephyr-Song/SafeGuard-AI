@@ -3,20 +3,56 @@
 from __future__ import annotations
 
 import json
+from functools import wraps
 
-from flask import Blueprint, Response, jsonify, request
+from flask import Blueprint, Response, current_app, g, jsonify, request
 
 from .encounter_engine import EncounterEngine
-from .encounter_report import build_docx_report, build_pdf_report
+from .encounter_report import (
+    build_docx_report,
+    build_ethics_application_docx,
+    build_expert_summary_docx,
+    build_pdf_report,
+)
 
 
 encounter_api = Blueprint("encounter_v2", __name__, url_prefix="/api/safebars/v2")
 encounter_engine = EncounterEngine()
 
 
+def require_session_role(*allowed_roles: str):
+    """Protect one session with a role-specific capability token."""
+    def decorator(view):
+        @wraps(view)
+        def wrapped(*args, **kwargs):
+            if not current_app.config.get("SAFEBARS_REQUIRE_ROLE_AUTH", True):
+                return view(*args, **kwargs)
+            session_id = kwargs.get("session_id")
+            token = request.headers.get("X-SafeBARS-Access", "").strip()
+            if not token:
+                return jsonify({
+                    "success": False,
+                    "error": "A SafeBARS session access token is required.",
+                }), 401
+            role = encounter_engine.access_role(session_id, token)
+            if role not in allowed_roles:
+                return jsonify({
+                    "success": False,
+                    "error": "This access token does not permit that action.",
+                }), 403
+            g.safebars_role = role
+            return view(*args, **kwargs)
+        return wrapped
+    return decorator
+
+
 @encounter_api.get("/options")
 def options():
-    return jsonify({"success": True, **encounter_engine.public_options()})
+    return jsonify({
+        "success": True,
+        **encounter_engine.public_options(),
+        "role_auth_required": current_app.config.get("SAFEBARS_REQUIRE_ROLE_AUTH", True),
+    })
 
 
 @encounter_api.post("/sessions")
@@ -27,10 +63,12 @@ def create_session():
         return jsonify({"success": False, "error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"success": False, "error": f"Could not create encounter session: {str(exc)[:400]}"}), 500
-    return jsonify({"success": True, "session": encounter_session}), 201
+    access = encounter_engine.issue_access(encounter_session["id"])
+    return jsonify({"success": True, "session": encounter_session, "access": access}), 201
 
 
 @encounter_api.get("/sessions/<session_id>")
+@require_session_role("researcher")
 def get_session(session_id: str):
     encounter_session = encounter_engine.get_session(session_id)
     if not encounter_session:
@@ -38,20 +76,67 @@ def get_session(session_id: str):
     return jsonify({"success": True, "session": encounter_session})
 
 
+@encounter_api.post("/sessions/<session_id>/versions")
+@require_session_role("researcher")
+def create_protocol_version(session_id: str):
+    encounter_session = encounter_engine.create_protocol_version(session_id)
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    access = encounter_engine.issue_access(encounter_session["id"])
+    return jsonify({"success": True, "session": encounter_session, "access": access}), 201
+
+
 @encounter_api.patch("/sessions/<session_id>/map")
+@require_session_role("researcher")
 def update_map(session_id: str):
     payload = request.get_json(silent=True) or {}
-    encounter_session = encounter_engine.update_map(session_id, payload.get("stages", []))
+    try:
+        encounter_session = encounter_engine.update_map(session_id, payload.get("stages", []))
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({"success": True, "session": encounter_session})
+
+
+@encounter_api.patch("/sessions/<session_id>/plan")
+@require_session_role("researcher")
+def update_audit_plan(session_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        encounter_session = encounter_engine.update_audit_plan(
+            session_id, payload.get("scenario_ids")
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({"success": True, "session": encounter_session})
+
+
+@encounter_api.patch("/sessions/<session_id>/application-profile")
+@require_session_role("researcher")
+def update_application_profile(session_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        encounter_session = encounter_engine.update_application_profile(
+            session_id, payload.get("profile_id", "")
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
     if not encounter_session:
         return jsonify({"success": False, "error": "Session not found"}), 404
     return jsonify({"success": True, "session": encounter_session})
 
 
 @encounter_api.post("/sessions/<session_id>/audit")
+@require_session_role("researcher")
 def run_audit(session_id: str):
     payload = request.get_json(silent=True) or {}
     try:
         encounter_session = encounter_engine.run_audit(session_id, payload.get("scenario_ids"))
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"success": False, "error": f"Audit failed: {str(exc)[:400]}"}), 500
     if not encounter_session:
@@ -59,7 +144,24 @@ def run_audit(session_id: str):
     return jsonify({"success": True, "session": encounter_session})
 
 
+@encounter_api.post("/sessions/<session_id>/tasks/<task_id>/rerun")
+@require_session_role("researcher")
+def rerun_task(session_id: str, task_id: str):
+    try:
+        encounter_session = encounter_engine.rerun_task(session_id, task_id)
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except KeyError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 404
+    except Exception as exc:
+        return jsonify({"success": False, "error": f"Task rerun failed: {str(exc)[:400]}"}), 500
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({"success": True, "session": encounter_session})
+
+
 @encounter_api.post("/sessions/<session_id>/issues/<issue_id>/decision")
+@require_session_role("researcher")
 def record_decision(session_id: str, issue_id: str):
     payload = request.get_json(silent=True) or {}
     try:
@@ -79,7 +181,71 @@ def record_decision(session_id: str, issue_id: str):
     return jsonify({"success": True, "session": encounter_session})
 
 
+@encounter_api.get("/sessions/<session_id>/expert-summary")
+@require_session_role("expert")
+def expert_summary(session_id: str):
+    summary = encounter_engine.expert_summary(session_id)
+    if not summary:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({"success": True, "summary": summary})
+
+
+@encounter_api.post("/sessions/<session_id>/handoffs/<handoff_id>/researcher-response")
+@require_session_role("researcher")
+def respond_to_handoff(session_id: str, handoff_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        encounter_session = encounter_engine.respond_to_handoff(
+            session_id=session_id,
+            handoff_id=handoff_id,
+            response=payload.get("response", ""),
+            revised_text=payload.get("revised_text", ""),
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except KeyError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 404
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({"success": True, "session": encounter_session})
+
+
+@encounter_api.post("/sessions/<session_id>/handoffs/<handoff_id>/review")
+@require_session_role("expert")
+def review_handoff(session_id: str, handoff_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        encounter_session = encounter_engine.review_handoff(
+            session_id=session_id,
+            handoff_id=handoff_id,
+            action=payload.get("action", "advise"),
+            reviewer_role=payload.get("reviewer_role", "ethics_board"),
+            reviewer_name=payload.get("reviewer_name", ""),
+            advice=payload.get("advice", ""),
+            rationale=payload.get("rationale", ""),
+            redirect_role=payload.get("redirect_role", ""),
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except KeyError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 404
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({"success": True, "session": encounter_session})
+
+
+@encounter_api.post("/sessions/<session_id>/access/rotate-expert")
+@require_session_role("researcher")
+def rotate_expert_access(session_id: str):
+    try:
+        token = encounter_engine.rotate_expert_access(session_id)
+    except KeyError:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({"success": True, "expert_token": token})
+
+
 @encounter_api.get("/sessions/<session_id>/export")
+@require_session_role("researcher")
 def export_session(session_id: str):
     encounter_session = encounter_engine.get_session(session_id)
     if not encounter_session:
@@ -93,6 +259,7 @@ def export_session(session_id: str):
 
 
 @encounter_api.get("/sessions/<session_id>/export.docx")
+@require_session_role("researcher")
 def export_session_docx(session_id: str):
     encounter_session = encounter_engine.get_session(session_id)
     if not encounter_session:
@@ -110,6 +277,7 @@ def export_session_docx(session_id: str):
 
 
 @encounter_api.get("/sessions/<session_id>/export.pdf")
+@require_session_role("researcher")
 def export_session_pdf(session_id: str):
     encounter_session = encounter_engine.get_session(session_id)
     if not encounter_session:
@@ -122,5 +290,41 @@ def export_session_pdf(session_id: str):
     return Response(
         report,
         mimetype="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@encounter_api.get("/sessions/<session_id>/export.application.docx")
+@require_session_role("researcher")
+def export_ethics_application_docx(session_id: str):
+    encounter_session = encounter_engine.get_session(session_id)
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    try:
+        report = build_ethics_application_docx(encounter_session)
+    except Exception as exc:
+        return jsonify({"success": False, "error": f"Could not create application draft: {str(exc)[:400]}"}), 500
+    filename = f"safebars_{session_id}_ethics_application_draft.docx"
+    return Response(
+        report,
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@encounter_api.get("/sessions/<session_id>/export.expert.docx")
+@require_session_role("expert")
+def export_expert_summary_docx(session_id: str):
+    encounter_session = encounter_engine.get_session(session_id)
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    try:
+        report = build_expert_summary_docx(encounter_session)
+    except Exception as exc:
+        return jsonify({"success": False, "error": f"Could not create expert summary: {str(exc)[:400]}"}), 500
+    filename = f"safebars_{session_id}_expert_review_summary.docx"
+    return Response(
+        report,
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

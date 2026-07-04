@@ -29,6 +29,8 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+from .ethics_application import build_application_readiness
+
 
 INK = "17202A"
 MUTED = "66727F"
@@ -166,7 +168,10 @@ def _add_label_paragraph(doc: Document, label: str, value: Any, *, after: float 
     _set_run(value_run)
 
 
-def _configure_docx(document: Document) -> None:
+def _configure_docx(
+    document: Document,
+    header_text: str = "SAFEBARS  /  ENCOUNTER STRESS-TEST REPORT",
+) -> None:
     section = document.sections[0]
     section.page_width = Inches(8.5)
     section.page_height = Inches(11)
@@ -205,19 +210,31 @@ def _configure_docx(document: Document) -> None:
         style.paragraph_format.keep_with_next = True
 
     header = section.header.paragraphs[0]
-    header.text = "SAFEBARS  /  ENCOUNTER STRESS-TEST REPORT"
+    header.text = header_text
     _set_run(header.runs[0], size=9, color=MUTED, bold=True)
     footer = section.footer.paragraphs[0]
     _add_page_number(footer)
 
 
 def _add_docx_boundary_callout(document: Document) -> None:
-    table = document.add_table(rows=1, cols=1)
-    _set_table_geometry(table, [9360])
-    cell = table.cell(0, 0)
-    _set_cell_shading(cell, AMBER_FILL)
-    paragraph = cell.paragraphs[0]
-    paragraph.paragraph_format.space_after = Pt(0)
+    paragraph = document.add_paragraph()
+    paragraph.paragraph_format.left_indent = Pt(8)
+    paragraph.paragraph_format.right_indent = Pt(8)
+    paragraph.paragraph_format.space_before = Pt(4)
+    paragraph.paragraph_format.space_after = Pt(8)
+    paragraph.paragraph_format.line_spacing = 1.10
+    p_pr = paragraph._p.get_or_add_pPr()
+    shading = OxmlElement("w:shd")
+    shading.set(qn("w:fill"), AMBER_FILL)
+    p_pr.append(shading)
+    borders = OxmlElement("w:pBdr")
+    left = OxmlElement("w:left")
+    left.set(qn("w:val"), "single")
+    left.set(qn("w:sz"), "18")
+    left.set(qn("w:space"), "6")
+    left.set(qn("w:color"), "D6B86A")
+    borders.append(left)
+    p_pr.append(borders)
     label = paragraph.add_run("Interpretation boundary. ")
     _set_run(label, bold=True, color="7A5A00")
     copy = paragraph.add_run(
@@ -336,17 +353,61 @@ def build_docx_report(session: Dict[str, Any]) -> bytes:
         _add_label_paragraph(document, "Researcher revision", issue.get("revised_text", ""))
         _add_label_paragraph(document, "Decision rationale", issue.get("decision_rationale", ""))
         _add_label_paragraph(document, "Boundary", issue.get("uncertainty"), after=8)
+        for position in issue.get("agent_positions", []):
+            _add_label_paragraph(
+                document,
+                f"Position - {position.get('agent', 'Agent')}",
+                position.get("position"),
+            )
+        _add_label_paragraph(document, "Resolution rule", issue.get("resolution_rule"), after=8)
 
     document.add_heading("5. Real-world handoffs", level=1)
     if not session.get("handoffs"):
         document.add_paragraph("No real-world handoffs were recorded.")
     for index, handoff in enumerate(session.get("handoffs", []), start=1):
         document.add_heading(f"5.{index} {handoff.get('question', 'Unresolved question')}", level=2)
+        _add_label_paragraph(
+            document,
+            "Priority / status",
+            f"{_text(handoff.get('priority')).upper()} | {_text(handoff.get('status')).upper()}",
+        )
         _add_label_paragraph(document, "Why AI cannot resolve this", handoff.get("why_ai_cannot_resolve"))
-        _add_label_paragraph(document, "Real-world owner", handoff.get("owner"), after=8)
+        _add_label_paragraph(document, "Recommended real-world owner", handoff.get("recommended_role_label", handoff.get("owner")))
+        _add_label_paragraph(document, "Expert advice", handoff.get("expert_advice", ""))
+        _add_label_paragraph(document, "Expert rationale", handoff.get("expert_rationale", ""), after=8)
+        _add_label_paragraph(document, "Researcher response", handoff.get("researcher_response", ""))
+        _add_label_paragraph(document, "Linked protocol revision", handoff.get("researcher_revised_text", ""), after=8)
 
     document.add_page_break()
-    document.add_heading("Appendix A. Submitted materials", level=1)
+    document.add_heading("Appendix A. Framework-grounded ethics map", level=1)
+    assessment = session.get("framework_assessment", {})
+    _add_label_paragraph(document, "Pathway", assessment.get("pathway"))
+    _add_label_paragraph(
+        document,
+        "Active frameworks",
+        ", ".join(item.get("name", "") for item in assessment.get("frameworks", [])),
+    )
+    for dimension in assessment.get("dimensions", []):
+        document.add_heading(f"{dimension.get('label', 'Framework dimension')} - {_text(dimension.get('coverage')).upper()}", level=2)
+        _add_label_paragraph(document, "Framework question", dimension.get("question"))
+        _add_label_paragraph(document, "Submitted evidence", ", ".join(dimension.get("source_passage_ids", [])), after=8)
+
+    document.add_heading("Appendix B. Inspectable audit plan", level=1)
+    for index, task in enumerate(session.get("audit_plan", []), start=1):
+        document.add_heading(f"B.{index} {task.get('title', 'Untitled task')}", level=2)
+        _add_label_paragraph(
+            document,
+            "Agent / state",
+            f"{_text(task.get('agent'))} | {_text(task.get('priority')).upper()} | {_text(task.get('status')).upper()} | attempt {task.get('attempts', 0)}",
+        )
+        _add_label_paragraph(document, "Routing reason", task.get("reason"))
+        _add_label_paragraph(document, "Inputs", ", ".join(task.get("input_passage_ids", [])))
+        _add_label_paragraph(document, "Tools", ", ".join(task.get("tools", [])))
+        _add_label_paragraph(document, "Dependencies", ", ".join(task.get("depends_on", [])))
+        _add_label_paragraph(document, "Stop condition", task.get("stop_condition"))
+        _add_label_paragraph(document, "Result", task.get("result_summary"), after=8)
+
+    document.add_heading("Appendix C. Submitted materials", level=1)
     artifact_labels = {
         "recruitment": "Recruitment message",
         "consent": "Consent language",
@@ -359,7 +420,7 @@ def build_docx_report(session: Dict[str, Any]) -> bytes:
         document.add_heading(label, level=2)
         document.add_paragraph(_text(session.get("artifacts", {}).get(key)))
 
-    document.add_heading("Appendix B. Audit event history", level=1)
+    document.add_heading("Appendix D. Audit event history", level=1)
     for event in session.get("event_log", []):
         _add_label_paragraph(
             document,
@@ -573,17 +634,62 @@ def build_pdf_report(session: Dict[str, Any]) -> bytes:
         story.append(_label_pdf("Researcher revision", issue.get("revised_text", ""), styles["body"]))
         story.append(_label_pdf("Decision rationale", issue.get("decision_rationale", ""), styles["body"]))
         story.append(_label_pdf("Boundary", issue.get("uncertainty"), styles["body"]))
+        for position in issue.get("agent_positions", []):
+            story.append(_label_pdf(
+                f"Position - {position.get('agent', 'Agent')}",
+                position.get("position"),
+                styles["body"],
+            ))
+        story.append(_label_pdf("Resolution rule", issue.get("resolution_rule"), styles["body"]))
 
     story.append(Paragraph("5. Real-world handoffs", styles["h1"]))
     if not session.get("handoffs"):
         story.append(_p("No real-world handoffs were recorded.", styles["body"]))
     for index, handoff in enumerate(session.get("handoffs", []), start=1):
         story.append(Paragraph(f"5.{index} {escape(_text(handoff.get('question')))}", styles["h2"]))
+        story.append(_label_pdf(
+            "Priority / status",
+            f"{_text(handoff.get('priority')).upper()} | {_text(handoff.get('status')).upper()}",
+            styles["body"],
+        ))
         story.append(_label_pdf("Why AI cannot resolve this", handoff.get("why_ai_cannot_resolve"), styles["body"]))
-        story.append(_label_pdf("Real-world owner", handoff.get("owner"), styles["body"]))
+        story.append(_label_pdf("Recommended real-world owner", handoff.get("recommended_role_label", handoff.get("owner")), styles["body"]))
+        story.append(_label_pdf("Expert advice", handoff.get("expert_advice", ""), styles["body"]))
+        story.append(_label_pdf("Expert rationale", handoff.get("expert_rationale", ""), styles["body"]))
 
     story.append(PageBreak())
-    story.append(Paragraph("Appendix A. Submitted materials", styles["h1"]))
+    story.append(Paragraph("Appendix A. Framework-grounded ethics map", styles["h1"]))
+    assessment = session.get("framework_assessment", {})
+    story.append(_label_pdf("Pathway", assessment.get("pathway"), styles["body"]))
+    story.append(_label_pdf(
+        "Active frameworks",
+        ", ".join(item.get("name", "") for item in assessment.get("frameworks", [])),
+        styles["body"],
+    ))
+    for dimension in assessment.get("dimensions", []):
+        story.append(Paragraph(
+            f"{escape(_text(dimension.get('label')))} - {escape(_text(dimension.get('coverage')).upper())}",
+            styles["h2"],
+        ))
+        story.append(_label_pdf("Framework question", dimension.get("question"), styles["body"]))
+        story.append(_label_pdf("Submitted evidence", ", ".join(dimension.get("source_passage_ids", [])), styles["body"]))
+
+    story.append(Paragraph("Appendix B. Inspectable audit plan", styles["h1"]))
+    for index, task in enumerate(session.get("audit_plan", []), start=1):
+        story.append(Paragraph(f"B.{index} {escape(_text(task.get('title')))}", styles["h2"]))
+        story.append(_label_pdf(
+            "Agent / state",
+            f"{_text(task.get('agent'))} | {_text(task.get('priority')).upper()} | {_text(task.get('status')).upper()} | attempt {task.get('attempts', 0)}",
+            styles["body"],
+        ))
+        story.append(_label_pdf("Routing reason", task.get("reason"), styles["body"]))
+        story.append(_label_pdf("Inputs", ", ".join(task.get("input_passage_ids", [])), styles["body"]))
+        story.append(_label_pdf("Tools", ", ".join(task.get("tools", [])), styles["body"]))
+        story.append(_label_pdf("Dependencies", ", ".join(task.get("depends_on", [])), styles["body"]))
+        story.append(_label_pdf("Stop condition", task.get("stop_condition"), styles["body"]))
+        story.append(_label_pdf("Result", task.get("result_summary"), styles["body"]))
+
+    story.append(Paragraph("Appendix C. Submitted materials", styles["h1"]))
     artifact_labels = {
         "recruitment": "Recruitment message",
         "consent": "Consent language",
@@ -596,7 +702,7 @@ def build_pdf_report(session: Dict[str, Any]) -> bytes:
         story.append(Paragraph(label, styles["h2"]))
         story.append(_p(session.get("artifacts", {}).get(key), styles["body"]))
 
-    story.append(Paragraph("Appendix B. Audit event history", styles["h1"]))
+    story.append(Paragraph("Appendix D. Audit event history", styles["h1"]))
     for event in session.get("event_log", []):
         story.append(_label_pdf(
             _date(event.get("created_at", "")),
@@ -605,4 +711,172 @@ def build_pdf_report(session: Dict[str, Any]) -> bytes:
         ))
 
     document.build(story, onFirstPage=_pdf_header_footer, onLaterPages=_pdf_header_footer)
+    return output.getvalue()
+
+
+def build_ethics_application_docx(session: Dict[str, Any]) -> bytes:
+    """Build a generic application draft, never an approval or compliance verdict."""
+    document = Document()
+    _configure_docx(document, "SAFEBARS  /  ETHICS APPLICATION DRAFT")
+    project = session.get("project", {})
+    artifacts = session.get("artifacts", {})
+    assessment = session.get("framework_assessment", {})
+    readiness = session.get("application_readiness") or build_application_readiness(session)
+
+    title = document.add_paragraph()
+    _set_run(title.add_run("ETHICS APPLICATION DRAFT"), size=22, color=INK, bold=True)
+    subtitle = document.add_paragraph()
+    _set_run(subtitle.add_run(_text(project.get("title"), "Untitled research project")), size=14, color=MUTED)
+    _add_docx_boundary_callout(document)
+    warning = document.add_paragraph()
+    _set_run(
+        warning.add_run(
+            "This generic draft must be transferred into the current form required by the relevant institution. "
+            "Generated or scaffolded text requires researcher verification and formal institutional review."
+        ),
+        color="7A5A00",
+        bold=True,
+    )
+
+    document.add_heading("Draft profile and completeness", level=1)
+    _add_label_paragraph(document, "Application profile", readiness.get("profile", {}).get("label"))
+    _add_label_paragraph(document, "Documented fields", f"{readiness.get('counts', {}).get('documented', 0)} of {len(readiness.get('fields', []))}")
+    _add_label_paragraph(document, "Unresolved handoffs", readiness.get("unresolved_handoff_count", 0))
+    for field in readiness.get("fields", []):
+        document.add_heading(
+            f"{field.get('label', 'Application field')} - {_text(field.get('status')).upper()}",
+            level=2,
+        )
+        _add_label_paragraph(
+            document,
+            "Evidence sources",
+            ", ".join(item.get("source", "") for item in field.get("evidence", [])),
+        )
+        if field.get("status") != "documented":
+            _add_label_paragraph(document, "Refinement needed", field.get("prompt"), after=8)
+
+    document.add_heading("1. Application overview", level=1)
+    _add_label_paragraph(document, "Project title", project.get("title"))
+    _add_label_paragraph(document, "Research context and purpose", project.get("context"))
+    _add_label_paragraph(document, "Participants and affected relationships", project.get("target_people"))
+    _add_label_paragraph(document, "Framework pathway", assessment.get("pathway"))
+    _add_label_paragraph(document, "Research builds, studies, or uses AI", "Yes" if project.get("uses_ai") else "No")
+
+    document.add_heading("2. Recruitment and participant selection", level=1)
+    document.add_paragraph(_text(artifacts.get("recruitment")))
+    _add_label_paragraph(document, "Belmont justice check", "Justify necessary eligibility boundaries, fair access, burdens, benefits, gatekeepers, and compensation.")
+
+    document.add_heading("3. Participant information, consent, and withdrawal", level=1)
+    document.add_paragraph(_text(artifacts.get("consent")))
+    _add_label_paragraph(document, "Belmont respect check", "Verify information, comprehension, voluntariness, recording choices, question skipping, and withdrawal at each data stage.")
+
+    document.add_heading("4. Study procedures and participant activities", level=1)
+    _add_label_paragraph(document, "Interview questions or prompts", artifacts.get("interview"))
+    _add_label_paragraph(document, "Workshop or activity plan", artifacts.get("activity"))
+
+    document.add_heading("5. Foreseeable risk, safeguarding, and support", level=1)
+    _add_label_paragraph(document, "Safety and escalation procedure", artifacts.get("safety"))
+    _add_label_paragraph(document, "Debrief and follow-up", artifacts.get("follow_up"))
+    _add_label_paragraph(document, "Belmont beneficence check", "Explain how harms are minimized, benefits justified, and responsible staff, escalation limits, and support routes confirmed.")
+
+    document.add_heading("6. Data management and confidentiality", level=1)
+    _add_label_paragraph(document, "Submitted data-use plan", artifacts.get("follow_up"))
+    _add_label_paragraph(document, "Required verification", "Specify data categories, collection, access, transfer, storage, security, retention, deletion, withdrawal effects, quotations, and reporting.")
+
+    if project.get("uses_ai") or assessment.get("uses_ai"):
+        document.add_heading("7. AI use and risk-management appendix", level=1)
+        _add_label_paragraph(document, "AI role described by researcher", project.get("context"))
+        for function in ("ai_govern", "ai_map", "ai_measure", "ai_manage"):
+            dimension = next((item for item in assessment.get("dimensions", []) if item.get("id") == function), None)
+            if dimension:
+                _add_label_paragraph(
+                    document,
+                    f"NIST AI RMF - {dimension.get('label')}",
+                    f"{_text(dimension.get('coverage')).upper()}: {dimension.get('question')} Evidence: {', '.join(dimension.get('source_passage_ids', [])) or 'none located'}",
+                )
+        next_section = 8
+    else:
+        next_section = 7
+
+    document.add_heading(f"{next_section}. Researcher decisions and revisions", level=1)
+    if not session.get("issues"):
+        document.add_paragraph("No encounter-audit issues have been generated yet.")
+    for issue in session.get("issues", []):
+        document.add_heading(issue.get("title", "Protocol issue"), level=2)
+        _add_label_paragraph(document, "Decision", issue.get("decision"))
+        _add_label_paragraph(document, "Researcher rationale", issue.get("decision_rationale"))
+        _add_label_paragraph(document, "Revised text", issue.get("revised_text"))
+
+    document.add_heading(f"{next_section + 1}. Outstanding expert and stakeholder review", level=1)
+    if not session.get("handoffs"):
+        document.add_paragraph("No handoffs have been generated yet.")
+    for handoff in session.get("handoffs", []):
+        document.add_heading(handoff.get("question", "Unresolved question"), level=2)
+        _add_label_paragraph(document, "Priority / status", f"{handoff.get('priority', 'standard')} / {handoff.get('status', 'open')}")
+        _add_label_paragraph(document, "Recommended reviewer", handoff.get("recommended_role_label", handoff.get("owner")))
+        _add_label_paragraph(document, "Why AI stopped", handoff.get("why_ai_cannot_resolve"))
+        _add_label_paragraph(document, "Expert advice", handoff.get("expert_advice"))
+        _add_label_paragraph(document, "Researcher response", handoff.get("researcher_response"))
+        _add_label_paragraph(document, "Linked protocol revision", handoff.get("researcher_revised_text"))
+
+    document.add_heading(f"{next_section + 2}. Submission readiness statement", level=1)
+    document.add_paragraph(
+        f"This draft is {readiness.get('completion_percent', 0)}% documented under the selected generic profile and "
+        f"contains {readiness.get('unresolved_handoff_count', 0)} unresolved handoff(s). The researcher must verify every section, "
+        "complete the institution-specific form, disclose AI assistance where required, and obtain formal approval before recruitment or data collection."
+    )
+
+    output = BytesIO()
+    document.save(output)
+    return output.getvalue()
+
+
+def build_expert_summary_docx(session: Dict[str, Any]) -> bytes:
+    """Build a concise expert-facing queue and advice record for one protocol."""
+    document = Document()
+    _configure_docx(document, "SAFEBARS  /  EXPERT REVIEW SUMMARY")
+    project = session.get("project", {})
+    issue_by_id = {item["id"]: item for item in session.get("issues", [])}
+    passages = _passage_lookup(session)
+
+    title = document.add_paragraph()
+    _set_run(title.add_run("SAFEBARS EXPERT REVIEW SUMMARY"), size=22, color=INK, bold=True)
+    subtitle = document.add_paragraph()
+    _set_run(subtitle.add_run(_text(project.get("title"), "Untitled research project")), size=14, color=MUTED)
+    _add_docx_boundary_callout(document)
+    _add_label_paragraph(document, "Project context", project.get("context"))
+    _add_label_paragraph(document, "Framework pathway", session.get("framework_assessment", {}).get("pathway"))
+
+    handoffs = sorted(
+        session.get("handoffs", []),
+        key=lambda item: ({"high": 0, "medium": 1, "standard": 2}.get(item.get("priority", "standard"), 3), item.get("status") == "resolved"),
+    )
+    document.add_heading("Prioritized handoff queue", level=1)
+    if not handoffs:
+        document.add_paragraph("No expert handoffs were generated for this session.")
+    for index, handoff in enumerate(handoffs, start=1):
+        issue = issue_by_id.get(handoff.get("issue_id"), {})
+        document.add_heading(f"{index}. {issue.get('title', handoff.get('question', 'Unresolved issue'))}", level=2)
+        _add_label_paragraph(document, "Priority / status", f"{handoff.get('priority', 'standard')} / {handoff.get('status', 'open')}")
+        _add_label_paragraph(document, "Recommended reviewer", handoff.get("recommended_role_label", handoff.get("owner")))
+        _add_label_paragraph(document, "Question", handoff.get("question"))
+        _add_label_paragraph(document, "Why AI stopped", handoff.get("why_ai_cannot_resolve"))
+        _add_label_paragraph(document, "Observation", issue.get("observation"))
+        for passage_id in issue.get("source_passage_ids", []):
+            passage = passages.get(passage_id)
+            if passage:
+                _add_label_paragraph(document, f"Source {passage_id}", passage.get("text"))
+        _add_label_paragraph(document, "Researcher decision", issue.get("decision"))
+        _add_label_paragraph(document, "Researcher rationale", issue.get("decision_rationale"))
+        _add_label_paragraph(document, "Expert advice", handoff.get("expert_advice"))
+        _add_label_paragraph(document, "Expert rationale", handoff.get("expert_rationale"), after=8)
+        _add_label_paragraph(document, "Researcher response", handoff.get("researcher_response"))
+        _add_label_paragraph(document, "Linked protocol revision", handoff.get("researcher_revised_text"), after=8)
+
+    document.add_heading("Review boundary", level=1)
+    document.add_paragraph(
+        "This summary records advice and unresolved questions. It is not an institutional approval decision and does not replace the institution's required review record."
+    )
+    output = BytesIO()
+    document.save(output)
     return output.getvalue()

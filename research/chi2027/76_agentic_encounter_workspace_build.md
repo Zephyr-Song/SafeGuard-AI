@@ -14,6 +14,8 @@ SafeBARS is no longer centered on free-form conversation with a synthetic stakeh
 6. assign unresolved questions to real stakeholders through epistemic handoffs;
 7. export the complete session, decisions, handoffs, and event history as JSON, an editable Word report, or a share-ready PDF report.
 
+The Orchestrator now also produces a visible, material-dependent audit plan before execution. Each task exposes its priority, routing reason, input passages, tools, dependencies, stop condition, status, attempts, and outputs.
+
 The original rehearsal-chat interface remains available at `/safebars/v1` for comparison, but it is no longer the main research contribution.
 
 ## Implemented Agent Roles
@@ -42,6 +44,14 @@ Each issue contains exact source material, a proposed change, and a boundary sta
 
 Unresolved questions name why AI cannot settle them, who should be consulted, a suggested method, and when the consultation should happen.
 
+### Inspectable audit plan
+
+The researcher can update the task plan after changing encounter scope or scenario selection. Scenario tasks are prioritized from actual passage coverage rather than presented as interchangeable agent personas. Missing context becomes a high-priority probe, a scoped-out stage creates a documented pause, and the final boundary task remains blocked until selected specialist tasks finish.
+
+### Structured contestation and reruns
+
+Issue cards preserve both the specialist agent's proposed protocol action and the Boundary and Handoff Agent's reason to limit or defer that action. No agent vote resolves the difference. Researchers can rerun one bounded specialist task, but the system refuses to overwrite an existing human decision silently.
+
 ## Technical Properties Relevant to the Study
 
 - SQLite persistence preserves sessions while the current service filesystem remains available.
@@ -59,11 +69,13 @@ The automatic rebuild is a usability recovery mechanism, not durable research-da
 1. Open `/safebars` and select **Load sample**.
 2. Select **Build encounter map** and point out that the object being modeled is the protocol, not a simulated person.
 3. Review the nine stages and change one stage note or scope toggle.
-4. Run the six scenario traces with the LLM toggle off to demonstrate the transparent baseline.
-5. Open one trace and identify the first unsupported transition.
-6. Open **Issue ledger**, inspect the cited passage, and defer one issue.
-7. Open **Handoffs** to show how uncertainty becomes a real consultation task.
-8. Export the session to show the decision and event record.
+4. Select scenarios and choose **Update task plan**. Inspect one routing reason, tool list, dependency, and stop condition.
+5. Run the scenario traces with the LLM toggle off to demonstrate the transparent baseline and material-dependent priority order.
+6. Open one trace and identify the first unsupported transition.
+7. Open **Issue ledger**, compare the two visible agent positions, inspect the cited passage, and defer one issue.
+8. Open **Handoffs** to show how uncertainty becomes a real consultation task.
+9. Rerun one undecided specialist task and show the updated attempt and result record.
+10. Export the session to show the decision, task, and event record.
 
 ## Immediate Research Tasks
 
@@ -99,7 +111,7 @@ SafeBARS can support claims about protocol inspection, researcher decision-makin
 
 ## Verification Completed
 
-- Five automated engine and API tests pass.
+- Ten automated engine and API tests pass, including framework routing, plan rescoping, bounded task reruns, expert handoff review, dual Word exports, and protection against silently overwriting human decisions.
 - A browser workflow produced 9 encounter stages, 6 breakdown traces, and 3 contestable sample issues.
 - Accept/edit/reject/defer decisions persist.
 - An injected missing-session failure was recovered automatically before the pending decision was saved.

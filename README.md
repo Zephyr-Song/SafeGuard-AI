@@ -1,69 +1,84 @@
-# SafeGuard AI - 安全教育与AI伦理学习平台
+# SafeBARS
 
-基于Fraud-R1改进的AI安全教育系统，专注于：
-1. **反欺诈教育** - 帮助用户识别和防范网络诈骗
-2. **AI伦理学习** - 理解AI决策的偏见与透明度
-3. **互动式学习** - 通过角色扮演和模拟提升安全意识
+SafeBARS is an agentic ethics-preparation workspace for sensitive human-facing research. It helps researchers scaffold protocol materials, stress-test pre-fieldwork encounters, expose unresolved value tensions, and hand questions that require authority or situated knowledge to real experts.
 
-## 核心创新点
+SafeBARS does **not** issue ethics approval, compliance decisions, or predictions about participant behaviour.
 
-### 1. 教育模式转换
-- 从"攻击测试"转变为"学习体验"
-- 引入渐进式学习路径
-- 实时反馈与解释系统
+## Current MVP
 
-### 2. 透明度仪表板
-- 展示AI决策过程
-- 偏见检测与可视化
-- 反事实推理展示
+The application supports three parties:
 
-### 3. 安全干预机制
-- 内容 distress 检测
-- 创伤知情安全提示
-- 学习者情绪状态监控
+- **Researcher:** completes guided intake, inspects framework coverage, runs bounded audits, decides on issues, responds to experts, and exports drafts.
+- **AI agents:** create a material-dependent task plan, trace breakdown scenarios, preserve provenance, stop at epistemic boundaries, and recommend a reviewer role.
+- **Ethics or domain expert:** reviews prioritized handoffs, requests clarification, redirects, advises, resolves, or reopens issues.
 
-## 项目结构
+Key features:
 
-```
-SafeGuard-AI/
-├── app.py                 # 主应用入口
-├── config.py              # 配置文件
-├── modules/
-│   ├── __init__.py
-│   ├── education_engine.py    # 教育内容生成引擎
-│   ├── scenario_simulator.py  # 场景模拟器
-│   ├── bias_detector.py       # 偏见检测器
-│   ├── transparency_dashboard.py  # 透明度仪表板
-│   ├── safety_guardian.py     # 安全守护模块
-│   └── learning_tracker.py    # 学习进度追踪
-├── data/
-│   ├── scenarios/         # 教育场景数据
-│   └── feedback/          # 学习反馈数据
-├── static/
-│   ├── css/
-│   ├── js/
-│   └── images/
-├── templates/
-│   └── index.html
-└── reports/               # 生成的报告
-```
+- guided conversational intake that populates structured protocol fields;
+- Belmont baseline with conditional Menlo and NIST AI RMF extensions;
+- Value Sensitive Design-informed trade-off exploration;
+- Ethics Dandelion evidence visualization;
+- inspectable agent plans, sources, tools, dependencies, and stopping rules;
+- researcher/expert capability tokens with separate API permissions;
+- rotatable expert invitations and browser-local expert caseload;
+- expert-advice-to-researcher-revision linkage;
+- immutable human review history through protocol versioning;
+- generic human-research and AI-enabled application profiles;
+- field-level draft completeness checks;
+- JSON, Word, PDF, application-draft, and expert-summary exports.
 
-## 安装与运行
+## Run locally
 
 ```bash
-# 安装依赖
 pip install -r requirements.txt
-
-# 运行应用
 python app.py
-
-# 访问 http://localhost:5000
 ```
 
-## 使用说明
+Open [http://127.0.0.1:5050/safebars](http://127.0.0.1:5050/safebars).
 
-1. **选择学习模式**：初学者/进阶/专家
-2. **选择场景类型**：诈骗服务/冒充/钓鱼/虚假招聘/网恋
-3. **开始互动学习**：与AI模拟的诈骗场景互动
-4. **查看透明度分析**：了解AI如何判断风险
-5. **获取学习报告**：查看学习进度和建议
+Important routes:
+
+- `/safebars` - researcher workspace;
+- `/safebars/expert` - browser-local expert caseload;
+- `/safebars/expert/<session_id>` - one invited expert review;
+- `/safebars/brief` - supervisor-facing concept brief;
+- `/safebars/v1` - preserved earlier rehearsal interface;
+- `/healthz` - deployment health check.
+
+## Configuration
+
+Copy `.env.example` to `.env` and set only the providers you intend to use. Local secret files are ignored by Git.
+
+Security-related settings:
+
+```dotenv
+SAFEBARS_REQUIRE_ROLE_AUTH=1
+ENABLE_DEMO_AUTH=0
+FLASK_SECRET_KEY=replace_with_a_long_random_value
+```
+
+`SAFEBARS_REQUIRE_ROLE_AUTH=1` protects each v2 session with separate researcher and expert capability tokens. Optional outer HTTP Basic Auth can be enabled for a closed demonstration with `ENABLE_DEMO_AUTH=1`, `SAFEBARS_DEMO_USER`, and `SAFEBARS_DEMO_PASSWORD`.
+
+## Validation
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+The automated suite covers the audit engine, ethics-framework routing, application profiles, report exports, role authorization, expert invitation rotation, revision linkage, and protocol versioning.
+
+## Deployment boundary
+
+`render.yaml` configures a single-worker Render demonstration. The free plan uses ephemeral local storage, so SQLite sessions and invitation tokens can disappear after a restart or redeploy. Use a persistent database and institution-managed identity before handling real or confidential ethics applications.
+
+See [DEPLOY_RENDER.md](DEPLOY_RENDER.md) for deployment steps and [research/chi2027/79_role_collaboration_and_application_adapter.md](research/chi2027/79_role_collaboration_and_application_adapter.md) for the current research and implementation boundary.
+
+## Framework sources
+
+- The Belmont Report: respect for persons, beneficence, and justice.
+- The Menlo Report Companion: ICT and data-research extension.
+- NIST AI Risk Management Framework 1.0: Govern, Map, Measure, and Manage.
+- Value Sensitive Design: stakeholder and value-tension investigation.
+- Ethics and Society Review: interdisciplinary expert review and iteration.
+
+Frameworks inform prompts and mappings; they do not turn SafeBARS into an approving authority.

@@ -31,6 +31,9 @@ from config import FRAUD_CATEGORIES, DIFFICULTY_LEVELS, SAFETY_CONFIG, ACTIVE_MO
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates'))
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or os.urandom(24)
+app.config["SAFEBARS_REQUIRE_ROLE_AUTH"] = os.getenv(
+    "SAFEBARS_REQUIRE_ROLE_AUTH", "1"
+) == "1"
 app.register_blueprint(encounter_api)
 
 
@@ -117,6 +120,18 @@ def safebars_v1_study_page():
 def safebars_brief_page():
     """SafeBARS导师展示摘要页"""
     return render_template('safebars_brief.html')
+
+
+@app.route('/safebars/expert/<session_id>')
+def safebars_expert_page(session_id):
+    """Prototype expert handoff review workspace for one encounter session."""
+    return render_template('safebars_expert.html', session_id=session_id)
+
+
+@app.route('/safebars/expert')
+def safebars_expert_dashboard_page():
+    """Browser-local caseload for expert invitations opened in this session."""
+    return render_template('safebars_expert_dashboard.html')
 
 @app.route('/api/categories')
 def get_categories():

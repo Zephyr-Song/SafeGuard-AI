@@ -4,15 +4,25 @@ from __future__ import annotations
 
 from contextlib import closing
 from datetime import datetime, timezone
+import hashlib
+import hmac
 import json
 import os
 import re
+import secrets
 import sqlite3
 import threading
 from typing import Any, Dict, Iterable, List, Optional
 import uuid
 
 from .llm_client import LLMClient
+from .ethics_framework import (
+    EXPERT_ROLES,
+    FRAMEWORKS,
+    build_framework_assessment,
+    recommend_expert_role,
+)
+from .ethics_application import APPLICATION_PROFILES, build_application_readiness
 
 
 ARTIFACT_LABELS = {
@@ -165,6 +175,9 @@ SCENARIO_LIBRARY = [
 ]
 
 
+PRIORITY_ORDER = {"high": 0, "medium": 1, "low": 2}
+
+
 SAMPLE_PROJECT = {
     "project": {
         "title": "Community workshop on online fraud prevention",
@@ -226,6 +239,17 @@ class EncounterStore:
                     )
                     """
                 )
+                connection.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS encounter_access (
+                        session_id TEXT NOT NULL,
+                        role TEXT NOT NULL,
+                        token_hash TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        PRIMARY KEY (session_id, role)
+                    )
+                    """
+                )
 
     def save(self, session: Dict[str, Any]) -> None:
         serialized = json.dumps(session, ensure_ascii=True)
@@ -279,6 +303,41 @@ class EncounterStore:
             for row in rows
         ]
 
+    @staticmethod
+    def _token_hash(token: str) -> str:
+        return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+    def rotate_access(self, session_id: str, role: str) -> str:
+        if role not in {"researcher", "expert"}:
+            raise ValueError("Access role must be researcher or expert.")
+        token = secrets.token_urlsafe(32)
+        with self._lock, closing(self._connect()) as connection:
+            with connection:
+                connection.execute(
+                    """
+                    INSERT INTO encounter_access (session_id, role, token_hash, created_at)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(session_id, role)
+                    DO UPDATE SET token_hash=excluded.token_hash, created_at=excluded.created_at
+                    """,
+                    (session_id, role, self._token_hash(token), utc_now()),
+                )
+        return token
+
+    def access_role(self, session_id: str, token: str) -> Optional[str]:
+        if not token:
+            return None
+        candidate = self._token_hash(token)
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                "SELECT role, token_hash FROM encounter_access WHERE session_id = ?",
+                (session_id,),
+            ).fetchall()
+        for row in rows:
+            if hmac.compare_digest(candidate, row["token_hash"]):
+                return row["role"]
+        return None
+
 
 class EncounterEngine:
     """Runs a bounded, inspectable encounter-audit workflow over research artifacts."""
@@ -303,7 +362,40 @@ class EncounterEngine:
             "llm_configured": self.llm_client.is_configured(),
             "active_provider": self._active_provider_summary(),
             "sample_project": SAMPLE_PROJECT,
+            "ethics_frameworks": [FRAMEWORKS[key] | {"id": key} for key in FRAMEWORKS],
+            "expert_roles": [EXPERT_ROLES[key] | {"id": key} for key in EXPERT_ROLES],
+            "application_profiles": [
+                APPLICATION_PROFILES[key] | {"id": key} for key in APPLICATION_PROFILES
+            ],
         }
+
+    def issue_access(self, session_id: str) -> Dict[str, str]:
+        if not self.store.load(session_id):
+            raise KeyError("Session not found.")
+        return {
+            "researcher_token": self.store.rotate_access(session_id, "researcher"),
+            "expert_token": self.store.rotate_access(session_id, "expert"),
+        }
+
+    def rotate_expert_access(self, session_id: str) -> str:
+        if not self.store.load(session_id):
+            raise KeyError("Session not found.")
+        return self.store.rotate_access(session_id, "expert")
+
+    def access_role(self, session_id: str, token: str) -> Optional[str]:
+        return self.store.access_role(session_id, token)
+
+    @staticmethod
+    def _human_review_started(session: Dict[str, Any]) -> bool:
+        decided = any(
+            item.get("decision", "pending") != "pending"
+            for item in session.get("issues", [])
+        )
+        reviewed = any(
+            item.get("review_history") or item.get("researcher_revision_history")
+            for item in session.get("handoffs", [])
+        )
+        return decided or reviewed
 
     def create_session(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         project = payload.get("project", {})
@@ -318,33 +410,85 @@ class EncounterEngine:
         created_at = utc_now()
         session = {
             "id": session_id,
-            "version": "2.0",
+            "version": "2.1",
             "status": "mapped",
             "project": {
                 "title": str(project.get("title", "Untitled fieldwork plan")).strip(),
                 "context": str(project.get("context", "")).strip(),
                 "target_people": str(project.get("target_people", "")).strip(),
+                "uses_ai": bool(project.get("uses_ai", False)),
             },
             "artifacts": artifacts,
+            "intake_transcript": payload.get("intake_transcript", []),
             "passages": self._extract_passages(artifacts),
             "encounter_map": [],
+            "framework_assessment": {},
+            "application_profile_id": str(payload.get("application_profile_id", "")).strip(),
+            "application_readiness": {},
+            "lineage": {
+                "parent_session_id": str(payload.get("lineage", {}).get("parent_session_id", "")).strip(),
+                "version_number": int(payload.get("lineage", {}).get("version_number", 1) or 1),
+            },
             "selected_scenarios": payload.get("selected_scenarios", []),
             "traces": [],
             "issues": [],
             "handoffs": [],
             "agent_activity": [],
+            "audit_plan": [],
             "use_llm": bool(payload.get("use_llm", False)),
             "created_at": created_at,
             "updated_at": created_at,
         }
         session["encounter_map"] = self._build_encounter_map(session)
+        session["framework_assessment"] = build_framework_assessment(session)
+        session["application_readiness"] = build_application_readiness(session)
+        session["audit_plan"] = self._build_audit_plan(
+            session, session.get("selected_scenarios") or None
+        )
         self._activity(session, "Encounter Orchestrator", "completed", "Built an editable encounter map from submitted artifacts.")
-        self._save(session, "session_created", {"passage_count": len(session["passages"])})
+        self._save(
+            session,
+            "session_created",
+            {
+                "passage_count": len(session["passages"]),
+                "planned_task_count": len(session["audit_plan"]),
+            },
+        )
         return session
+
+    def create_protocol_version(self, session_id: str) -> Optional[Dict[str, Any]]:
+        source = self.get_session(session_id)
+        if not source:
+            return None
+        current_version = int(source.get("lineage", {}).get("version_number", 1) or 1)
+        payload = {
+            "project": source.get("project", {}),
+            "artifacts": source.get("artifacts", {}),
+            "intake_transcript": source.get("intake_transcript", []),
+            "selected_scenarios": source.get("selected_scenarios", []),
+            "use_llm": source.get("use_llm", False),
+            "application_profile_id": source.get("application_profile_id", ""),
+            "lineage": {
+                "parent_session_id": source["id"],
+                "version_number": current_version + 1,
+            },
+        }
+        version = self.create_session(payload)
+        self.store.log(
+            source["id"],
+            "protocol_version_created",
+            {"new_session_id": version["id"], "version_number": current_version + 1},
+        )
+        return version
 
     def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
         session = self.store.load(session_id)
         if session:
+            if not session.get("audit_plan"):
+                session["audit_plan"] = self._build_audit_plan(
+                    session, session.get("selected_scenarios") or None
+                )
+            session["application_readiness"] = build_application_readiness(session)
             session["event_log"] = self.store.list_events(session_id)
         return session
 
@@ -352,6 +496,8 @@ class EncounterEngine:
         session = self.get_session(session_id)
         if not session:
             return None
+        if self._human_review_started(session):
+            raise ValueError("The encounter scope cannot change after human review has started. Create a new protocol version instead.")
         allowed_ids = {stage["id"] for stage in STAGE_DEFINITIONS}
         cleaned = []
         for stage in stages:
@@ -366,19 +512,79 @@ class EncounterEngine:
                 }
             )
         if cleaned:
+            if session.get("status") == "audited":
+                self._invalidate_audit_results(session)
             session["encounter_map"] = cleaned
+            session["audit_plan"] = self._build_audit_plan(
+                session, session.get("selected_scenarios") or None
+            )
             session["updated_at"] = utc_now()
-            self._save(session, "map_updated", {"stage_count": len(cleaned)})
+            self._save(
+                session,
+                "map_updated",
+                {
+                    "stage_count": len(cleaned),
+                    "planned_task_count": len(session["audit_plan"]),
+                },
+            )
+        return session
+
+    def update_audit_plan(
+        self,
+        session_id: str,
+        scenario_ids: Optional[List[str]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        valid_ids = {item["id"] for item in SCENARIO_LIBRARY}
+        selected = [item for item in (scenario_ids or []) if item in valid_ids]
+        if not selected:
+            raise ValueError("Select at least one bounded scenario for the audit plan.")
+        if self._human_review_started(session):
+            raise ValueError("The audit plan cannot change after human review has started. Create a new protocol version instead.")
+        if session.get("status") == "audited":
+            self._invalidate_audit_results(session)
+        session["selected_scenarios"] = selected
+        session["audit_plan"] = self._build_audit_plan(session, selected)
+        session["status"] = "mapped"
+        session["updated_at"] = utc_now()
+        self._save(
+            session,
+            "audit_plan_updated",
+            {
+                "scenario_ids": selected,
+                "task_order": [item["id"] for item in session["audit_plan"]],
+            },
+        )
+        return session
+
+    def update_application_profile(
+        self,
+        session_id: str,
+        profile_id: str,
+    ) -> Optional[Dict[str, Any]]:
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        if profile_id not in APPLICATION_PROFILES:
+            raise ValueError("Select a recognized application profile.")
+        session["application_profile_id"] = profile_id
+        session["updated_at"] = utc_now()
+        self._save(session, "application_profile_updated", {"profile_id": profile_id})
         return session
 
     def run_audit(self, session_id: str, scenario_ids: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
         session = self.get_session(session_id)
         if not session:
             return None
+        if self._human_review_started(session):
+            raise ValueError("The audit cannot be rerun after human review has started. Create a new protocol version to preserve the review record.")
 
         selected = set(scenario_ids or session.get("selected_scenarios") or [])
         scenarios = [item for item in SCENARIO_LIBRARY if not selected or item["id"] in selected]
         session["selected_scenarios"] = [item["id"] for item in scenarios]
+        session["audit_plan"] = self._build_audit_plan(session, session["selected_scenarios"])
         session["traces"] = []
         session["issues"] = []
         session["handoffs"] = []
@@ -386,30 +592,68 @@ class EncounterEngine:
             item for item in session.get("agent_activity", []) if item.get("agent") == "Encounter Orchestrator"
         ]
 
-        self._activity(session, "Breakdown Scenario Agent", "running", f"Tracing {len(scenarios)} bounded scenarios.")
-        for scenario in scenarios:
+        scenario_by_id = {item["id"]: item for item in scenarios}
+        scenario_tasks = sorted(
+            [item for item in session["audit_plan"] if item["kind"] == "scenario"],
+            key=lambda item: (PRIORITY_ORDER[item["priority"]], item["id"]),
+        )
+        self._activity(session, "Breakdown Scenario Agent", "running", f"Tracing {len(scenario_tasks)} material-routed scenarios.")
+        for task in scenario_tasks:
+            scenario = scenario_by_id[task["scenario_id"]]
+            self._start_task(task)
             trace = self._trace_scenario(session, scenario)
             session["traces"].append(trace)
             if trace["status"] != "covered":
                 session["issues"].append(self._issue_from_trace(session, scenario, trace))
+            self._finish_task(
+                task,
+                "paused" if trace["status"] == "not_run" else "completed",
+                [trace["id"]],
+                trace["first_gap"],
+            )
         self._activity(session, "Breakdown Scenario Agent", "completed", f"Produced {len(session['traces'])} inspectable traces.")
 
+        relationship_task = self._plan_task(session, "relationship")
+        if relationship_task:
+            self._start_task(relationship_task)
         self._activity(session, "Relationship and Power Agent", "running", "Checking support, pressure, gatekeeping, and responsibility roles.")
-        session["issues"].extend(self._relationship_issues(session))
+        relationship_issues = self._relationship_issues(session)
+        session["issues"].extend(relationship_issues)
+        if relationship_task:
+            self._finish_task(
+                relationship_task,
+                "completed",
+                [item["id"] for item in relationship_issues],
+                f"Produced {len(relationship_issues)} relationship-specific issue(s).",
+            )
         self._activity(session, "Relationship and Power Agent", "completed", "Added relationship-specific planning questions where needed.")
 
-        self._activity(session, "Boundary and Handoff Agent", "running", "Checking provenance and removing participant-proxy claims.")
-        session["issues"] = self._boundary_check(session, session["issues"])
-
+        llm_task = self._plan_task(session, "llm_critic")
         if session.get("use_llm") and self.llm_client.is_configured():
+            if llm_task:
+                self._start_task(llm_task)
             self._activity(session, "Bounded LLM Critic", "running", "Looking for up to two passage-grounded gaps beyond the scenario library.")
             llm_issues, detail = self._llm_issues(session)
             session["issues"].extend(llm_issues)
             state = "completed" if llm_issues else "fallback"
+            if llm_task:
+                self._finish_task(llm_task, state, [item["id"] for item in llm_issues], detail)
             self._activity(session, "Bounded LLM Critic", state, detail)
 
+        boundary_task = self._plan_task(session, "boundary_handoff")
+        if boundary_task:
+            self._start_task(boundary_task)
+        self._activity(session, "Boundary and Handoff Agent", "running", "Checking provenance, preserving contestation, and removing participant-proxy claims.")
+        session["issues"] = self._boundary_check(session, session["issues"])
         session["issues"] = self._deduplicate_issues(session["issues"])
         session["handoffs"] = self._initial_handoffs(session["issues"])
+        if boundary_task:
+            self._finish_task(
+                boundary_task,
+                "completed",
+                [item["id"] for item in session["handoffs"]],
+                f"Checked {len(session['issues'])} issue(s) and prepared {len(session['handoffs'])} handoff(s).",
+            )
         self._activity(
             session,
             "Boundary and Handoff Agent",
@@ -421,8 +665,89 @@ class EncounterEngine:
         self._save(
             session,
             "audit_completed",
-            {"trace_count": len(session["traces"]), "issue_count": len(session["issues"])},
+            {
+                "trace_count": len(session["traces"]),
+                "issue_count": len(session["issues"]),
+                "task_order": [item["id"] for item in scenario_tasks],
+            },
         )
+        return session
+
+    def rerun_task(self, session_id: str, task_id: str) -> Optional[Dict[str, Any]]:
+        """Rerun one bounded task without silently overwriting a human decision."""
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        task = next((item for item in session.get("audit_plan", []) if item["id"] == task_id), None)
+        if not task:
+            raise KeyError("Audit task not found.")
+        if task["kind"] in {"orchestrator", "boundary_handoff"}:
+            raise ValueError("This coordination task is refreshed automatically after a specialist rerun.")
+
+        affected = self._issues_for_task(session, task)
+        decided = [item for item in affected if item.get("decision", "pending") != "pending"]
+        if decided:
+            raise ValueError("Reset the related human decision before rerunning this task.")
+
+        affected_ids = {item["id"] for item in affected}
+        session["issues"] = [item for item in session.get("issues", []) if item["id"] not in affected_ids]
+        session["handoffs"] = [
+            item for item in session.get("handoffs", []) if item.get("issue_id") not in affected_ids
+        ]
+        self._start_task(task)
+
+        if task["kind"] == "scenario":
+            scenario = next(item for item in SCENARIO_LIBRARY if item["id"] == task["scenario_id"])
+            session["traces"] = [
+                item for item in session.get("traces", []) if item.get("scenario_id") != scenario["id"]
+            ]
+            trace = self._trace_scenario(session, scenario)
+            session["traces"].append(trace)
+            if trace["status"] != "covered":
+                session["issues"].append(self._issue_from_trace(session, scenario, trace))
+            self._finish_task(
+                task,
+                "paused" if trace["status"] == "not_run" else "completed",
+                [trace["id"]],
+                trace["first_gap"],
+            )
+        elif task["kind"] == "relationship":
+            issues = self._relationship_issues(session)
+            session["issues"].extend(issues)
+            self._finish_task(
+                task,
+                "completed",
+                [item["id"] for item in issues],
+                f"Produced {len(issues)} relationship-specific issue(s).",
+            )
+        elif task["kind"] == "llm_critic":
+            if not session.get("use_llm") or not self.llm_client.is_configured():
+                self._finish_task(task, "fallback", [], "No configured LLM provider; no model call was made.")
+            else:
+                issues, detail = self._llm_issues(session)
+                session["issues"].extend(issues)
+                self._finish_task(
+                    task,
+                    "completed" if issues else "fallback",
+                    [item["id"] for item in issues],
+                    detail,
+                )
+
+        session["issues"] = self._deduplicate_issues(
+            self._boundary_check(session, session.get("issues", []))
+        )
+        session["handoffs"] = self._initial_handoffs(session["issues"], session.get("handoffs", []))
+        boundary_task = self._plan_task(session, "boundary_handoff")
+        if boundary_task:
+            self._start_task(boundary_task)
+            self._finish_task(
+                boundary_task,
+                "completed",
+                [item["id"] for item in session["handoffs"]],
+                "Boundary and handoff state refreshed after specialist rerun.",
+            )
+        session["updated_at"] = utc_now()
+        self._save(session, "audit_task_rerun", {"task_id": task_id, "attempt": task["attempts"]})
         return session
 
     def record_decision(
@@ -450,6 +775,426 @@ class EncounterEngine:
         session["updated_at"] = utc_now()
         self._save(session, "issue_decision", {"issue_id": issue_id, "decision": decision})
         return session
+
+    def respond_to_handoff(
+        self,
+        session_id: str,
+        handoff_id: str,
+        response: str = "",
+        revised_text: str = "",
+    ) -> Optional[Dict[str, Any]]:
+        """Link an expert handoff to a researcher response and protocol revision."""
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        handoff = next(
+            (item for item in session.get("handoffs", []) if item.get("id") == handoff_id),
+            None,
+        )
+        if not handoff:
+            raise KeyError("Handoff not found.")
+        response = response.strip()
+        revised_text = revised_text.strip()
+        if not response and not revised_text:
+            raise ValueError("Add a response or revised protocol text before submitting.")
+
+        now = utc_now()
+        revision = {
+            "response": response,
+            "revised_text": revised_text,
+            "timestamp": now,
+        }
+        handoff.setdefault("researcher_revision_history", []).append(revision)
+        handoff["researcher_response"] = response
+        handoff["researcher_revised_text"] = revised_text
+        handoff["researcher_responded_at"] = now
+        handoff["status"] = "researcher_revised" if revised_text else "researcher_responded"
+        handoff["resolved_at"] = ""
+
+        issue = next(
+            (item for item in session.get("issues", []) if item.get("id") == handoff.get("issue_id")),
+            None,
+        )
+        if issue:
+            if revised_text:
+                issue["revised_text"] = revised_text
+                issue["decision"] = "edit"
+                issue["decided_at"] = now
+            if response:
+                issue["decision_rationale"] = response
+
+        session["updated_at"] = now
+        self._save(
+            session,
+            "researcher_handoff_response",
+            {
+                "handoff_id": handoff_id,
+                "has_response": bool(response),
+                "has_revision": bool(revised_text),
+            },
+        )
+        return session
+
+    def review_handoff(
+        self,
+        session_id: str,
+        handoff_id: str,
+        action: str,
+        reviewer_role: str,
+        reviewer_name: str = "",
+        advice: str = "",
+        rationale: str = "",
+        redirect_role: str = "",
+    ) -> Optional[Dict[str, Any]]:
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        valid_actions = {"assign", "advise", "request_clarification", "redirect", "resolve", "reopen"}
+        if action not in valid_actions:
+            raise ValueError("Unsupported expert-review action.")
+        if reviewer_role not in EXPERT_ROLES:
+            raise ValueError("Select a recognized expert role.")
+        handoff = next(
+            (item for item in session.get("handoffs", []) if item.get("id") == handoff_id),
+            None,
+        )
+        if not handoff:
+            raise KeyError("Handoff not found.")
+        if action in {"advise", "request_clarification"} and not advice.strip():
+            raise ValueError("Add advice or a clarification request before saving this action.")
+        if action == "redirect" and redirect_role not in EXPERT_ROLES:
+            raise ValueError("Select a recognized role to receive the redirected handoff.")
+
+        now = utc_now()
+        event = {
+            "action": action,
+            "reviewer_role": reviewer_role,
+            "reviewer_role_label": EXPERT_ROLES[reviewer_role]["label"],
+            "reviewer_name": reviewer_name.strip(),
+            "advice": advice.strip(),
+            "rationale": rationale.strip(),
+            "timestamp": now,
+        }
+        handoff.setdefault("review_history", []).append(event)
+        handoff["reviewer_role"] = reviewer_role
+        handoff["reviewer_name"] = reviewer_name.strip()
+        handoff["expert_advice"] = advice.strip() or handoff.get("expert_advice", "")
+        handoff["expert_rationale"] = rationale.strip() or handoff.get("expert_rationale", "")
+        handoff["reviewed_at"] = now
+        if action == "assign":
+            handoff["status"] = "assigned"
+        elif action == "advise":
+            handoff["status"] = "advised"
+        elif action == "request_clarification":
+            handoff["status"] = "needs_clarification"
+        elif action == "redirect":
+            role = EXPERT_ROLES[redirect_role]
+            handoff["recommended_role"] = redirect_role
+            handoff["recommended_role_label"] = role["label"]
+            handoff["owner"] = role["label"]
+            handoff["status"] = "redirected"
+            event["redirect_role"] = redirect_role
+            event["redirect_role_label"] = role["label"]
+        elif action == "resolve":
+            handoff["status"] = "resolved"
+            handoff["resolved_at"] = now
+        elif action == "reopen":
+            handoff["status"] = "open"
+            handoff["resolved_at"] = ""
+
+        session["updated_at"] = now
+        self._save(
+            session,
+            "expert_handoff_review",
+            {"handoff_id": handoff_id, "action": action, "reviewer_role": reviewer_role},
+        )
+        return session
+
+    def expert_summary(self, session_id: str) -> Optional[Dict[str, Any]]:
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        issue_by_id = {item["id"]: item for item in session.get("issues", [])}
+        queue = []
+        for handoff in session.get("handoffs", []):
+            issue = issue_by_id.get(handoff.get("issue_id"), {})
+            queue.append(
+                {
+                    **handoff,
+                    "issue": {
+                        "title": issue.get("title", "Unresolved protocol issue"),
+                        "severity": issue.get("severity", "unknown"),
+                        "category": issue.get("category", "unknown"),
+                        "observation": issue.get("observation", ""),
+                        "suggestion": issue.get("suggestion", ""),
+                        "source_passage_ids": issue.get("source_passage_ids", []),
+                        "researcher_decision": issue.get("decision", "pending"),
+                        "researcher_rationale": issue.get("decision_rationale", ""),
+                    },
+                }
+            )
+        priority_order = {"high": 0, "medium": 1, "standard": 2}
+        queue.sort(key=lambda item: (priority_order.get(item.get("priority", "standard"), 3), item.get("status") == "resolved"))
+        return {
+            "session_id": session["id"],
+            "project": session.get("project", {}),
+            "framework_pathway": session.get("framework_assessment", {}).get("pathway", "unassessed"),
+            "framework_dimensions": session.get("framework_assessment", {}).get("dimensions", []),
+            "passages": session.get("passages", []),
+            "generated_at": utc_now(),
+            "queue": queue,
+            "counts": {
+                "total": len(queue),
+                "unresolved": sum(item.get("status") != "resolved" for item in queue),
+                "high_priority": sum(item.get("priority") == "high" for item in queue),
+                "unresolved_high_priority": sum(
+                    item.get("priority") == "high" and item.get("status") != "resolved"
+                    for item in queue
+                ),
+                "advised": sum(item.get("status") == "advised" for item in queue),
+                "resolved": sum(item.get("status") == "resolved" for item in queue),
+            },
+            "boundary": "Expert advice supports institutional review; this summary is not an approval decision.",
+        }
+
+    def _build_audit_plan(
+        self,
+        session: Dict[str, Any],
+        scenario_ids: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Create a material-dependent, inspectable execution plan."""
+        selected = set(scenario_ids or [item["id"] for item in SCENARIO_LIBRARY])
+        now = utc_now()
+        plan: List[Dict[str, Any]] = [
+            {
+                "id": "task_orchestrate",
+                "kind": "orchestrator",
+                "agent": "Encounter Orchestrator",
+                "title": "Index materials and map the encounter",
+                "goal": "Create addressable passages, stages, and a bounded specialist queue.",
+                "reason": f"The submitted package contains {len(session.get('passages', []))} addressable passage(s).",
+                "priority": "high",
+                "status": "completed",
+                "depends_on": [],
+                "input_passage_ids": [item["id"] for item in session.get("passages", [])[:12]],
+                "tools": ["protocol parser", "artifact inventory", "stage coverage mapper"],
+                "stop_condition": "Stop for human scope confirmation before specialist tasks run.",
+                "attempts": 1,
+                "last_started_at": now,
+                "last_completed_at": now,
+                "output_ids": [item["id"] for item in session.get("encounter_map", [])],
+                "result_summary": "Editable encounter map created; awaiting human scope confirmation.",
+            }
+        ]
+
+        scenario_task_ids = []
+        for scenario in SCENARIO_LIBRARY:
+            if scenario["id"] not in selected:
+                continue
+            priority, reason, input_ids = self._scenario_route(session, scenario)
+            task_id = f"task_scenario_{scenario['id']}"
+            scenario_task_ids.append(task_id)
+            plan.append(
+                {
+                    "id": task_id,
+                    "kind": "scenario",
+                    "scenario_id": scenario["id"],
+                    "agent": "Breakdown Scenario Agent",
+                    "title": scenario["title"],
+                    "goal": "Trace the protocol response and stop at the first unsupported transition.",
+                    "reason": reason,
+                    "priority": priority,
+                    "status": "queued",
+                    "depends_on": ["task_orchestrate"],
+                    "input_passage_ids": input_ids,
+                    "tools": ["passage retrieval", "safeguard lookup", "transition tracer"],
+                    "stop_condition": scenario["boundary_explanation"],
+                    "attempts": 0,
+                    "last_started_at": "",
+                    "last_completed_at": "",
+                    "output_ids": [],
+                    "result_summary": "",
+                }
+            )
+
+        relationship_reason = self._relationship_route_reason(session)
+        plan.append(
+            {
+                "id": "task_relationship",
+                "kind": "relationship",
+                "agent": "Relationship and Power Agent",
+                "title": "Inspect support, pressure, gatekeeping, and responsibility",
+                "goal": "Map consequential relationships without generating demographic personas.",
+                "reason": relationship_reason,
+                "priority": "high" if "missing" in relationship_reason.lower() else "medium",
+                "status": "queued",
+                "depends_on": ["task_orchestrate"],
+                "input_passage_ids": [
+                    item["id"]
+                    for item in self._passages(session, ["recruitment", "consent", "safety"])[:8]
+                ],
+                "tools": ["relationship term scan", "responsibility check", "role boundary rules"],
+                "stop_condition": "Stop before claiming which relationships matter locally; create a real-person handoff.",
+                "attempts": 0,
+                "last_started_at": "",
+                "last_completed_at": "",
+                "output_ids": [],
+                "result_summary": "",
+            }
+        )
+
+        llm_enabled = bool(session.get("use_llm") and self.llm_client.is_configured())
+        plan.append(
+            {
+                "id": "task_llm_critic",
+                "kind": "llm_critic",
+                "agent": "Bounded LLM Critic",
+                "title": "Probe for additional passage-grounded gaps",
+                "goal": "Find at most two non-checklist gaps while remaining grounded to submitted passages.",
+                "reason": (
+                    "A provider is configured and the researcher enabled this optional probe."
+                    if llm_enabled
+                    else "Skipped because no configured provider was enabled; deterministic tracing remains active."
+                ),
+                "priority": "low",
+                "status": "queued" if llm_enabled else "skipped",
+                "depends_on": ["task_orchestrate"],
+                "input_passage_ids": [item["id"] for item in session.get("passages", [])[:40]],
+                "tools": ["bounded model call", "JSON schema validation", "passage ID validator"],
+                "stop_condition": "Return no issue unless it cites an existing passage; never speak as a participant.",
+                "attempts": 0,
+                "last_started_at": "",
+                "last_completed_at": "",
+                "output_ids": [],
+                "result_summary": "",
+            }
+        )
+
+        specialist_dependencies = scenario_task_ids + ["task_relationship"]
+        if llm_enabled:
+            specialist_dependencies.append("task_llm_critic")
+        plan.append(
+            {
+                "id": "task_boundary_handoff",
+                "kind": "boundary_handoff",
+                "agent": "Boundary and Handoff Agent",
+                "title": "Check provenance, preserve contestation, and route unknowns",
+                "goal": "Prevent participant-proxy claims and convert situated unknowns into named consultation tasks.",
+                "reason": "This task is conditionally released only after the selected specialist tasks finish.",
+                "priority": "high",
+                "status": "blocked",
+                "depends_on": specialist_dependencies,
+                "input_passage_ids": [],
+                "tools": ["provenance validator", "claim boundary rules", "handoff generator"],
+                "stop_condition": "Do not resolve local, legal, clinical, community, or normative questions with generated text.",
+                "attempts": 0,
+                "last_started_at": "",
+                "last_completed_at": "",
+                "output_ids": [],
+                "result_summary": "",
+            }
+        )
+        return plan
+
+    def _scenario_route(
+        self,
+        session: Dict[str, Any],
+        scenario: Dict[str, Any],
+    ) -> tuple[str, str, List[str]]:
+        stage = next(
+            (item for item in session.get("encounter_map", []) if item["id"] == scenario["trigger_stage"]),
+            None,
+        )
+        relevant = self._passages(session, scenario["artifacts"])
+        safeguards = self._matching_passages(relevant, scenario["safeguards"])
+        input_ids = [item["id"] for item in relevant[:8]]
+        if stage and not stage.get("included", True):
+            return (
+                "low",
+                f"The triggering stage '{stage['name']}' is outside the confirmed scope; run only to document that stop.",
+                input_ids,
+            )
+        if not relevant:
+            return (
+                "high",
+                "No relevant artifact was submitted, so the task is routed as a missing-context probe.",
+                [],
+            )
+        if not safeguards:
+            return (
+                "high",
+                f"{len(relevant)} relevant passage(s) were found, but no explicit response cue matched this scenario.",
+                input_ids,
+            )
+        return (
+            "medium",
+            f"{len(safeguards)} possible safeguard passage(s) were found and require responsibility-aware review.",
+            input_ids,
+        )
+
+    def _relationship_route_reason(self, session: Dict[str, Any]) -> str:
+        blob = " ".join(
+            [session.get("project", {}).get("context", ""), session.get("project", {}).get("target_people", "")]
+            + list(session.get("artifacts", {}).values())
+        ).lower()
+        terms = ["family", "caregiver", "helper", "community", "partner", "gatekeeper", "service"]
+        found = [term for term in terms if term in blob]
+        if found:
+            return f"Relationship cues ({', '.join(found[:4])}) require a dedicated power and responsibility check."
+        return "Relationship roles are missing from the submitted context, so the task checks this absence explicitly."
+
+    def _plan_task(self, session: Dict[str, Any], kind: str) -> Optional[Dict[str, Any]]:
+        return next((item for item in session.get("audit_plan", []) if item.get("kind") == kind), None)
+
+    def _start_task(self, task: Dict[str, Any]) -> None:
+        task["status"] = "running"
+        task["attempts"] = int(task.get("attempts", 0)) + 1
+        task["last_started_at"] = utc_now()
+        task["result_summary"] = ""
+
+    def _finish_task(
+        self,
+        task: Dict[str, Any],
+        status: str,
+        output_ids: List[str],
+        summary: str,
+    ) -> None:
+        task["status"] = status
+        task["last_completed_at"] = utc_now()
+        task["output_ids"] = output_ids
+        task["result_summary"] = summary
+
+    def _issues_for_task(
+        self,
+        session: Dict[str, Any],
+        task: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+        if task["kind"] == "scenario":
+            trace_id = f"trace_{task['scenario_id']}"
+            return [item for item in session.get("issues", []) if item.get("trigger_trace_id") == trace_id]
+        if task["kind"] == "relationship":
+            return [
+                item
+                for item in session.get("issues", [])
+                if item.get("agent") == "Relationship and Power Agent"
+            ]
+        if task["kind"] == "llm_critic":
+            return [
+                item for item in session.get("issues", []) if item.get("agent") == "Bounded LLM Critic"
+            ]
+        return []
+
+    def _invalidate_audit_results(self, session: Dict[str, Any]) -> None:
+        """Clear stale specialist outputs when an undecided plan is rescoped."""
+        session["traces"] = []
+        session["issues"] = []
+        session["handoffs"] = []
+        session["agent_activity"] = [
+            item
+            for item in session.get("agent_activity", [])
+            if item.get("agent") == "Encounter Orchestrator"
+        ]
+        session["status"] = "mapped"
 
     def _extract_passages(self, artifacts: Dict[str, str]) -> List[Dict[str, str]]:
         passages: List[Dict[str, str]] = []
@@ -658,6 +1403,20 @@ class EncounterEngine:
             ]
             issue["boundary_status"] = "planning_hypothesis"
             issue["boundary_note"] = "This issue concerns the submitted protocol and must not be treated as evidence about a real community."
+            issue["agent_positions"] = [
+                {
+                    "agent": issue.get("agent", "Specialist agent"),
+                    "position": issue.get("suggestion", "Revise or clarify the cited protocol passage."),
+                },
+                {
+                    "agent": "Boundary and Handoff Agent",
+                    "position": issue.get("uncertainty", "Defer the situated judgment to an appropriate real person."),
+                },
+            ]
+            issue["contestation_status"] = (
+                "human_resolution_required" if issue.get("requires_handoff") else "review_required"
+            )
+            issue["resolution_rule"] = "No agent vote or synthetic consensus: the researcher must accept, edit, reject, or defer."
         return issues
 
     def _llm_issues(self, session: Dict[str, Any]) -> tuple[List[Dict[str, Any]], str]:
@@ -773,24 +1532,60 @@ class EncounterEngine:
             result.append(issue)
         return result
 
-    def _initial_handoffs(self, issues: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _initial_handoffs(
+        self,
+        issues: List[Dict[str, Any]],
+        existing: Optional[List[Dict[str, Any]]] = None,
+    ) -> List[Dict[str, Any]]:
+        existing_by_id = {item.get("id"): item for item in (existing or [])}
         handoffs = []
         for issue in issues:
             if not issue.get("requires_handoff"):
                 continue
-            handoffs.append(self._handoff_from_issue(issue))
+            generated = self._handoff_from_issue(issue)
+            prior = existing_by_id.get(generated["id"])
+            if prior:
+                for key in (
+                    "owner", "recommended_role", "recommended_role_label", "recommended_role_scope",
+                    "priority", "status", "reviewer_role", "reviewer_name", "expert_advice",
+                    "expert_rationale", "reviewed_at", "resolved_at", "review_history",
+                ):
+                    if key in prior:
+                        generated[key] = prior[key]
+            handoffs.append(generated)
         return handoffs
 
     def _handoff_from_issue(self, issue: Dict[str, Any]) -> Dict[str, Any]:
+        role = recommend_expert_role(issue)
+        severity = issue.get("severity", "medium")
+        priority = "high" if severity == "high" else ("medium" if severity == "medium" else "standard")
+        triage_factors = [f"{severity} issue severity", "situated judgment required"]
+        if issue.get("decision") == "defer":
+            triage_factors.append("researcher explicitly deferred the issue")
+        if issue.get("category") in {"consent_autonomy", "withdrawal_data", "privacy_disclosure", "distress_support"}:
+            triage_factors.append("participant rights, safety, or data control may change")
         return {
             "id": f"handoff_{issue['id']}",
             "issue_id": issue["id"],
             "question": f"How should the project address: {issue['title']}?",
             "why_ai_cannot_resolve": issue.get("uncertainty") or "The answer depends on situated human judgment.",
-            "owner": issue.get("handoff_owner", "relevant real stakeholder"),
+            "owner": role["label"],
+            "recommended_role": role["id"],
+            "recommended_role_label": role["label"],
+            "recommended_role_scope": role["scope"],
+            "original_owner_suggestion": issue.get("handoff_owner", "relevant real stakeholder"),
+            "priority": priority,
+            "triage_factors": triage_factors,
             "suggested_method": "Review the cited passage and scenario in a short consultation before recruitment.",
             "deadline_stage": "Before recruitment or fieldwork",
             "status": "open",
+            "reviewer_role": "",
+            "reviewer_name": "",
+            "expert_advice": "",
+            "expert_rationale": "",
+            "reviewed_at": "",
+            "resolved_at": "",
+            "review_history": [],
         }
 
     def _ensure_handoff(self, session: Dict[str, Any], issue: Dict[str, Any]) -> None:
@@ -831,6 +1626,7 @@ class EncounterEngine:
         )
 
     def _save(self, session: Dict[str, Any], event_type: str, payload: Dict[str, Any]) -> None:
+        session["application_readiness"] = build_application_readiness(session)
         self.store.save(session)
         self.store.log(session["id"], event_type, payload)
         session["event_log"] = self.store.list_events(session["id"])

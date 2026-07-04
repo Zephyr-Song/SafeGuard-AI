@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBARS Expert Caseload</title>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <style>
+        :root { --ink:#17202a; --muted:#66727f; --line:#d9dee3; --surface:#fff; --subtle:#f5f7f8; --green:#246b49; --green-soft:#e7f3ec; --teal:#176f73; --amber:#b7791f; --amber-soft:#fff8e8; --red:#a4423b; --red-soft:#fcebea; }
+        * { box-sizing:border-box; }
+        body { margin:0; background:#f2f4f5; color:var(--ink); font-family:Inter,Segoe UI,Arial,sans-serif; }
+        button { font:inherit; }
+        header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:13px 20px; border-bottom:1px solid var(--line); background:#fff; }
+        .brand { display:flex; align-items:center; gap:9px; }
+        .mark { width:34px; height:34px; display:grid; place-items:center; border-radius:8px; background:var(--green-soft); color:var(--green); }
+        h1,h2,h3,p { margin:0; }
+        h1 { font-size:16px; }
+        .muted { color:var(--muted); font-size:11px; line-height:1.45; }
+        .shell { width:min(1120px,calc(100% - 28px)); margin:18px auto 50px; }
+        .notice { padding:10px 12px; border-left:3px solid var(--amber); background:var(--amber-soft); color:#614b21; font-size:11px; line-height:1.45; }
+        .summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:12px 0 18px; }
+        .stat { padding:12px; border:1px solid var(--line); border-radius:7px; background:#fff; }
+        .value { font-size:22px; font-weight:800; }
+        .label { margin-top:2px; color:var(--muted); font-size:9px; text-transform:uppercase; }
+        .heading { display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:8px; }
+        .heading h2 { font-size:16px; }
+        .cases { display:grid; gap:9px; }
+        .case { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; padding:14px; border:1px solid var(--line); border-radius:8px; background:#fff; }
+        .case h3 { font-size:14px; }
+        .meta { display:flex; flex-wrap:wrap; gap:5px; margin:8px 0; }
+        .badge { padding:2px 6px; border-radius:99px; background:#e8edf1; color:#4c5963; font-size:9px; font-weight:800; text-transform:uppercase; }
+        .badge.high { background:var(--red-soft); color:var(--red); }
+        .badge.open { background:var(--amber-soft); color:#825711; }
+        .badge.resolved { background:var(--green-soft); color:var(--green); }
+        .actions { display:flex; flex-direction:column; justify-content:center; gap:6px; min-width:138px; }
+        .btn { min-height:34px; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:7px 10px; border:1px solid #bfc8cf; border-radius:5px; background:#fff; color:var(--ink); cursor:pointer; font-size:10px; font-weight:700; text-decoration:none; }
+        .btn-primary { border-color:var(--green); background:var(--green); color:#fff; }
+        .empty { padding:70px 20px; border:1px solid var(--line); border-radius:8px; background:#fff; text-align:center; color:var(--muted); }
+        @media (max-width:720px) { .summary { grid-template-columns:1fr 1fr; } .case { grid-template-columns:1fr; } .actions { flex-direction:row; } header { align-items:flex-start; flex-direction:column; } }
+    </style>
+</head>
+<body>
+    <header><div class="brand"><div class="mark"><i data-lucide="inbox" size="18"></i></div><div><h1>SafeBARS Expert Caseload</h1><p class="muted">Invited protocols stored in this browser session</p></div></div><a class="btn" href="/safebars"><i data-lucide="arrow-left" size="14"></i>Researcher workspace</a></header>
+    <main class="shell">
+        <div class="notice"><strong>Prototype access model.</strong> Cases appear only after their expert invitation has been opened in this browser session. This is not an institution-wide case-management or approval system.</div>
+        <section class="summary" id="summary"></section>
+        <div class="heading"><div><h2>Invited protocols</h2><p class="muted">Sorted by unresolved high-priority handoffs.</p></div><button class="btn" id="refreshButton"><i data-lucide="refresh-cw" size="14"></i>Refresh</button></div>
+        <section class="cases" id="cases"><div class="empty">No expert invitations have been opened in this browser session.</div></section>
+    </main>
+    <script>
+        const caseIndexKey = "safebars_expert_cases";
+        const $ = id => document.getElementById(id);
+        const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+        const caseIds = () => [...new Set(JSON.parse(sessionStorage.getItem(caseIndexKey) || "[]"))];
+        const accessToken = id => sessionStorage.getItem(`safebars_expert_access_${id}`) || "";
+        async function loadCase(id) {
+            const token = accessToken(id);
+            if (!token) throw new Error("Missing expert token");
+            const response = await fetch(`/api/safebars/v2/sessions/${id}/expert-summary`, {headers:{"X-SafeBARS-Access":token}});
+            const payload = await response.json();
+            if (!response.ok || payload.success === false) throw new Error(payload.error || `Request failed: ${response.status}`);
+            return {...payload.summary, accessToken:token};
+        }
+        function removeCase(id) {
+            sessionStorage.removeItem(`safebars_expert_access_${id}`);
+            sessionStorage.setItem(caseIndexKey, JSON.stringify(caseIds().filter(item => item !== id)));
+            loadAll();
+        }
+        function render(cases) {
+            const totals = {
+                cases: cases.length,
+                unresolved: cases.reduce((sum,item) => sum + (item.counts.unresolved || 0), 0),
+                high: cases.reduce((sum,item) => sum + (item.counts.unresolved_high_priority ?? item.counts.high_priority ?? 0), 0),
+                resolved: cases.reduce((sum,item) => sum + (item.counts.resolved || 0), 0),
+            };
+            $("summary").innerHTML = [[totals.cases,"Cases"],[totals.unresolved,"Unresolved"],[totals.high,"High priority"],[totals.resolved,"Resolved"]].map(([value,label]) => `<div class="stat"><div class="value">${value}</div><div class="label">${label}</div></div>`).join("");
+            cases.sort((a,b) => ((b.counts.unresolved_high_priority ?? b.counts.high_priority ?? 0) - (a.counts.unresolved_high_priority ?? a.counts.high_priority ?? 0)) || (b.counts.unresolved - a.counts.unresolved));
+            $("cases").innerHTML = cases.length ? cases.map(item => `<article class="case"><div><h3>${escapeHtml(item.project.title || "Untitled project")}</h3><p class="muted">${escapeHtml(item.project.context || "No context provided")}</p><div class="meta"><span class="badge">${escapeHtml((item.framework_pathway || "unassessed").replaceAll("_"," "))}</span><span class="badge high">${item.counts.unresolved_high_priority ?? item.counts.high_priority ?? 0} high unresolved</span><span class="badge open">${item.counts.unresolved || 0} unresolved</span><span class="badge resolved">${item.counts.resolved || 0} resolved</span></div><p class="muted">Session ${escapeHtml(item.session_id.replace("encounter_",""))}</p></div><div class="actions"><a class="btn btn-primary" href="/safebars/expert/${escapeHtml(item.session_id)}#access=${encodeURIComponent(item.accessToken)}"><i data-lucide="clipboard-check" size="14"></i>Review case</a><button class="btn" data-remove-case="${escapeHtml(item.session_id)}"><i data-lucide="x" size="14"></i>Remove</button></div></article>`).join("") : `<div class="empty">No valid expert invitations are stored. Open an invitation link from a researcher first.</div>`;
+            document.querySelectorAll("[data-remove-case]").forEach(button => button.addEventListener("click", () => removeCase(button.dataset.removeCase)));
+            lucide.createIcons();
+        }
+        async function loadAll() {
+            const valid = [];
+            for (const id of caseIds()) {
+                try { valid.push(await loadCase(id)); }
+                catch { sessionStorage.removeItem(`safebars_expert_access_${id}`); }
+            }
+            sessionStorage.setItem(caseIndexKey, JSON.stringify(valid.map(item => item.session_id)));
+            render(valid);
+        }
+        $("refreshButton").addEventListener("click", loadAll);
+        loadAll();
+        lucide.createIcons();
+    </script>
+</body>
+</html>

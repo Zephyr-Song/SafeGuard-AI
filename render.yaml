@@ -5,10 +5,17 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    healthCheckPath: /healthz
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
       - key: ENABLE_OPENAI_PROVIDER
+        value: "0"
+      - key: SAFEBARS_REQUIRE_ROLE_AUTH
+        value: "1"
+      - key: SAFEBARS_V2_DB_PATH
+        value: /tmp/safebars_v2.db
+      - key: ENABLE_DEMO_AUTH
         value: "0"
       - key: FLASK_SECRET_KEY
         sync: false
