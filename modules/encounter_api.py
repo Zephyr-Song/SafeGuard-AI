@@ -268,7 +268,7 @@ def export_session_docx(session_id: str):
         report = build_docx_report(encounter_session)
     except Exception as exc:
         return jsonify({"success": False, "error": f"Could not create Word report: {str(exc)[:400]}"}), 500
-    filename = f"safebars_{session_id}.docx"
+    filename = f"safebars_{session_id}_full_audit_report.docx"
     return Response(
         report,
         mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -286,7 +286,7 @@ def export_session_pdf(session_id: str):
         report = build_pdf_report(encounter_session)
     except Exception as exc:
         return jsonify({"success": False, "error": f"Could not create PDF report: {str(exc)[:400]}"}), 500
-    filename = f"safebars_{session_id}.pdf"
+    filename = f"safebars_{session_id}_full_audit_report.pdf"
     return Response(
         report,
         mimetype="application/pdf",

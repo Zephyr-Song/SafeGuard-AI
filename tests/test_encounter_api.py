@@ -152,9 +152,11 @@ class EncounterApiTest(unittest.TestCase):
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
         self.assertTrue(word_report.data.startswith(b"PK"))
+        self.assertIn("full_audit_report.docx", word_report.headers["Content-Disposition"])
         word_document = Document(BytesIO(word_report.data))
         word_text = "\n".join(paragraph.text for paragraph in word_document.paragraphs)
         self.assertIn(SAMPLE_PROJECT["project"]["title"], word_text)
+        self.assertIn("SAFEBARS FULL AUDIT REPORT", word_text)
         self.assertIn("Framework-grounded ethics map", word_text)
         self.assertIn("Inspectable audit plan", word_text)
         self.assertIn("Resolution rule", word_text)
@@ -167,6 +169,7 @@ class EncounterApiTest(unittest.TestCase):
         self.assertEqual(pdf_report.mimetype, "application/pdf")
         self.assertTrue(pdf_report.data.startswith(b"%PDF-"))
         self.assertGreater(len(pdf_report.data), 5000)
+        self.assertIn("full_audit_report.pdf", pdf_report.headers["Content-Disposition"])
 
         application = self.client.get(
             f"/api/safebars/v2/sessions/{session_id}/export.application.docx"
@@ -244,6 +247,10 @@ class EncounterApiTest(unittest.TestCase):
         workspace = self.client.get("/safebars")
         self.assertEqual(workspace.status_code, 200)
         self.assertIn(b"Encounter stress-testing workspace", workspace.data)
+        self.assertIn(b"Start quick intake", workspace.data)
+        self.assertIn(b"Six core questions", workspace.data)
+        self.assertIn(b"Full audit report (.docx)", workspace.data)
+        self.assertIn(b"Application draft (.docx)", workspace.data)
 
         legacy = self.client.get("/safebars/v1")
         self.assertEqual(legacy.status_code, 200)

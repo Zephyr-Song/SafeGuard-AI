@@ -14,7 +14,7 @@ The application supports three parties:
 
 Key features:
 
-- guided conversational intake that populates structured protocol fields;
+- six-question guided intake that populates structured protocol fields, with one conditional AI-governance follow-up;
 - Belmont baseline with conditional Menlo and NIST AI RMF extensions;
 - Value Sensitive Design-informed trade-off exploration;
 - Ethics Dandelion evidence visualization;
@@ -26,6 +26,11 @@ Key features:
 - generic human-research and AI-enabled application profiles;
 - field-level draft completeness checks;
 - JSON, Word, PDF, application-draft, and expert-summary exports.
+
+## Export types
+
+- **Application draft (.docx):** submission-oriented sections, completeness gaps, researcher revisions, and unresolved expert questions. Transfer this material into the institution's current official form.
+- **Full audit report (.docx/.pdf):** internal evidence record containing framework mapping, encounter stages, scenario traces, issue ledger, sources, agent plan, handoffs, and event history. Use it for supervision, team review, or research evaluation rather than as the application form itself.
 
 ## Run locally
 

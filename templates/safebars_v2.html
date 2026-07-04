@@ -668,6 +668,8 @@
             box-shadow: var(--shadow);
             overflow: hidden;
         }
+        .export-guide { padding: 9px 11px; border-bottom: 1px solid var(--line); background: var(--surface-subtle); color: var(--muted); font-size: 9px; line-height: 1.4; }
+        .export-guide strong { display: block; margin-bottom: 2px; color: var(--ink); font-size: 10px; }
 
         .issue-header {
             padding: 12px 14px;
@@ -838,17 +840,18 @@
                     <i data-lucide="download" size="16"></i><span>Export</span><i data-lucide="chevron-down" size="14"></i>
                 </button>
                 <div class="export-menu" id="exportMenu" role="menu" hidden>
+                    <div class="export-guide"><strong>Choose by purpose</strong>Application draft = submission-oriented sections. Full audit report = internal evidence, provenance, and decision history.</div>
                     <button class="export-option" type="button" data-export-format="json" role="menuitem">
                         <i data-lucide="braces" size="17"></i><span class="export-option-copy"><span class="export-option-title">JSON data</span><span class="export-option-note">Complete structured session</span></span>
                     </button>
                     <button class="export-option" type="button" data-export-format="docx" role="menuitem">
-                        <i data-lucide="file-text" size="17"></i><span class="export-option-copy"><span class="export-option-title">Word report</span><span class="export-option-note">Editable human-readable report</span></span>
+                        <i data-lucide="file-text" size="17"></i><span class="export-option-copy"><span class="export-option-title">Full audit report (.docx)</span><span class="export-option-note">Internal map, traces, issues, agent plan, sources, and history</span></span>
                     </button>
                     <button class="export-option" type="button" data-export-format="pdf" role="menuitem">
-                        <i data-lucide="file-type" size="17"></i><span class="export-option-copy"><span class="export-option-title">PDF report</span><span class="export-option-note">Share-ready fixed layout</span></span>
+                        <i data-lucide="file-type" size="17"></i><span class="export-option-copy"><span class="export-option-title">Full audit report (.pdf)</span><span class="export-option-note">Fixed-layout version of the internal evidence report</span></span>
                     </button>
                     <button class="export-option" type="button" data-export-format="application" role="menuitem">
-                        <i data-lucide="clipboard-pen" size="17"></i><span class="export-option-copy"><span class="export-option-title">Ethics application draft</span><span class="export-option-note">Generic Word draft requiring institutional review</span></span>
+                        <i data-lucide="clipboard-pen" size="17"></i><span class="export-option-copy"><span class="export-option-title">Application draft (.docx)</span><span class="export-option-note">Submission-oriented sections to transfer into the institution's form</span></span>
                     </button>
                 </div>
             </div>
@@ -868,9 +871,9 @@
             </div>
 
             <button class="btn btn-teal full" id="guidedIntakeButton">
-                <i data-lucide="messages-square" size="16"></i>Start guided intake
+                <i data-lucide="messages-square" size="16"></i>Start quick intake
             </button>
-            <p class="section-kicker" style="margin:7px 0 12px">A step-by-step assistant can populate the structured fields below.</p>
+            <p class="section-kicker" style="margin:7px 0 12px">Six core questions populate the fields below; AI projects receive one additional question.</p>
 
             <div class="field">
                 <label for="projectTitle">Project title</label>
@@ -1059,7 +1062,7 @@
 
     <dialog class="intake-dialog" id="intakeDialog">
         <div class="intake-header">
-            <div><h2 class="section-heading">Guided protocol intake</h2><div class="intake-progress" id="intakeProgress">Step 1</div></div>
+            <div><h2 class="section-heading">Quick guided protocol intake</h2><div class="intake-progress" id="intakeProgress">Step 1</div></div>
             <button class="btn btn-quiet btn-icon" id="closeIntakeButton" title="Close guided intake"><i data-lucide="x" size="17"></i></button>
         </div>
         <div class="intake-messages" id="intakeMessages"></div>
@@ -1067,6 +1070,7 @@
             <textarea id="intakeAnswer" placeholder="Describe this part of your study in your own words"></textarea>
             <div class="intake-actions">
                 <button class="btn btn-quiet" id="restartIntakeButton"><i data-lucide="rotate-ccw" size="14"></i>Restart</button>
+                <button class="btn btn-quiet" id="skipIntakeButton">Skip for now</button>
                 <button class="btn btn-primary" id="submitIntakeButton">Save answer and continue<i data-lucide="arrow-right" size="15"></i></button>
             </div>
         </div>
@@ -1096,18 +1100,26 @@
             follow_up: "artifactFollowUp",
         };
 
-        const intakeSteps = [
-            {id: "title", target: "projectTitle", question: "What is the working title of your project?", hint: "Use a short title that identifies the research topic or intervention.", min: 3},
-            {id: "context", target: "projectContext", question: "What problem are you studying, in which setting, and what method do you plan to use?", hint: "Please include the research aim, setting, method, and why contact with people is needed.", min: 30},
-            {id: "people", target: "targetPeople", question: "Who may participate or be affected, and which helpers, gatekeepers, institutions, or communities are involved?", hint: "Name direct and indirect stakeholders, including anyone who can enable access, exert pressure, receive disclosure, or provide support.", min: 20},
-            {id: "uses_ai", question: "Does the research build, evaluate, study, or use an AI system? Please answer yes or no and briefly explain its role.", hint: "State whether AI affects recruitment, interaction, data analysis, decisions, or participant-facing outputs.", min: 3},
-            {id: "recruitment", target: "artifactRecruitment", question: "How will people be identified, approached, screened, and compensated?", hint: "Include eligibility, who makes contact, gatekeeper involvement, compensation, and how pressure will be avoided.", min: 20},
-            {id: "consent", target: "artifactConsent", question: "What information and choices will participants receive before agreeing?", hint: "Address comprehension, voluntariness, recording, data use, skipping questions, withdrawal, and who can answer questions.", min: 20},
-            {id: "interview", target: "artifactInterview", question: "What questions or prompts will participants encounter?", hint: "Provide the sensitive or decision-relevant questions, preferably one per line.", min: 15},
-            {id: "activity", target: "artifactActivity", question: "What will participants do, for how long, and what alternatives or breaks are available?", hint: "Describe duration, tasks, technologies, accessibility, optional activities, and lower-burden alternatives.", min: 20},
-            {id: "safety", target: "artifactSafety", question: "What happens if there is distress, unexpected disclosure, loss of privacy, or another safeguarding concern?", hint: "Name observable triggers, pause or stop actions, responsible staff, escalation limits, and real support routes.", min: 20},
-            {id: "follow_up", target: "artifactFollowUp", question: "What happens after participation, including debriefing, support, data retention, deletion, reporting, and withdrawal after collection?", hint: "Specify who follows up, who can access data, retention and deletion rules, and any commitments made to participants.", min: 20},
+        const coreIntakeSteps = [
+            {id: "context", target: "projectContext", question: "What are you studying, where and how will the research happen, and does AI play any role?", hint: "Include the aim, setting, method, why human participation is needed, and either describe the AI role or write 'No AI'.", min: 30, detectAi: true},
+            {id: "people_recruitment", question: "Who is involved and how will participants be recruited?", hint: "Use two lines if possible:\nPeople/relationships: participants, helpers, gatekeepers, affected communities.\nRecruitment: contact, eligibility, compensation, and pressure safeguards.", min: 30, sections: [
+                {target: "targetPeople", labels: ["people", "participants", "relationships"]},
+                {target: "artifactRecruitment", labels: ["recruitment", "eligibility", "contact"]},
+            ]},
+            {id: "consent", target: "artifactConsent", question: "What information and choices will participants receive before agreeing?", hint: "Cover comprehension, voluntariness, recording, data use, skipping, withdrawal stages, and a contact for questions.", min: 25},
+            {id: "procedures", question: "What will participants be asked and what will they do?", hint: "Use two sections if possible:\nQuestions/prompts: sensitive or decision-relevant questions.\nActivities: tasks, duration, technologies, breaks, accessibility, and alternatives.", min: 30, sections: [
+                {target: "artifactInterview", labels: ["questions", "prompts", "interview"]},
+                {target: "artifactActivity", labels: ["activities", "activity", "tasks", "procedures"]},
+            ]},
+            {id: "safety", target: "artifactSafety", question: "What happens if there is distress, unexpected disclosure, privacy loss, or another safeguarding concern?", hint: "Name triggers, pause or stop actions, responsible staff, escalation limits, and real support routes.", min: 25},
+            {id: "follow_up", target: "artifactFollowUp", question: "What happens after participation and to the research data?", hint: "Cover debriefing, complaints, follow-up, access, storage, security, retention, deletion, reporting, and withdrawal after collection.", min: 30},
         ];
+
+        const aiIntakeStep = {id: "ai_governance", appendTarget: "projectContext", question: "Because this project uses AI, what needs human oversight and what happens when the AI is wrong?", hint: "Describe the model/provider, prompts or outputs, participant disclosure, human review and override, data/training use, monitoring, fallback, correction, and complaints.", min: 30};
+
+        function activeIntakeSteps() {
+            return [...coreIntakeSteps, ...($("usesAi").checked ? [aiIntakeStep] : [])];
+        }
 
         const $ = (id) => document.getElementById(id);
         const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
@@ -1180,7 +1192,7 @@
             $("useLlm").checked = !!state.session.use_llm && !$("useLlm").disabled;
             Object.entries(artifactInputs).forEach(([key, id]) => $(id).value = state.session.artifacts?.[key] || "");
             state.intakeTranscript = state.session.intake_transcript || [];
-            state.intakeComplete = state.intakeTranscript.some(item => item.role === "researcher");
+            state.intakeComplete = state.intakeTranscript.some(item => /intake (?:is )?complete|quick intake complete/i.test(item.text || ""));
         }
 
         async function restoreCurrentSession() {
@@ -1223,6 +1235,10 @@
 
         function appendIntakeMessage(kind, text) {
             state.intakeTranscript.push({role: kind === "user" ? "researcher" : "assistant", kind, text, timestamp: new Date().toISOString()});
+            displayIntakeMessage(kind, text);
+        }
+
+        function displayIntakeMessage(kind, text) {
             const message = document.createElement("div");
             message.className = `intake-message ${kind}`;
             message.textContent = text;
@@ -1230,21 +1246,29 @@
             $("intakeMessages").scrollTop = $("intakeMessages").scrollHeight;
         }
 
+        function renderStoredIntakeTranscript() {
+            $("intakeMessages").innerHTML = "";
+            state.intakeTranscript.forEach(item => displayIntakeMessage(item.kind || (item.role === "researcher" ? "user" : "bot"), item.text || ""));
+        }
+
         function askCurrentIntakeQuestion() {
-            const step = intakeSteps[state.intakeStep];
+            const steps = activeIntakeSteps();
+            const step = steps[state.intakeStep];
             if (!step) {
                 state.intakeComplete = true;
-                appendIntakeMessage("bot", "The structured intake is complete. Review the populated fields, make any corrections, and build the encounter map. The framework pathway will be selected from your answers.");
-                $("intakeProgress").textContent = "Complete · review the structured fields before continuing";
+                appendIntakeMessage("bot", `Quick intake complete: ${coreIntakeSteps.length} core questions${$("usesAi").checked ? " plus one AI follow-up" : ""}. Review or refine the populated fields before building the encounter map.`);
+                $("intakeProgress").textContent = "Complete · review the structured fields or continue directly";
                 $("submitIntakeButton").disabled = true;
+                $("skipIntakeButton").disabled = true;
                 $("intakeAnswer").disabled = true;
                 renderWorkflow();
                 return;
             }
-            $("intakeProgress").textContent = `Step ${state.intakeStep + 1} of ${intakeSteps.length} · ${step.id.replaceAll("_", " ")}`;
+            $("intakeProgress").textContent = `Step ${state.intakeStep + 1} of ${steps.length} · ${step.id.replaceAll("_", " ")}${step.id === "ai_governance" ? " (AI only)" : ""}`;
             appendIntakeMessage("bot", step.question);
             $("intakeAnswer").value = "";
             $("intakeAnswer").placeholder = step.hint;
+            $("skipIntakeButton").disabled = false;
             $("intakeAnswer").focus();
         }
 
@@ -1254,36 +1278,82 @@
             state.intakeComplete = false;
             $("intakeMessages").innerHTML = "";
             $("submitIntakeButton").disabled = false;
+            $("skipIntakeButton").disabled = false;
             $("intakeAnswer").disabled = false;
-            appendIntakeMessage("bot", "I will collect the information needed for a framework-grounded protocol review. I can help structure the application, but I cannot provide institutional ethics approval.");
+            appendIntakeMessage("bot", "This quick intake uses six core questions. You may skip any question and refine the structured fields later. AI projects receive one additional governance question; SafeBARS still cannot provide institutional ethics approval.");
             askCurrentIntakeQuestion();
         }
 
         function openGuidedIntake() {
             if (!state.intakeTranscript.length) restartIntake();
+            else if (!$("intakeMessages").children.length) {
+                renderStoredIntakeTranscript();
+                if (state.intakeComplete) {
+                    state.intakeStep = activeIntakeSteps().length;
+                    $("intakeProgress").textContent = "Complete · review the structured fields or restart";
+                    $("submitIntakeButton").disabled = true;
+                    $("skipIntakeButton").disabled = true;
+                    $("intakeAnswer").disabled = true;
+                }
+            }
             $("intakeDialog").showModal();
             lucide.createIcons();
         }
 
+        function applySectionAnswer(answer, sections) {
+            const collected = new Map(sections.map(section => [section.target, []]));
+            let currentTarget = null;
+            answer.split(/\r?\n/).forEach(line => {
+                const separator = line.indexOf(":");
+                const prefix = (separator >= 0 ? line.slice(0, separator) : "").trim().toLowerCase();
+                const matched = sections.find(section => section.labels.some(label => prefix.includes(label)));
+                if (matched) {
+                    currentTarget = matched.target;
+                    const value = line.slice(separator + 1).trim();
+                    if (value) collected.get(currentTarget).push(value);
+                } else if (currentTarget && line.trim()) {
+                    collected.get(currentTarget).push(line.trim());
+                }
+            });
+            const recognized = [...collected.values()].some(lines => lines.length);
+            sections.forEach(section => {
+                const value = collected.get(section.target).join("\n").trim();
+                $(section.target).value = value || (recognized ? $(section.target).value : answer);
+            });
+        }
+
+        function applyIntakeAnswer(step, answer) {
+            if (step.detectAi) {
+                const normalized = answer.toLowerCase();
+                const explicitlyNoAi = /\b(no ai|without ai|does not use ai|do not use ai|not using ai)\b/.test(normalized);
+                const mentionsAi = /\b(ai|artificial intelligence|llm|language model|machine learning|algorithmic|automated model)\b/.test(normalized);
+                $("usesAi").checked = mentionsAi && !explicitlyNoAi;
+            }
+            if (step.sections) applySectionAnswer(answer, step.sections);
+            else if (step.appendTarget) {
+                const existing = $(step.appendTarget).value.trim();
+                $(step.appendTarget).value = `${existing}${existing ? "\n\n" : ""}AI governance details: ${answer}`;
+            } else if (step.target) $(step.target).value = answer;
+        }
+
         function submitIntakeAnswer() {
-            const step = intakeSteps[state.intakeStep];
+            const step = activeIntakeSteps()[state.intakeStep];
             if (!step) return;
             const answer = $("intakeAnswer").value.trim();
             if (answer.length < step.min) {
                 appendIntakeMessage("hint", step.hint);
                 return;
             }
-            if (step.id === "uses_ai") {
-                const normalized = answer.toLowerCase();
-                const yes = /(^|\b)(yes|y|use|uses|using|build|evaluate|study ai)(\b|$)/.test(normalized) && !/^no\b/.test(normalized);
-                $("usesAi").checked = yes;
-                if (yes && !$("projectContext").value.toLowerCase().includes("ai")) {
-                    $("projectContext").value += `\nAI role: ${answer}`;
-                }
-            } else if (step.target) {
-                $(step.target).value = answer;
-            }
+            applyIntakeAnswer(step, answer);
             appendIntakeMessage("user", answer);
+            state.intakeStep += 1;
+            askCurrentIntakeQuestion();
+        }
+
+        function skipIntakeAnswer() {
+            const step = activeIntakeSteps()[state.intakeStep];
+            if (!step) return;
+            appendIntakeMessage("user", `Skipped for now: ${step.id.replaceAll("_", " ")}.`);
             state.intakeStep += 1;
             askCurrentIntakeQuestion();
         }
@@ -1492,7 +1562,8 @@
 
         function renderWorkflow() {
             const mapped = !!state.session;
-            const intakeDone = state.intakeComplete || state.intakeTranscript.some(item => item.role === "researcher");
+            const intakeStarted = state.intakeTranscript.some(item => item.role === "researcher");
+            const intakeDone = state.intakeComplete;
             const audited = state.session?.status === "audited";
             const decisions = state.session?.issues?.filter(issue => issue.decision !== "pending").length || 0;
             const total = state.session?.issues?.length || 0;
@@ -1500,7 +1571,7 @@
             $("workflowMap").className = `workflow-step ${mapped ? "complete" : "active"}`;
             $("workflowTrace").className = `workflow-step ${audited ? "complete" : (mapped ? "active" : "")}`;
             $("workflowDecide").className = `workflow-step ${audited ? "active" : ""}`;
-            $("workflowIntake").querySelector(".workflow-state").textContent = intakeDone ? `${state.intakeTranscript.filter(item => item.role === "researcher").length} answers structured` : "Guided intake available";
+            $("workflowIntake").querySelector(".workflow-state").textContent = intakeDone ? "Quick intake complete" : (intakeStarted ? "Quick intake in progress" : "Six-question quick intake available");
             $("workflowMap").querySelector(".workflow-state").textContent = mapped ? `${state.session.passages.length} passages indexed` : "Awaiting materials";
             $("workflowTrace").querySelector(".workflow-state").textContent = audited ? `${state.session.traces.length} traces completed` : "Not run";
             $("workflowDecide").querySelector(".workflow-state").textContent = total ? `${decisions} of ${total} decided` : "No issues";
@@ -1798,6 +1869,7 @@
         $("guidedIntakeButton").addEventListener("click", openGuidedIntake);
         $("closeIntakeButton").addEventListener("click", () => $("intakeDialog").close());
         $("restartIntakeButton").addEventListener("click", restartIntake);
+        $("skipIntakeButton").addEventListener("click", skipIntakeAnswer);
         $("submitIntakeButton").addEventListener("click", submitIntakeAnswer);
         $("intakeAnswer").addEventListener("keydown", event => {
             if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) submitIntakeAnswer();
