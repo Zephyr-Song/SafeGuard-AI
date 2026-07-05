@@ -11,8 +11,10 @@ from .encounter_engine import EncounterEngine
 from .encounter_report import (
     build_docx_report,
     build_ethics_application_docx,
+    build_expert_portfolio_docx,
     build_expert_summary_docx,
     build_pdf_report,
+    build_research_design_docx,
 )
 
 
@@ -312,6 +314,24 @@ def export_ethics_application_docx(session_id: str):
     )
 
 
+@encounter_api.get("/sessions/<session_id>/export.research-design.docx")
+@require_session_role("researcher")
+def export_research_design_docx(session_id: str):
+    encounter_session = encounter_engine.get_session(session_id)
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    try:
+        report = build_research_design_docx(encounter_session)
+    except Exception as exc:
+        return jsonify({"success": False, "error": f"Could not create research design: {str(exc)[:400]}"}), 500
+    filename = f"safebars_{session_id}_research_design.docx"
+    return Response(
+        report,
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @encounter_api.get("/sessions/<session_id>/export.expert.docx")
 @require_session_role("expert")
 def export_expert_summary_docx(session_id: str):
@@ -327,4 +347,44 @@ def export_expert_summary_docx(session_id: str):
         report,
         mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@encounter_api.post("/expert/export.portfolio.docx")
+def export_expert_portfolio_docx():
+    payload = request.get_json(silent=True) or {}
+    cases = payload.get("cases", [])
+    if not isinstance(cases, list) or not cases:
+        return jsonify({"success": False, "error": "At least one expert-accessible case is required."}), 400
+    if len(cases) > 25:
+        return jsonify({"success": False, "error": "A portfolio export is limited to 25 cases."}), 400
+
+    sessions = []
+    seen = set()
+    role_auth_required = current_app.config.get("SAFEBARS_REQUIRE_ROLE_AUTH", True)
+    for case in cases:
+        if not isinstance(case, dict):
+            return jsonify({"success": False, "error": "Each case must include a session ID and expert token."}), 400
+        session_id = str(case.get("session_id", "")).strip()
+        token = str(case.get("expert_token", "")).strip()
+        if not session_id or session_id in seen:
+            continue
+        if role_auth_required and encounter_engine.access_role(session_id, token) != "expert":
+            return jsonify({"success": False, "error": f"Expert access was not valid for case {session_id}."}), 403
+        encounter_session = encounter_engine.get_session(session_id)
+        if not encounter_session:
+            return jsonify({"success": False, "error": f"Case {session_id} was not found."}), 404
+        sessions.append(encounter_session)
+        seen.add(session_id)
+
+    if not sessions:
+        return jsonify({"success": False, "error": "No valid expert-accessible cases were supplied."}), 400
+    try:
+        report = build_expert_portfolio_docx(sessions)
+    except Exception as exc:
+        return jsonify({"success": False, "error": f"Could not create expert caseload summary: {str(exc)[:400]}"}), 500
+    return Response(
+        report,
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": 'attachment; filename="safebars_expert_caseload_summary.docx"'},
     )

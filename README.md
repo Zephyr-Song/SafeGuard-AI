@@ -25,12 +25,14 @@ Key features:
 - immutable human review history through protocol versioning;
 - generic human-research and AI-enabled application profiles;
 - field-level draft completeness checks;
-- JSON, Word, PDF, application-draft, and expert-summary exports.
+- JSON, Word, PDF, ethics-application, research-design, per-case expert-summary, and expert-caseload exports.
 
 ## Export types
 
 - **Application draft (.docx):** submission-oriented sections, completeness gaps, researcher revisions, and unresolved expert questions. Transfer this material into the institution's current official form.
+- **Research design (.docx):** researcher-facing methods and fieldwork plan covering participants, recruitment, procedures, consent, safeguards, data, AI oversight, trade-offs, expert dependencies, and next actions.
 - **Full audit report (.docx/.pdf):** internal evidence record containing framework mapping, encounter stages, scenario traces, issue ledger, sources, agent plan, handoffs, and event history. Use it for supervision, team review, or research evaluation rather than as the application form itself.
+- **Expert review summary / caseload summary (.docx):** one-protocol review record or a cross-application summary of accessible ethics drafts, gaps, priorities, advice, researcher responses, and linked revisions.
 
 ## Run locally
 

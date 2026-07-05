@@ -840,7 +840,7 @@
                     <i data-lucide="download" size="16"></i><span>Export</span><i data-lucide="chevron-down" size="14"></i>
                 </button>
                 <div class="export-menu" id="exportMenu" role="menu" hidden>
-                    <div class="export-guide"><strong>Choose by purpose</strong>Application draft = submission-oriented sections. Full audit report = internal evidence, provenance, and decision history.</div>
+                    <div class="export-guide"><strong>Choose by purpose</strong>Application draft = ethics submission content. Research design = methods and fieldwork plan. Full audit report = internal evidence and decision history.</div>
                     <button class="export-option" type="button" data-export-format="json" role="menuitem">
                         <i data-lucide="braces" size="17"></i><span class="export-option-copy"><span class="export-option-title">JSON data</span><span class="export-option-note">Complete structured session</span></span>
                     </button>
@@ -852,6 +852,9 @@
                     </button>
                     <button class="export-option" type="button" data-export-format="application" role="menuitem">
                         <i data-lucide="clipboard-pen" size="17"></i><span class="export-option-copy"><span class="export-option-title">Application draft (.docx)</span><span class="export-option-note">Submission-oriented sections to transfer into the institution's form</span></span>
+                    </button>
+                    <button class="export-option" type="button" data-export-format="research-design" role="menuitem">
+                        <i data-lucide="notebook-tabs" size="17"></i><span class="export-option-copy"><span class="export-option-title">Research design (.docx)</span><span class="export-option-note">Methods, participant journey, safeguards, data plan, trade-offs, and next actions</span></span>
                     </button>
                 </div>
             </div>
@@ -1815,7 +1818,11 @@
 
         async function exportSession(format) {
             if (!state.session) return;
-            const suffix = format === "json" ? "/export" : (format === "application" ? "/export.application.docx" : `/export.${format}`);
+            const suffix = format === "json"
+                ? "/export"
+                : (format === "application"
+                    ? "/export.application.docx"
+                    : (format === "research-design" ? "/export.research-design.docx" : `/export.${format}`));
             toggleExportMenu(false);
             try {
                 const response = await fetch(`/api/safebars/v2/sessions/${state.session.id}${suffix}`, {headers: {"X-SafeBARS-Access": state.access?.researcher_token || ""}});
@@ -1825,7 +1832,7 @@
                 }
                 const blob = await response.blob();
                 const disposition = response.headers.get("Content-Disposition") || "";
-                const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || `safebars-export.${format === "application" ? "docx" : format}`;
+                const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || `safebars-export.${["application", "research-design"].includes(format) ? "docx" : format}`;
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
                 link.download = filename;
