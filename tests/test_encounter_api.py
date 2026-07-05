@@ -183,6 +183,19 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn("ETHICS APPLICATION DRAFT", application_text)
         self.assertIn("formal approval", application_text)
 
+        research_design = self.client.get(
+            f"/api/safebars/v2/sessions/{session_id}/export.research-design.docx",
+            headers=researcher_headers,
+        )
+        self.assertEqual(research_design.status_code, 200)
+        self.assertIn("research_design.docx", research_design.headers["Content-Disposition"])
+        design_document = Document(BytesIO(research_design.data))
+        design_text = "\n".join(paragraph.text for paragraph in design_document.paragraphs)
+        self.assertIn("RESEARCH DESIGN AND ETHICS-IN-PRACTICE PLAN", design_text)
+        self.assertIn("Research setting, procedures, and participant journey", design_text)
+        self.assertIn("Ethics-informed trade-offs and design decisions", design_text)
+        self.assertIn("Expert dependencies and unresolved design questions", design_text)
+
         expert_export = self.client.get(
             f"/api/safebars/v2/sessions/{session_id}/export.expert.docx"
             , headers=expert_headers
@@ -192,6 +205,38 @@ class EncounterApiTest(unittest.TestCase):
         expert_text = "\n".join(paragraph.text for paragraph in expert_document.paragraphs)
         self.assertIn("SAFEBARS EXPERT REVIEW SUMMARY", expert_text)
         self.assertIn("Expert advice", expert_text)
+
+        second_payload = json.loads(json.dumps(SAMPLE_PROJECT))
+        second_payload["project"]["title"] = "Second sensitive-service protocol"
+        second_created = self.client.post(
+            "/api/safebars/v2/sessions", json=second_payload
+        ).get_json()
+        portfolio = self.client.post(
+            "/api/safebars/v2/expert/export.portfolio.docx",
+            json={
+                "cases": [
+                    {
+                        "session_id": session_id,
+                        "expert_token": created_payload["access"]["expert_token"],
+                    },
+                    {
+                        "session_id": second_created["session"]["id"],
+                        "expert_token": second_created["access"]["expert_token"],
+                    },
+                ]
+            },
+        )
+        self.assertEqual(portfolio.status_code, 200)
+        self.assertIn("expert_caseload_summary.docx", portfolio.headers["Content-Disposition"])
+        portfolio_document = Document(BytesIO(portfolio.data))
+        portfolio_text = "\n".join(
+            paragraph.text for paragraph in portfolio_document.paragraphs
+        )
+        self.assertIn("SAFEBARS EXPERT CASELOAD SUMMARY", portfolio_text)
+        self.assertIn("Applications in scope: 2", portfolio_text)
+        self.assertIn(SAMPLE_PROJECT["project"]["title"], portfolio_text)
+        self.assertIn("Second sensitive-service protocol", portfolio_text)
+        self.assertIn("Clarify the withdrawal and deletion boundary.", portfolio_text)
 
     def test_role_tokens_and_expert_invite_rotation(self):
         payload = json.loads(json.dumps(SAMPLE_PROJECT))
@@ -216,6 +261,20 @@ class EncounterApiTest(unittest.TestCase):
             self.client.get(
                 f"/api/safebars/v2/sessions/{session_id}/expert-summary",
                 headers=researcher_headers,
+            ).status_code,
+            403,
+        )
+        self.assertEqual(
+            self.client.post(
+                "/api/safebars/v2/expert/export.portfolio.docx",
+                json={
+                    "cases": [
+                        {
+                            "session_id": session_id,
+                            "expert_token": researcher_token,
+                        }
+                    ]
+                },
             ).status_code,
             403,
         )
@@ -251,6 +310,7 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Six core questions", workspace.data)
         self.assertIn(b"Full audit report (.docx)", workspace.data)
         self.assertIn(b"Application draft (.docx)", workspace.data)
+        self.assertIn(b"Research design (.docx)", workspace.data)
 
         legacy = self.client.get("/safebars/v1")
         self.assertEqual(legacy.status_code, 200)
@@ -263,6 +323,7 @@ class EncounterApiTest(unittest.TestCase):
         expert_dashboard = self.client.get("/safebars/expert")
         self.assertEqual(expert_dashboard.status_code, 200)
         self.assertIn(b"SafeBARS Expert Caseload", expert_dashboard.data)
+        self.assertIn(b"Download caseload summary", expert_dashboard.data)
 
 
 if __name__ == "__main__":
