@@ -423,6 +423,7 @@ class EncounterEngine:
             "passages": self._extract_passages(artifacts),
             "encounter_map": [],
             "framework_assessment": {},
+            "tradeoff_deliberations": payload.get("tradeoff_deliberations", {}),
             "application_profile_id": str(payload.get("application_profile_id", "")).strip(),
             "application_readiness": {},
             "lineage": {
@@ -468,6 +469,7 @@ class EncounterEngine:
             "selected_scenarios": source.get("selected_scenarios", []),
             "use_llm": source.get("use_llm", False),
             "application_profile_id": source.get("application_profile_id", ""),
+            "tradeoff_deliberations": source.get("tradeoff_deliberations", {}),
             "lineage": {
                 "parent_session_id": source["id"],
                 "version_number": current_version + 1,
@@ -484,6 +486,7 @@ class EncounterEngine:
     def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
         session = self.store.load(session_id)
         if session:
+            session.setdefault("tradeoff_deliberations", {})
             if not session.get("audit_plan"):
                 session["audit_plan"] = self._build_audit_plan(
                     session, session.get("selected_scenarios") or None
@@ -572,6 +575,52 @@ class EncounterEngine:
         session["application_profile_id"] = profile_id
         session["updated_at"] = utc_now()
         self._save(session, "application_profile_updated", {"profile_id": profile_id})
+        return session
+
+    def update_tradeoff_deliberations(
+        self,
+        session_id: str,
+        deliberations: List[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        allowed = {
+            item.get("id"): item
+            for item in session.get("framework_assessment", {}).get("tradeoffs", [])
+        }
+        cleaned: Dict[str, Dict[str, Any]] = {}
+        for item in deliberations or []:
+            tradeoff_id = str(item.get("id", "")).strip()
+            if tradeoff_id not in allowed:
+                continue
+            try:
+                value = int(item.get("value", allowed[tradeoff_id].get("left", {}).get("value", 50)))
+            except (TypeError, ValueError):
+                raise ValueError("Trade-off positions must be whole numbers from 0 to 100.")
+            if value < 0 or value > 100:
+                raise ValueError("Trade-off positions must be between 0 and 100.")
+            cleaned[tradeoff_id] = {
+                "id": tradeoff_id,
+                "value": value,
+                "rationale": str(item.get("rationale", "")).strip()[:2000],
+                "updated_at": utc_now(),
+            }
+        if not cleaned:
+            raise ValueError("Add at least one recognized trade-off deliberation.")
+        session["tradeoff_deliberations"] = {
+            **session.get("tradeoff_deliberations", {}),
+            **cleaned,
+        }
+        session["updated_at"] = utc_now()
+        self._save(
+            session,
+            "tradeoff_deliberations_updated",
+            {
+                "tradeoff_ids": list(cleaned),
+                "positions": {key: value["value"] for key, value in cleaned.items()},
+            },
+        )
         return session
 
     def run_audit(self, session_id: str, scenario_ids: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:

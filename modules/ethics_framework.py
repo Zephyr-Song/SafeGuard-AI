@@ -208,6 +208,7 @@ TRADEOFFS = [
     {
         "id": "recruitment_reach",
         "title": "Recruitment precision and equitable reach",
+        "short_label": "Recruitment reach",
         "left": {"label": "Narrow eligibility", "value": 55},
         "right": {"label": "Broader access", "value": 45},
         "dimensions": ["justice", "respect"],
@@ -216,6 +217,7 @@ TRADEOFFS = [
     {
         "id": "data_richness_privacy",
         "title": "Data richness and participant privacy",
+        "short_label": "Data and privacy",
         "left": {"label": "Richer records", "value": 50},
         "right": {"label": "Data minimization", "value": 50},
         "dimensions": ["respect", "beneficence", "law_public_interest"],
@@ -224,6 +226,7 @@ TRADEOFFS = [
     {
         "id": "automation_oversight",
         "title": "AI automation and human oversight",
+        "short_label": "AI oversight",
         "left": {"label": "More automation", "value": 40},
         "right": {"label": "More human review", "value": 60},
         "dimensions": ["ai_govern", "ai_measure", "ai_manage"],

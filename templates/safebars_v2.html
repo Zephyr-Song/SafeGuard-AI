@@ -509,6 +509,37 @@
         .framework-chip { padding: 7px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface-subtle); font-size: 10px; }
         .framework-chip a { color: var(--blue); font-weight: 700; text-decoration: none; }
         .dimension-detail { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 11px; line-height: 1.45; }
+        .tradeoff-comparison { margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-subtle); }
+        .tradeoff-comparison-head { display: flex; justify-content: space-between; align-items: start; gap: 14px; }
+        .tradeoff-comparison-title { font-size: 12px; font-weight: 800; }
+        .tradeoff-comparison-copy { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+        .tradeoff-dandelion { margin-top: 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+        .tradeoff-dandelion svg { display: block; width: 100%; height: 420px; }
+        .tradeoff-link { stroke: #c8d1d8; stroke-width: 1.15; stroke-dasharray: 3 3; }
+        .tradeoff-petal { stroke-width: 1.6; opacity: .72; }
+        .tradeoff-petal.recruitment_reach { fill: #dce9f5; stroke: #2e74b5; }
+        .tradeoff-petal.data_richness_privacy { fill: #dff0ef; stroke: #176f73; }
+        .tradeoff-petal.automation_oversight { fill: #ede4f3; stroke: #76508c; }
+        .comparison-dimension circle { stroke-width: 3; }
+        .comparison-dimension.traditional circle { fill: #e8f0f7; }
+        .comparison-dimension.ict circle { fill: #e1f1ef; }
+        .comparison-dimension.ai circle { fill: #eee6f3; }
+        .comparison-dimension.documented circle { stroke: var(--green); }
+        .comparison-dimension.partial circle { stroke: var(--amber); }
+        .comparison-dimension.missing circle { stroke: var(--red); }
+        .comparison-dimension text { fill: var(--ink); font-size: 8px; font-weight: 700; text-anchor: middle; pointer-events: none; }
+        .tradeoff-petal-label { fill: var(--ink); font-size: 9px; font-weight: 800; text-anchor: middle; }
+        .tradeoff-petal-value { fill: var(--muted); font-size: 8px; text-anchor: middle; }
+        .tradeoff-center-ring { fill: #f7faf9; stroke: var(--green); stroke-width: 2; }
+        .tradeoff-legend { display: flex; flex-wrap: wrap; gap: 9px 14px; margin-top: 8px; color: var(--muted); font-size: 9px; }
+        .tradeoff-legend span { display: inline-flex; align-items: center; gap: 5px; }
+        .legend-swatch { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--line-strong); }
+        .legend-swatch.traditional { background: #e8f0f7; }
+        .legend-swatch.ict { background: #e1f1ef; }
+        .legend-swatch.ai { background: #eee6f3; }
+        .tradeoff-comparison-summary { margin-top: 8px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+        .tradeoff-summary-item { padding: 7px 8px; border-left: 3px solid var(--blue); background: #fff; color: var(--muted); font-size: 9px; line-height: 1.4; }
+        .tradeoff-summary-item strong { display: block; color: var(--ink); margin-bottom: 2px; }
         .tradeoff-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
         .tradeoff-card { padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
         .tradeoff-title { font-size: 11px; font-weight: 750; }
@@ -516,6 +547,7 @@
         .tradeoff-axis span:last-child { text-align: right; }
         .tradeoff-axis input { width: 130px; accent-color: var(--teal); }
         .tradeoff-prompt { color: var(--muted); font-size: 10px; line-height: 1.4; }
+        .tradeoff-rationale { min-height: 64px; margin-top: 8px; font-size: 10px; }
         .framework-boundary { margin-top: 9px; color: var(--muted); font-size: 10px; }
         .readiness-panel { margin-top: 12px; padding: 13px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-subtle); }
         .readiness-panel select { width: min(330px, 100%); }
@@ -790,6 +822,8 @@
             .workflow-step:last-child { border-bottom: 0; }
             .map-grid, .scenario-grid, .agent-strip { grid-template-columns: 1fr; }
             .tradeoff-grid { grid-template-columns: 1fr; }
+            .tradeoff-comparison-summary { grid-template-columns: 1fr; }
+            .tradeoff-dandelion svg { height: 360px; }
             .readiness-summary,.readiness-fields { grid-template-columns: 1fr 1fr; }
             .task-card { grid-template-columns: 1fr; }
             .task-card > div:nth-child(2) { grid-column: auto; grid-row: auto; }
@@ -1010,6 +1044,13 @@
                                 <div class="dimension-detail" id="dimensionDetail">Select a petal to inspect its question and submitted evidence.</div>
                             </div>
                         </div>
+                        <div class="tradeoff-comparison">
+                            <div class="tradeoff-comparison-head"><div><div class="tradeoff-comparison-title">Connected Trade-off Dandelion</div><div class="tradeoff-comparison-copy">One comparative view of parameter lean, connected ethics dimensions, framework family, and evidence coverage. Petal orientation leans toward the larger side; it does not indicate ethical quality.</div></div><button class="btn btn-primary" id="saveTradeoffsButton"><i data-lucide="save" size="14"></i>Save decisions</button></div>
+                            <div class="tradeoff-dandelion" id="tradeoffDandelion"></div>
+                            <div class="tradeoff-legend"><span><i class="legend-swatch traditional"></i>Foundational ethics / VSD / ESR</span><span><i class="legend-swatch ict"></i>Menlo ICT extension</span><span><i class="legend-swatch ai"></i>NIST AI RMF extension</span><span>Green / amber / red outline = documented / partial / missing evidence</span></div>
+                            <div class="tradeoff-comparison-summary" id="tradeoffComparisonSummary" aria-live="polite"></div>
+                            <div class="framework-boundary">Visualization rationale: adapted from the synthesized-data principle of <a href="https://doi.org/10.1145/3334480.3382795" target="_blank" rel="noopener">An et al.'s Dandelion Diagram (CHI EA 2020)</a>; SafeBARS applies it to connected ethics parameters rather than classroom tracking data.</div>
+                        </div>
                         <div class="tradeoff-grid" id="tradeoffGrid"></div>
                         <div class="framework-boundary" id="frameworkBoundary"></div>
                     </div>
@@ -1092,6 +1133,9 @@
             access: null,
             selectedTraceId: null,
             selectedDimensionId: null,
+            tradeoffSessionId: null,
+            tradeoffValues: {},
+            tradeoffRationales: {},
             intakeStep: 0,
             intakeTranscript: [],
             intakeComplete: false,
@@ -1626,14 +1670,123 @@
             return lines;
         }
 
+        function initializeTradeoffState(assessment) {
+            if (state.tradeoffSessionId !== state.session?.id) {
+                state.tradeoffSessionId = state.session?.id || null;
+                state.tradeoffValues = {};
+                state.tradeoffRationales = {};
+            }
+            const saved = state.session?.tradeoff_deliberations || {};
+            (assessment.tradeoffs || []).forEach(item => {
+                if (state.tradeoffValues[item.id] === undefined) {
+                    state.tradeoffValues[item.id] = Number(saved[item.id]?.value ?? item.left.value);
+                }
+                if (state.tradeoffRationales[item.id] === undefined) {
+                    state.tradeoffRationales[item.id] = saved[item.id]?.rationale || "";
+                }
+            });
+        }
+
+        function frameworkFamily(node) {
+            if (node.framework === "nist_ai_rmf") return "ai";
+            if (node.framework === "menlo") return "ict";
+            return "traditional";
+        }
+
+        function renderTradeoffDandelion(assessment) {
+            const tradeoffs = assessment.tradeoffs || [];
+            const dimensions = assessment.dimensions || [];
+            if (!tradeoffs.length || !dimensions.length) {
+                $("tradeoffDandelion").innerHTML = "";
+                $("tradeoffComparisonSummary").innerHTML = "";
+                return;
+            }
+            initializeTradeoffState(assessment);
+            const width = 760, height = 420, cx = 380, cy = 210, outerRadius = 168;
+            const dimensionPositions = dimensions.map((node, index) => {
+                const angle = -Math.PI / 2 + (Math.PI * 2 * index / dimensions.length);
+                return {...node, angle, x: cx + Math.cos(angle) * outerRadius, y: cy + Math.sin(angle) * outerRadius};
+            });
+            const dimensionById = Object.fromEntries(dimensionPositions.map(node => [node.id, node]));
+            const petalData = tradeoffs.map((item, index) => {
+                const baseAngle = -Math.PI / 2 + (Math.PI * 2 * index / tradeoffs.length);
+                const leftValue = Number(state.tradeoffValues[item.id]);
+                const rightValue = 100 - leftValue;
+                const orientation = baseAngle + ((rightValue - leftValue) / 100) * 0.28;
+                const petalLength = 98 + Math.abs(rightValue - leftValue) * 0.26;
+                const halfWidth = 15 + Math.abs(rightValue - leftValue) * 0.08;
+                const startRadius = 34;
+                const sx = cx + Math.cos(baseAngle) * startRadius;
+                const sy = cy + Math.sin(baseAngle) * startRadius;
+                const tx = cx + Math.cos(orientation) * petalLength;
+                const ty = cy + Math.sin(orientation) * petalLength;
+                const px = Math.cos(orientation + Math.PI / 2) * halfWidth;
+                const py = Math.sin(orientation + Math.PI / 2) * halfWidth;
+                const labelRadius = 126;
+                return {
+                    ...item,
+                    leftValue,
+                    rightValue,
+                    tx,
+                    ty,
+                    labelX: cx + Math.cos(baseAngle) * labelRadius,
+                    labelY: cy + Math.sin(baseAngle) * labelRadius,
+                    path: `M ${(sx + px).toFixed(1)} ${(sy + py).toFixed(1)} L ${tx.toFixed(1)} ${ty.toFixed(1)} L ${(sx - px).toFixed(1)} ${(sy - py).toFixed(1)} Z`,
+                };
+            });
+            const links = petalData.flatMap(item => (item.dimensions || []).map(dimensionId => {
+                const dimension = dimensionById[dimensionId];
+                return dimension ? `<line class="tradeoff-link" x1="${item.tx.toFixed(1)}" y1="${item.ty.toFixed(1)}" x2="${dimension.x.toFixed(1)}" y2="${dimension.y.toFixed(1)}"></line>` : "";
+            })).join("");
+            const petals = petalData.map(item => {
+                const label = escapeHtml(item.short_label || item.title);
+                return `<g><path class="tradeoff-petal ${escapeHtml(item.id)}" d="${item.path}"></path><text class="tradeoff-petal-label" x="${item.labelX.toFixed(1)}" y="${item.labelY.toFixed(1)}">${label}</text><text class="tradeoff-petal-value" x="${item.labelX.toFixed(1)}" y="${(item.labelY + 12).toFixed(1)}">${item.leftValue} / ${item.rightValue}</text></g>`;
+            }).join("");
+            const nodes = dimensionPositions.map(node => {
+                const lines = splitNodeLabel(node.label).slice(0, 3);
+                const labels = lines.map((line, index) => `<tspan x="0" y="${(index - (lines.length - 1) / 2) * 8}">${escapeHtml(line)}</tspan>`).join("");
+                return `<g class="comparison-dimension ${frameworkFamily(node)} ${escapeHtml(node.coverage)}" data-comparison-dimension="${escapeHtml(node.id)}" transform="translate(${node.x.toFixed(1)} ${node.y.toFixed(1)})"><circle r="22"></circle><text>${labels}</text></g>`;
+            }).join("");
+            const aria = petalData.map(item => `${item.title}: ${item.left.label} ${item.leftValue}, ${item.right.label} ${item.rightValue}; linked to ${(item.dimensions || []).join(", ")}`).join(". ");
+            $("tradeoffDandelion").innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Connected ethics trade-off comparison. ${escapeHtml(aria)}">${links}${petals}<circle class="tradeoff-center-ring" cx="${cx}" cy="${cy}" r="31"></circle><text x="${cx}" y="${cy - 3}" text-anchor="middle" style="font-size:10px;font-weight:800;fill:var(--ink)">Research</text><text x="${cx}" y="${cy + 10}" text-anchor="middle" style="font-size:8px;fill:var(--muted)">design</text>${nodes}</svg>`;
+            $("tradeoffComparisonSummary").innerHTML = petalData.map(item => {
+                const leaning = item.leftValue === item.rightValue ? "Balanced deliberation" : `Leans toward ${item.leftValue > item.rightValue ? item.left.label : item.right.label}`;
+                const linked = (item.dimensions || []).map(id => dimensionById[id]?.label || id).join(", ");
+                return `<div class="tradeoff-summary-item"><strong>${escapeHtml(item.title)}</strong>${escapeHtml(leaning)} (${item.leftValue}/${item.rightValue}). Connected to ${escapeHtml(linked)}.</div>`;
+            }).join("");
+            document.querySelectorAll("[data-comparison-dimension]").forEach(node => node.addEventListener("click", () => showDimension(node.dataset.comparisonDimension)));
+        }
+
+        async function saveTradeoffDeliberations() {
+            if (!state.session) return;
+            document.querySelectorAll("[data-tradeoff-rationale]").forEach(input => {
+                state.tradeoffRationales[input.dataset.tradeoffRationale] = input.value.trim();
+            });
+            const deliberations = (state.session.framework_assessment?.tradeoffs || []).map(item => ({
+                id: item.id,
+                value: Number(state.tradeoffValues[item.id] ?? item.left.value),
+                rationale: state.tradeoffRationales[item.id] || "",
+            }));
+            try {
+                const result = await api(`/api/safebars/v2/sessions/${state.session.id}/tradeoffs`, {method: "PATCH", body: JSON.stringify({deliberations})});
+                state.session = result.session;
+                persistCurrentSession();
+                renderFrameworkAssessment();
+                toast("Trade-off positions and rationales saved to the research design and expert summary.");
+            } catch (error) { toast(error.message, true); }
+        }
+
         function renderFrameworkAssessment() {
             const assessment = state.session?.framework_assessment;
             if (!assessment?.dimensions?.length) {
                 $("frameworkGraph").innerHTML = "";
                 $("frameworkList").innerHTML = "";
+                $("tradeoffDandelion").innerHTML = "";
+                $("tradeoffComparisonSummary").innerHTML = "";
                 $("tradeoffGrid").innerHTML = "";
                 return;
             }
+            initializeTradeoffState(assessment);
             $("frameworkPathway").textContent = assessment.pathway.replaceAll("_", " ");
             $("frameworkList").innerHTML = assessment.frameworks.map(framework => `<div class="framework-chip"><a href="${escapeHtml(framework.url)}" target="_blank" rel="noopener">${escapeHtml(framework.name)}</a><div>${escapeHtml(framework.scope)} · ${escapeHtml(framework.citation)}</div></div>`).join("");
             $("frameworkBoundary").textContent = assessment.interpretation_boundary;
@@ -1654,11 +1807,21 @@
             document.querySelectorAll("[data-dimension-id]").forEach(node => node.addEventListener("click", () => showDimension(node.dataset.dimensionId)));
             if (!state.selectedDimensionId || !nodes.some(node => node.id === state.selectedDimensionId)) state.selectedDimensionId = nodes[0].id;
             showDimension(state.selectedDimensionId);
+            renderTradeoffDandelion(assessment);
 
-            $("tradeoffGrid").innerHTML = assessment.tradeoffs.map(item => `<div class="tradeoff-card"><div class="tradeoff-title">${escapeHtml(item.title)}</div><div class="tradeoff-axis"><span>${escapeHtml(item.left.label)}</span><input type="range" min="0" max="100" value="${item.left.value}" data-tradeoff="${escapeHtml(item.id)}"><span>${escapeHtml(item.right.label)}</span></div><div class="tradeoff-prompt">${escapeHtml(item.prompt)}</div><div class="task-meta" id="tradeoff-${escapeHtml(item.id)}">Current deliberation position: ${item.left.value} / ${100 - item.left.value}. This is not an ethical score.</div></div>`).join("");
+            $("tradeoffGrid").innerHTML = assessment.tradeoffs.map(item => {
+                const value = Number(state.tradeoffValues[item.id] ?? item.left.value);
+                return `<div class="tradeoff-card"><div class="tradeoff-title">${escapeHtml(item.title)}</div><div class="tradeoff-axis"><span>${escapeHtml(item.left.label)}</span><input type="range" min="0" max="100" value="${value}" data-tradeoff="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.title)} deliberation position"><span>${escapeHtml(item.right.label)}</span></div><div class="tradeoff-prompt">${escapeHtml(item.prompt)}</div><div class="task-meta" id="tradeoff-${escapeHtml(item.id)}">Current deliberation position: ${value} / ${100 - value}. This is not an ethical score.</div><label for="tradeoff-rationale-${escapeHtml(item.id)}">Researcher rationale</label><textarea class="tradeoff-rationale" id="tradeoff-rationale-${escapeHtml(item.id)}" data-tradeoff-rationale="${escapeHtml(item.id)}" placeholder="Why does this position fit the study context?">${escapeHtml(state.tradeoffRationales[item.id] || "")}</textarea></div>`;
+            }).join("");
             document.querySelectorAll("[data-tradeoff]").forEach(input => input.addEventListener("input", () => {
+                state.tradeoffValues[input.dataset.tradeoff] = Number(input.value);
                 $(`tradeoff-${input.dataset.tradeoff}`).textContent = `Current deliberation position: ${input.value} / ${100 - Number(input.value)}. Record the rationale; this is not an ethical score.`;
+                renderTradeoffDandelion(assessment);
             }));
+            document.querySelectorAll("[data-tradeoff-rationale]").forEach(input => input.addEventListener("input", () => {
+                state.tradeoffRationales[input.dataset.tradeoffRationale] = input.value;
+            }));
+            lucide.createIcons();
         }
 
         function renderApplicationReadiness() {
@@ -1897,6 +2060,7 @@
         });
         $("buildMapButton").addEventListener("click", buildMap);
         $("applicationProfile").addEventListener("change", updateApplicationProfile);
+        $("saveTradeoffsButton").addEventListener("click", saveTradeoffDeliberations);
         $("saveMapButton").addEventListener("click", () => saveMap(false));
         $("updatePlanButton").addEventListener("click", () => updateAuditPlan(false));
         $("runAuditButton").addEventListener("click", runAudit);

@@ -39,6 +39,30 @@ class EncounterApiTest(unittest.TestCase):
             "X-SafeBARS-Access": created_payload["access"]["expert_token"]
         }
 
+        tradeoffs = self.client.patch(
+            f"/api/safebars/v2/sessions/{session_id}/tradeoffs",
+            json={
+                "deliberations": [
+                    {
+                        "id": "recruitment_reach",
+                        "value": 70,
+                        "rationale": "A narrower group is methodologically necessary, with community review of exclusion effects.",
+                    },
+                    {
+                        "id": "data_richness_privacy",
+                        "value": 35,
+                        "rationale": "Data minimization outweighs richer recordings for this sensitive topic.",
+                    },
+                ]
+            },
+            headers=researcher_headers,
+        )
+        self.assertEqual(tradeoffs.status_code, 200)
+        self.assertEqual(
+            tradeoffs.get_json()["session"]["tradeoff_deliberations"]["recruitment_reach"]["value"],
+            70,
+        )
+
         planned = self.client.patch(
             f"/api/safebars/v2/sessions/{session_id}/plan",
             json={"scenario_ids": ["participant_distress", "partial_withdrawal"]},
@@ -123,6 +147,10 @@ class EncounterApiTest(unittest.TestCase):
         self.assertEqual(versioned.status_code, 201)
         self.assertEqual(versioned.get_json()["session"]["lineage"]["parent_session_id"], session_id)
         self.assertEqual(versioned.get_json()["session"]["lineage"]["version_number"], 2)
+        self.assertEqual(
+            versioned.get_json()["session"]["tradeoff_deliberations"]["recruitment_reach"]["value"],
+            70,
+        )
 
         issue_id = audited_session["issues"][0]["id"]
         decision = self.client.post(
@@ -195,6 +223,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn("Research setting, procedures, and participant journey", design_text)
         self.assertIn("Ethics-informed trade-offs and design decisions", design_text)
         self.assertIn("Expert dependencies and unresolved design questions", design_text)
+        self.assertIn("Narrow eligibility: 70", design_text)
+        self.assertIn("A narrower group is methodologically necessary", design_text)
 
         expert_export = self.client.get(
             f"/api/safebars/v2/sessions/{session_id}/export.expert.docx"
@@ -237,6 +267,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(SAMPLE_PROJECT["project"]["title"], portfolio_text)
         self.assertIn("Second sensitive-service protocol", portfolio_text)
         self.assertIn("Clarify the withdrawal and deletion boundary.", portfolio_text)
+        self.assertIn("Recorded research-design trade-offs", portfolio_text)
+        self.assertIn("Data minimization outweighs richer recordings", portfolio_text)
 
     def test_role_tokens_and_expert_invite_rotation(self):
         payload = json.loads(json.dumps(SAMPLE_PROJECT))
@@ -313,6 +345,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Research design (.docx)", workspace.data)
         self.assertIn(b"Expert workspace", workspace.data)
         self.assertIn(b'href="/safebars/expert"', workspace.data)
+        self.assertIn(b"Connected Trade-off Dandelion", workspace.data)
+        self.assertIn(b"10.1145/3334480.3382795", workspace.data)
 
         legacy = self.client.get("/safebars/v1")
         self.assertEqual(legacy.status_code, 200)
