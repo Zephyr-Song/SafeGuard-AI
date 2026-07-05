@@ -131,6 +131,22 @@ def update_application_profile(session_id: str):
     return jsonify({"success": True, "session": encounter_session})
 
 
+@encounter_api.patch("/sessions/<session_id>/tradeoffs")
+@require_session_role("researcher")
+def update_tradeoffs(session_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        encounter_session = encounter_engine.update_tradeoff_deliberations(
+            session_id,
+            payload.get("deliberations", []),
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({"success": True, "session": encounter_session})
+
+
 @encounter_api.post("/sessions/<session_id>/audit")
 @require_session_role("researcher")
 def run_audit(session_id: str):

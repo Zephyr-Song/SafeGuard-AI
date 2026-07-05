@@ -17,7 +17,7 @@ Key features:
 - six-question guided intake that populates structured protocol fields, with one conditional AI-governance follow-up;
 - Belmont baseline with conditional Menlo and NIST AI RMF extensions;
 - Value Sensitive Design-informed trade-off exploration;
-- Ethics Dandelion evidence visualization;
+- Ethics Dandelion evidence visualization and a connected Trade-off Dandelion comparing parameter lean, linked framework dimensions, framework family, and evidence coverage;
 - inspectable agent plans, sources, tools, dependencies, and stopping rules;
 - researcher/expert capability tokens with separate API permissions;
 - rotatable expert invitations and browser-local expert caseload;
@@ -33,6 +33,8 @@ Key features:
 - **Research design (.docx):** researcher-facing methods and fieldwork plan covering participants, recruitment, procedures, consent, safeguards, data, AI oversight, trade-offs, expert dependencies, and next actions.
 - **Full audit report (.docx/.pdf):** internal evidence record containing framework mapping, encounter stages, scenario traces, issue ledger, sources, agent plan, handoffs, and event history. Use it for supervision, team review, or research evaluation rather than as the application form itself.
 - **Expert review summary / caseload summary (.docx):** one-protocol review record or a cross-application summary of accessible ethics drafts, gaps, priorities, advice, researcher responses, and linked revisions.
+
+Saved trade-off positions and researcher rationales flow into the research-design document and the expert caseload summary. The visualization uses the synthesized-data principle of An et al.'s CHI EA 2020 Dandelion Diagram while explicitly adapting it from classroom position/orientation data to connected ethics-design parameters.
 
 ## Run locally
 

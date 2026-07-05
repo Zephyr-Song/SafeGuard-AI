@@ -44,7 +44,7 @@ AMBER_FILL = "FFF8E8"
 
 
 def _text(value: Any, fallback: str = "Not provided") -> str:
-    cleaned = str(value or "").strip()
+    cleaned = "" if value is None else str(value).strip()
     return cleaned or fallback
 
 
@@ -925,10 +925,14 @@ def build_research_design_docx(session: Dict[str, Any]) -> bytes:
     tradeoffs = assessment.get("tradeoffs", [])
     if not tradeoffs:
         document.add_paragraph("No framework-grounded trade-off records are available yet.")
+    deliberations = session.get("tradeoff_deliberations", {})
     for tradeoff in tradeoffs:
         document.add_heading(tradeoff.get("label", tradeoff.get("title", "Design trade-off")), level=2)
         left = tradeoff.get("left", {})
         right = tradeoff.get("right", {})
+        deliberation = deliberations.get(tradeoff.get("id"), {})
+        left_value = deliberation.get("value", left.get("value", 50))
+        right_value = 100 - int(left_value)
         _add_label_paragraph(
             document,
             "Connected parameters",
@@ -937,9 +941,10 @@ def build_research_design_docx(session: Dict[str, Any]) -> bytes:
         _add_label_paragraph(
             document,
             "Current design balance",
-            f"{_text(left.get('label'))}: {left.get('value', 'not set')} / {_text(right.get('label'))}: {right.get('value', 'not set')}",
+            f"{_text(left.get('label'))}: {left_value} / {_text(right.get('label'))}: {right_value}",
         )
-        _add_label_paragraph(document, "Researcher decision required", tradeoff.get("prompt"), after=8)
+        _add_label_paragraph(document, "Researcher decision prompt", tradeoff.get("prompt"))
+        _add_label_paragraph(document, "Researcher rationale", deliberation.get("rationale"), after=8)
 
     document.add_heading(f"{next_section + 1}. Expert dependencies and unresolved design questions", level=1)
     unresolved = [item for item in session.get("handoffs", []) if item.get("status") != "resolved"]
@@ -1072,6 +1077,24 @@ def build_expert_portfolio_docx(sessions: List[Dict[str, Any]]) -> bytes:
         _add_label_paragraph(document, "Application profile", readiness.get("profile", {}).get("label"))
         _add_label_paragraph(document, "Application completeness", f"{readiness.get('completion_percent', 0)}% documented")
         _add_label_paragraph(document, "Review priority", f"{high_unresolved} high-priority unresolved; {unresolved_count} unresolved overall")
+
+        deliberations = session.get("tradeoff_deliberations", {})
+        if deliberations:
+            document.add_heading("Recorded research-design trade-offs", level=3)
+            tradeoff_by_id = {
+                item.get("id"): item
+                for item in session.get("framework_assessment", {}).get("tradeoffs", [])
+            }
+            for tradeoff_id, deliberation in deliberations.items():
+                tradeoff = tradeoff_by_id.get(tradeoff_id, {})
+                left = tradeoff.get("left", {})
+                right = tradeoff.get("right", {})
+                left_value = int(deliberation.get("value", left.get("value", 50)))
+                _add_label_paragraph(
+                    document,
+                    tradeoff.get("title", tradeoff_id),
+                    f"{_text(left.get('label'))}: {left_value} / {_text(right.get('label'))}: {100 - left_value}. Rationale: {_text(deliberation.get('rationale'))}",
+                )
 
         document.add_heading("Application gaps", level=3)
         gaps = [field for field in readiness.get("fields", []) if field.get("status") != "documented"]
