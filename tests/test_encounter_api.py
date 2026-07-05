@@ -311,6 +311,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Full audit report (.docx)", workspace.data)
         self.assertIn(b"Application draft (.docx)", workspace.data)
         self.assertIn(b"Research design (.docx)", workspace.data)
+        self.assertIn(b"Expert workspace", workspace.data)
+        self.assertIn(b'href="/safebars/expert"', workspace.data)
 
         legacy = self.client.get("/safebars/v1")
         self.assertEqual(legacy.status_code, 200)
