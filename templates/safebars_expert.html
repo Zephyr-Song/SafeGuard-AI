@@ -26,12 +26,13 @@
         label { display:block; margin-bottom:4px; color:var(--muted); font-size:10px; font-weight:700; }
         input,select,textarea { width:100%; padding:8px 9px; border:1px solid #cbd3d9; border-radius:5px; background:#fff; color:var(--ink); }
         textarea { min-height:78px; resize:vertical; }
-        .stats { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; margin-top:12px; }
+        .stats { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:8px; margin-top:12px; }
         .stat { padding:11px; border:1px solid var(--line); border-radius:7px; background:var(--surface); }
         .stat-value { font-size:22px; font-weight:800; }
         .stat-label { margin-top:2px; color:var(--muted); font-size:10px; text-transform:uppercase; }
         .toolbar { display:flex; justify-content:space-between; gap:10px; align-items:center; margin:18px 0 9px; }
         .toolbar h2 { font-size:15px; }
+        .toolbar-filters { display:flex; gap:7px; flex-wrap:wrap; justify-content:flex-end; }
         .toolbar select { width:auto; min-width:180px; }
         .queue { display:grid; gap:10px; }
         .card { border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--surface); }
@@ -48,6 +49,9 @@
         .section { margin-top:11px; color:#42505b; font-size:11px; line-height:1.5; }
         .section:first-child { margin-top:0; }
         .section strong { color:var(--ink); }
+        .assignment-panel { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+        .assignment-box { padding:8px 9px; border:1px solid var(--line); border-radius:6px; background:#fff; font-size:10px; line-height:1.45; }
+        .assignment-box strong { display:block; color:var(--ink); margin-bottom:2px; text-transform:uppercase; letter-spacing:.03em; }
         .quote { margin-top:6px; padding:8px 9px; border-left:3px solid var(--blue); background:#f2f5f7; font-size:10px; line-height:1.4; }
         .factors { margin:6px 0 0; padding-left:18px; color:var(--muted); font-size:10px; }
         .field { margin-bottom:9px; }
@@ -57,11 +61,17 @@
         .btn-primary { border-color:var(--green); background:var(--green); color:#fff; }
         .btn-resolve { border-color:var(--teal); color:var(--teal); }
         .history { margin-top:9px; padding-top:8px; border-top:1px solid var(--line); color:var(--muted); font-size:9px; }
+        .timeline { margin-top:10px; display:grid; gap:6px; }
+        .timeline-item { display:grid; grid-template-columns:18px 1fr; gap:7px; color:var(--muted); font-size:10px; line-height:1.4; }
+        .timeline-dot { width:10px; height:10px; margin-top:3px; border-radius:50%; background:#c8d1d8; border:2px solid #fff; box-shadow:0 0 0 1px var(--line); }
+        .timeline-item.active .timeline-dot { background:var(--green); box-shadow:0 0 0 1px var(--green); }
+        .timeline-title { color:var(--ink); font-weight:800; }
+        .timeline-comment { margin-top:3px; padding:6px 7px; border-left:2px solid var(--blue); background:#f4f7f9; color:#43505b; }
         .empty { padding:60px 20px; text-align:center; color:var(--muted); background:#fff; border:1px solid var(--line); border-radius:8px; }
         .toast { position:fixed; right:18px; bottom:18px; display:none; max-width:390px; padding:10px 12px; border:1px solid var(--line); border-radius:7px; background:#fff; box-shadow:0 12px 34px rgba(20,30,38,.18); font-size:12px; }
         .toast.show { display:block; }
         .toast.error { border-color:#d99b95; background:#fff8f7; }
-        @media (max-width:800px) { .stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .reviewer,.card-body { grid-template-columns:1fr; } .review { border-left:0; border-top:1px solid var(--line); } .project-top,.toolbar { align-items:stretch; flex-direction:column; } .toolbar select { width:100%; } }
+        @media (max-width:800px) { .stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .reviewer,.card-body,.assignment-panel { grid-template-columns:1fr; } .review { border-left:0; border-top:1px solid var(--line); } .project-top,.toolbar { align-items:stretch; flex-direction:column; } .toolbar-filters { justify-content:stretch; } .toolbar select { width:100%; } }
     </style>
 </head>
 <body data-session-id="{{ session_id }}">
@@ -76,7 +86,7 @@
             <div class="reviewer"><div><label for="reviewerName">Reviewer name or identifier</label><input id="reviewerName" placeholder="e.g. School ethics advisor"></div><div><label for="reviewerRole">Reviewer role</label><select id="reviewerRole"></select></div></div>
         </section>
         <section class="stats" id="stats"></section>
-        <div class="toolbar"><div><h2>Prioritized handoff queue</h2><p class="muted">Review the source, AI boundary, researcher position, and routing rationale.</p></div><select id="statusFilter"><option value="unresolved">Unresolved first</option><option value="all">All handoffs</option><option value="open">Open only</option><option value="needs_clarification">Needs clarification</option><option value="researcher_revised">Researcher revised</option><option value="advised">Advised</option><option value="resolved">Resolved</option></select></div>
+        <div class="toolbar"><div><h2>Prioritized handoff queue</h2><p class="muted">Review the source, AI boundary, researcher position, routing rationale, and assignment trail.</p></div><div class="toolbar-filters"><select id="roleFilter"><option value="all">All expert roles</option></select><select id="statusFilter"><option value="unresolved">Unresolved first</option><option value="all">All handoffs</option><option value="open">Open only</option><option value="assigned">Assigned</option><option value="needs_clarification">Needs clarification</option><option value="researcher_revised">Researcher revised</option><option value="advised">Advised</option><option value="resolved">Resolved</option></select></div></div>
         <section class="queue" id="queue"><div class="empty">Loading expert summary…</div></section>
     </main>
     <div class="toast" id="toast"></div>
@@ -101,12 +111,62 @@
         function toast(message, error = false) { clearTimeout(toastTimer); $("toast").textContent = message; $("toast").className = `toast show ${error ? "error" : ""}`; toastTimer = setTimeout(() => $("toast").className = "toast", 4500); }
         function passage(id) { return summary?.passages?.find(item => item.id === id); }
         function roleOptions(selected = "") { return options.expert_roles.map(role => `<option value="${escapeHtml(role.id)}" ${role.id === selected ? "selected" : ""}>${escapeHtml(role.label)}</option>`).join(""); }
-        function filteredQueue() { const filter = $("statusFilter").value; if (filter === "all") return summary.queue; if (filter === "unresolved") return summary.queue.filter(item => item.status !== "resolved"); return summary.queue.filter(item => item.status === filter); }
+        function roleLabel(roleId = "") { return options.expert_roles.find(role => role.id === roleId)?.label || roleId || "Unassigned"; }
+        function populateRoleFilter() {
+            const current = $("roleFilter").value || "all";
+            $("roleFilter").innerHTML = `<option value="all">All expert roles</option>` + options.expert_roles.map(role => `<option value="${escapeHtml(role.id)}">${escapeHtml(role.label)} (${summary?.role_counts?.[role.id] || 0})</option>`).join("");
+            $("roleFilter").value = [...$("roleFilter").options].some(option => option.value === current) ? current : "all";
+        }
+        function filteredQueue() {
+            const filter = $("statusFilter").value;
+            const roleFilter = $("roleFilter").value;
+            let queue = summary.queue;
+            if (roleFilter !== "all") queue = queue.filter(item => (item.assigned_role || item.recommended_role) === roleFilter);
+            if (filter === "all") return queue;
+            if (filter === "unresolved") return queue.filter(item => item.status !== "resolved");
+            return queue.filter(item => item.status === filter);
+        }
+        function timeline(item) {
+            const events = [{title:"AI handoff created", actor:"Boundary and Handoff Agent", time:item.created_at || "", text:item.why_ai_cannot_resolve || ""}];
+            if (item.assigned_role || item.status === "assigned") events.push({title:"Assigned for expert review", actor:item.assigned_reviewer_name || roleLabel(item.assigned_role || item.recommended_role), time:item.assigned_at || item.reviewed_at || "", text:item.assigned_role_label || roleLabel(item.assigned_role || item.recommended_role)});
+            (item.review_history || []).forEach(event => {
+                const redirected = event.redirect_role_label ? `Redirected to ${event.redirect_role_label}` : "";
+                events.push({title:event.action.replaceAll("_", " "), actor:event.reviewer_name || event.reviewer_role_label || event.reviewer_role, time:event.timestamp || "", text:[event.advice, event.rationale, redirected].filter(Boolean).join(" · ")});
+            });
+            (item.researcher_revision_history || []).forEach(event => events.push({title:"Researcher response", actor:"Researcher", time:event.timestamp || "", text:[event.response, event.revised_text ? `Revision: ${event.revised_text}` : ""].filter(Boolean).join(" · ")}));
+            if (item.resolved_at) events.push({title:"Resolved", actor:item.reviewer_name || "Expert reviewer", time:item.resolved_at, text:"Marked ready for the researcher's ethics application record."});
+            return `<div class="timeline">${events.map(event => `<div class="timeline-item active"><span class="timeline-dot"></span><div><div class="timeline-title">${escapeHtml(event.title)} · ${escapeHtml(event.actor || "")}</div><div>${escapeHtml(event.time || "No timestamp")}</div>${event.text ? `<div class="timeline-comment">${escapeHtml(event.text)}</div>` : ""}</div></div>`).join("")}</div>`;
+        }
+        function enhanceHandoffCards(queue) {
+            document.querySelectorAll(".card").forEach((card, index) => {
+                const item = queue[index];
+                if (!item) return;
+                const evidence = card.querySelector(".evidence");
+                const actions = card.querySelector(".actions");
+                const assignment = document.createElement("div");
+                assignment.className = "assignment-panel";
+                assignment.innerHTML = `<div class="assignment-box"><strong>Recommended role</strong>${escapeHtml(item.recommended_role_label || item.owner)}<br><span class="muted">${escapeHtml(item.recommended_role_scope || "")}</span></div><div class="assignment-box"><strong>Current assignment</strong>${escapeHtml(item.assigned_reviewer_name || "Not assigned to a named reviewer")}<br><span class="muted">${escapeHtml(item.assigned_role_label || "Awaiting expert triage")}</span></div>`;
+                evidence?.appendChild(assignment);
+                const history = document.createElement("div");
+                history.className = "section";
+                history.innerHTML = `<strong>Workflow timeline and comment history</strong>${timeline(item)}`;
+                evidence?.appendChild(history);
+                if (actions && !actions.querySelector("[data-action='assign']")) {
+                    const assign = document.createElement("button");
+                    assign.className = "btn";
+                    assign.dataset.action = "assign";
+                    assign.dataset.id = item.id;
+                    assign.textContent = "Assign to me";
+                    actions.prepend(assign);
+                }
+            });
+        }
         function render() {
             $("projectTitle").textContent = summary.project.title || "Untitled project";
             $("projectContext").textContent = summary.project.context || "No project context provided.";
             $("pathway").textContent = summary.framework_pathway.replaceAll("_", " ");
-            const labels = [["total","Total"],["unresolved","Unresolved"],["high_priority","High priority"],["advised","Advised"],["resolved","Resolved"]];
+            populateRoleFilter();
+            const labels = [["total","Total"],["unresolved","Unresolved"],["high_priority","High priority"],["assigned","Assigned"],["advised","Advised"],["resolved","Resolved"]];
             $("stats").innerHTML = labels.map(([key,label]) => `<div class="stat"><div class="stat-value">${summary.counts[key] || 0}</div><div class="stat-label">${label}</div></div>`).join("");
             const queue = filteredQueue();
             $("queue").innerHTML = queue.length ? queue.map(item => {
@@ -115,6 +175,7 @@
                 const history = (item.review_history || []).slice(-3).map(event => `<div>${escapeHtml(event.action)} · ${escapeHtml(event.reviewer_role_label || event.reviewer_role)} · ${escapeHtml(event.timestamp || "")}</div>`).join("");
                 return `<article class="card"><div class="card-head"><div><div class="badges"><span class="badge ${escapeHtml(item.priority)}">${escapeHtml(item.priority)} priority</span><span class="badge ${escapeHtml(item.status)}">${escapeHtml(item.status.replaceAll("_", " "))}</span><span class="badge">${escapeHtml(issue.severity || "unknown")}</span></div><h3 class="card-title">${escapeHtml(issue.title || item.question)}</h3></div><span class="muted">${escapeHtml(issue.category || "")}</span></div><div class="card-body"><div class="evidence"><div class="section"><strong>Question:</strong> ${escapeHtml(item.question)}</div><div class="section"><strong>Why AI stopped:</strong> ${escapeHtml(item.why_ai_cannot_resolve)}</div><div class="section"><strong>Recommended reviewer:</strong> ${escapeHtml(item.recommended_role_label || item.owner)}<br><span class="muted">${escapeHtml(item.recommended_role_scope || "")}</span></div><div class="section"><strong>Observation:</strong> ${escapeHtml(issue.observation || "")}</div>${quotes || `<div class="quote">No exact source passage was attached; inspect the missing protocol transition.</div>`}<div class="section"><strong>Researcher decision:</strong> ${escapeHtml(issue.researcher_decision || "pending")} · ${escapeHtml(issue.researcher_rationale || "No rationale recorded")}</div>${item.researcher_response ? `<div class="quote"><strong>Researcher response</strong><br>${escapeHtml(item.researcher_response)}${item.researcher_revised_text ? `<br><br><strong>Linked protocol revision</strong><br>${escapeHtml(item.researcher_revised_text)}` : ""}</div>` : ""}<ul class="factors">${(item.triage_factors || []).map(factor => `<li>${escapeHtml(factor)}</li>`).join("")}</ul></div><div class="review"><div class="field"><label for="advice-${escapeHtml(item.id)}">Expert advice or clarification request</label><textarea id="advice-${escapeHtml(item.id)}">${escapeHtml(item.expert_advice || "")}</textarea></div><div class="field"><label for="rationale-${escapeHtml(item.id)}">Review rationale</label><textarea id="rationale-${escapeHtml(item.id)}">${escapeHtml(item.expert_rationale || "")}</textarea></div><div class="field"><label for="redirect-${escapeHtml(item.id)}">Redirect to another role</label><select id="redirect-${escapeHtml(item.id)}">${roleOptions(item.recommended_role)}</select></div><div class="actions"><button class="btn btn-primary" data-action="advise" data-id="${escapeHtml(item.id)}">Save advice</button><button class="btn" data-action="request_clarification" data-id="${escapeHtml(item.id)}">Request clarification</button><button class="btn" data-action="redirect" data-id="${escapeHtml(item.id)}">Redirect</button><button class="btn btn-resolve" data-action="${item.status === "resolved" ? "reopen" : "resolve"}" data-id="${escapeHtml(item.id)}">${item.status === "resolved" ? "Reopen" : "Resolve"}</button></div>${history ? `<div class="history"><strong>Recent review history</strong>${history}</div>` : ""}</div></div></article>`;
             }).join("") : `<div class="empty">No handoffs match this filter.</div>`;
+            enhanceHandoffCards(queue);
             document.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => review(button.dataset.id, button.dataset.action)));
             lucide.createIcons();
         }
@@ -127,6 +188,7 @@
         async function downloadSummary() { try { const response = await fetch(`/api/safebars/v2/sessions/${sessionId}/export.expert.docx`, {headers:{"X-SafeBARS-Access":accessToken}}); if (!response.ok) { const payload = await response.json(); throw new Error(payload.error || `Download failed: ${response.status}`); } const blob = await response.blob(); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `safebars_${sessionId}_expert_review_summary.docx`; link.click(); URL.revokeObjectURL(link.href); } catch (error) { toast(error.message, true); } }
         async function initialize() { try { if (!accessToken) throw new Error("This expert invitation is missing or has expired. Ask the researcher for a new link."); options = await api("/api/safebars/v2/options"); $("reviewerRole").innerHTML = roleOptions("ethics_board"); await loadSummary(); } catch (error) { $("queue").innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`; toast(error.message, true); } lucide.createIcons(); }
         $("statusFilter").addEventListener("change", render);
+        $("roleFilter").addEventListener("change", render);
         $("downloadSummary").addEventListener("click", downloadSummary);
         initialize();
     </script>

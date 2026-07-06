@@ -9,7 +9,7 @@
         :root { --ink:#17202a; --muted:#66727f; --line:#d9dee3; --surface:#fff; --subtle:#f5f7f8; --green:#246b49; --green-soft:#e7f3ec; --teal:#176f73; --amber:#b7791f; --amber-soft:#fff8e8; --red:#a4423b; --red-soft:#fcebea; }
         * { box-sizing:border-box; }
         body { margin:0; background:#f2f4f5; color:var(--ink); font-family:Inter,Segoe UI,Arial,sans-serif; }
-        button { font:inherit; }
+        button,select { font:inherit; }
         header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:13px 20px; border-bottom:1px solid var(--line); background:#fff; }
         .brand { display:flex; align-items:center; gap:9px; }
         .mark { width:34px; height:34px; display:grid; place-items:center; border-radius:8px; background:var(--green-soft); color:var(--green); }
@@ -24,6 +24,7 @@
         .label { margin-top:2px; color:var(--muted); font-size:9px; text-transform:uppercase; }
         .heading { display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:8px; }
         .heading-actions { display:flex; gap:7px; flex-wrap:wrap; }
+        .role-filter { min-height:34px; padding:7px 10px; border:1px solid #bfc8cf; border-radius:5px; background:#fff; color:var(--ink); font-size:10px; font-weight:700; }
         .heading h2 { font-size:16px; }
         .cases { display:grid; gap:9px; }
         .case { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; padding:14px; border:1px solid var(--line); border-radius:8px; background:#fff; }
@@ -37,7 +38,7 @@
         .btn { min-height:34px; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:7px 10px; border:1px solid #bfc8cf; border-radius:5px; background:#fff; color:var(--ink); cursor:pointer; font-size:10px; font-weight:700; text-decoration:none; }
         .btn-primary { border-color:var(--green); background:var(--green); color:#fff; }
         .empty { padding:70px 20px; border:1px solid var(--line); border-radius:8px; background:#fff; text-align:center; color:var(--muted); }
-        @media (max-width:720px) { .summary { grid-template-columns:1fr 1fr; } .case { grid-template-columns:1fr; } .actions { flex-direction:row; } header { align-items:flex-start; flex-direction:column; } }
+        @media (max-width:720px) { .summary { grid-template-columns:1fr 1fr; } .case { grid-template-columns:1fr; } .actions { flex-direction:row; } header,.heading { align-items:flex-start; flex-direction:column; } .heading-actions,.role-filter { width:100%; } }
     </style>
 </head>
 <body>
@@ -45,7 +46,7 @@
     <main class="shell">
         <div class="notice"><strong>Prototype access model.</strong> Cases appear only after their expert invitation has been opened in this browser session. This is not an institution-wide case-management or approval system.</div>
         <section class="summary" id="summary"></section>
-        <div class="heading"><div><h2>Invited protocols</h2><p class="muted">Sorted by unresolved high-priority handoffs.</p></div><div class="heading-actions"><button class="btn btn-primary" id="downloadPortfolioButton"><i data-lucide="file-down" size="14"></i>Download caseload summary</button><button class="btn" id="refreshButton"><i data-lucide="refresh-cw" size="14"></i>Refresh</button></div></div>
+        <div class="heading"><div><h2>Invited protocols</h2><p class="muted">Sorted by unresolved high-priority handoffs; filter by assigned or recommended expert role.</p></div><div class="heading-actions"><select class="role-filter" id="roleFilter"><option value="all">All expert roles</option></select><button class="btn btn-primary" id="downloadPortfolioButton"><i data-lucide="file-down" size="14"></i>Download caseload summary</button><button class="btn" id="refreshButton"><i data-lucide="refresh-cw" size="14"></i>Refresh</button></div></div>
         <section class="cases" id="cases"><div class="empty">No expert invitations have been opened in this browser session.</div></section>
     </main>
     <script>
@@ -55,6 +56,21 @@
         const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
         const caseIds = () => [...new Set(JSON.parse(sessionStorage.getItem(caseIndexKey) || "[]"))];
         const accessToken = id => sessionStorage.getItem(`safebars_expert_access_${id}`) || "";
+        const caseRoles = item => [...new Set((item.queue || []).map(handoff => handoff.assigned_role || handoff.recommended_role).filter(Boolean))];
+        function roleLabel(roleId, cases = loadedCases) {
+            for (const item of cases) {
+                const handoff = (item.queue || []).find(entry => (entry.assigned_role || entry.recommended_role) === roleId);
+                if (handoff) return handoff.assigned_role_label || handoff.recommended_role_label || handoff.owner || roleId;
+            }
+            return roleId;
+        }
+        function populateRoleFilter(cases) {
+            const current = $("roleFilter").value || "all";
+            const counts = {};
+            cases.forEach(item => caseRoles(item).forEach(role => counts[role] = (counts[role] || 0) + 1));
+            $("roleFilter").innerHTML = `<option value="all">All expert roles</option>` + Object.entries(counts).sort((a,b) => roleLabel(a[0], cases).localeCompare(roleLabel(b[0], cases))).map(([role,count]) => `<option value="${escapeHtml(role)}">${escapeHtml(roleLabel(role, cases))} (${count})</option>`).join("");
+            $("roleFilter").value = [...$("roleFilter").options].some(option => option.value === current) ? current : "all";
+        }
         async function loadCase(id) {
             const token = accessToken(id);
             if (!token) throw new Error("Missing expert token");
@@ -69,15 +85,21 @@
             loadAll();
         }
         function render(cases) {
+            populateRoleFilter(cases);
+            const selectedRole = $("roleFilter").value;
+            const visibleCases = selectedRole === "all" ? [...cases] : cases.filter(item => caseRoles(item).includes(selectedRole));
             const totals = {
-                cases: cases.length,
-                unresolved: cases.reduce((sum,item) => sum + (item.counts.unresolved || 0), 0),
-                high: cases.reduce((sum,item) => sum + (item.counts.unresolved_high_priority ?? item.counts.high_priority ?? 0), 0),
-                resolved: cases.reduce((sum,item) => sum + (item.counts.resolved || 0), 0),
+                cases: visibleCases.length,
+                unresolved: visibleCases.reduce((sum,item) => sum + (item.counts.unresolved || 0), 0),
+                high: visibleCases.reduce((sum,item) => sum + (item.counts.unresolved_high_priority ?? item.counts.high_priority ?? 0), 0),
+                resolved: visibleCases.reduce((sum,item) => sum + (item.counts.resolved || 0), 0),
             };
             $("summary").innerHTML = [[totals.cases,"Cases"],[totals.unresolved,"Unresolved"],[totals.high,"High priority"],[totals.resolved,"Resolved"]].map(([value,label]) => `<div class="stat"><div class="value">${value}</div><div class="label">${label}</div></div>`).join("");
-            cases.sort((a,b) => ((b.counts.unresolved_high_priority ?? b.counts.high_priority ?? 0) - (a.counts.unresolved_high_priority ?? a.counts.high_priority ?? 0)) || (b.counts.unresolved - a.counts.unresolved));
-            $("cases").innerHTML = cases.length ? cases.map(item => `<article class="case"><div><h3>${escapeHtml(item.project.title || "Untitled project")}</h3><p class="muted">${escapeHtml(item.project.context || "No context provided")}</p><div class="meta"><span class="badge">${escapeHtml((item.framework_pathway || "unassessed").replaceAll("_"," "))}</span><span class="badge high">${item.counts.unresolved_high_priority ?? item.counts.high_priority ?? 0} high unresolved</span><span class="badge open">${item.counts.unresolved || 0} unresolved</span><span class="badge resolved">${item.counts.resolved || 0} resolved</span></div><p class="muted">Session ${escapeHtml(item.session_id.replace("encounter_",""))}</p></div><div class="actions"><a class="btn btn-primary" href="/safebars/expert/${escapeHtml(item.session_id)}#access=${encodeURIComponent(item.accessToken)}"><i data-lucide="clipboard-check" size="14"></i>Review case</a><button class="btn" data-remove-case="${escapeHtml(item.session_id)}"><i data-lucide="x" size="14"></i>Remove</button></div></article>`).join("") : `<div class="empty">No valid expert invitations are stored. Open an invitation link from a researcher first.</div>`;
+            visibleCases.sort((a,b) => ((b.counts.unresolved_high_priority ?? b.counts.high_priority ?? 0) - (a.counts.unresolved_high_priority ?? a.counts.high_priority ?? 0)) || (b.counts.unresolved - a.counts.unresolved));
+            $("cases").innerHTML = visibleCases.length ? visibleCases.map(item => {
+                const roles = caseRoles(item).map(role => roleLabel(role, cases)).slice(0, 3).join(" · ") || "No role routed";
+                return `<article class="case"><div><h3>${escapeHtml(item.project.title || "Untitled project")}</h3><p class="muted">${escapeHtml(item.project.context || "No context provided")}</p><div class="meta"><span class="badge">${escapeHtml((item.framework_pathway || "unassessed").replaceAll("_"," "))}</span><span class="badge high">${item.counts.unresolved_high_priority ?? item.counts.high_priority ?? 0} high unresolved</span><span class="badge open">${item.counts.unresolved || 0} unresolved</span><span class="badge resolved">${item.counts.resolved || 0} resolved</span><span class="badge">${escapeHtml(roles)}</span></div><p class="muted">Session ${escapeHtml(item.session_id.replace("encounter_",""))}</p></div><div class="actions"><a class="btn btn-primary" href="/safebars/expert/${escapeHtml(item.session_id)}#access=${encodeURIComponent(item.accessToken)}"><i data-lucide="clipboard-check" size="14"></i>Review case</a><button class="btn" data-remove-case="${escapeHtml(item.session_id)}"><i data-lucide="x" size="14"></i>Remove</button></div></article>`;
+            }).join("") : `<div class="empty">No cases match this expert-role filter.</div>`;
             document.querySelectorAll("[data-remove-case]").forEach(button => button.addEventListener("click", () => removeCase(button.dataset.removeCase)));
             lucide.createIcons();
         }
@@ -111,6 +133,7 @@
             URL.revokeObjectURL(link.href);
         }
         $("refreshButton").addEventListener("click", loadAll);
+        $("roleFilter").addEventListener("change", () => render(loadedCases));
         $("downloadPortfolioButton").addEventListener("click", () => downloadPortfolio().catch(error => alert(error.message)));
         loadAll();
         lucide.createIcons();

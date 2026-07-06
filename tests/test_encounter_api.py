@@ -115,6 +115,20 @@ class EncounterApiTest(unittest.TestCase):
             headers=expert_headers,
         )
         self.assertEqual(expert_review.status_code, 200)
+        reviewed_handoff = next(
+            item
+            for item in expert_review.get_json()["session"]["handoffs"]
+            if item["id"] == handoff["id"]
+        )
+        self.assertEqual(reviewed_handoff["assigned_role"], "ethics_board")
+        self.assertEqual(reviewed_handoff["assigned_reviewer_name"], "School ethics advisor")
+        self.assertGreaterEqual(len(reviewed_handoff["review_history"]), 1)
+        reviewed_summary = self.client.get(
+            f"/api/safebars/v2/sessions/{session_id}/expert-summary",
+            headers=expert_headers,
+        ).get_json()["summary"]
+        self.assertGreaterEqual(reviewed_summary["counts"]["assigned"], 1)
+        self.assertIn("ethics_board", reviewed_summary["role_counts"])
 
         researcher_response = self.client.post(
             f"/api/safebars/v2/sessions/{session_id}/handoffs/{handoff['id']}/researcher-response",
@@ -356,11 +370,14 @@ class EncounterApiTest(unittest.TestCase):
         expert = self.client.get("/safebars/expert/example_session")
         self.assertEqual(expert.status_code, 200)
         self.assertIn(b"SafeBARS Expert Review", expert.data)
+        self.assertIn(b"All expert roles", expert.data)
+        self.assertIn(b"Workflow timeline and comment history", expert.data)
 
         expert_dashboard = self.client.get("/safebars/expert")
         self.assertEqual(expert_dashboard.status_code, 200)
         self.assertIn(b"SafeBARS Expert Caseload", expert_dashboard.data)
         self.assertIn(b"Download caseload summary", expert_dashboard.data)
+        self.assertIn(b"filter by assigned or recommended expert role", expert_dashboard.data)
 
 
 if __name__ == "__main__":

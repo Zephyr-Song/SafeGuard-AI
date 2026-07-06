@@ -931,16 +931,34 @@ class EncounterEngine:
         handoff["expert_rationale"] = rationale.strip() or handoff.get("expert_rationale", "")
         handoff["reviewed_at"] = now
         if action == "assign":
+            handoff["assigned_role"] = reviewer_role
+            handoff["assigned_role_label"] = EXPERT_ROLES[reviewer_role]["label"]
+            handoff["assigned_reviewer_name"] = reviewer_name.strip() or EXPERT_ROLES[reviewer_role]["label"]
+            handoff["assigned_at"] = now
             handoff["status"] = "assigned"
         elif action == "advise":
+            if not handoff.get("assigned_role"):
+                handoff["assigned_role"] = reviewer_role
+                handoff["assigned_role_label"] = EXPERT_ROLES[reviewer_role]["label"]
+                handoff["assigned_reviewer_name"] = reviewer_name.strip() or EXPERT_ROLES[reviewer_role]["label"]
+                handoff["assigned_at"] = now
             handoff["status"] = "advised"
         elif action == "request_clarification":
+            if not handoff.get("assigned_role"):
+                handoff["assigned_role"] = reviewer_role
+                handoff["assigned_role_label"] = EXPERT_ROLES[reviewer_role]["label"]
+                handoff["assigned_reviewer_name"] = reviewer_name.strip() or EXPERT_ROLES[reviewer_role]["label"]
+                handoff["assigned_at"] = now
             handoff["status"] = "needs_clarification"
         elif action == "redirect":
             role = EXPERT_ROLES[redirect_role]
             handoff["recommended_role"] = redirect_role
             handoff["recommended_role_label"] = role["label"]
             handoff["owner"] = role["label"]
+            handoff["assigned_role"] = redirect_role
+            handoff["assigned_role_label"] = role["label"]
+            handoff["assigned_reviewer_name"] = ""
+            handoff["assigned_at"] = now
             handoff["status"] = "redirected"
             event["redirect_role"] = redirect_role
             event["redirect_role_label"] = role["label"]
@@ -984,6 +1002,10 @@ class EncounterEngine:
             )
         priority_order = {"high": 0, "medium": 1, "standard": 2}
         queue.sort(key=lambda item: (priority_order.get(item.get("priority", "standard"), 3), item.get("status") == "resolved"))
+        role_counts: Dict[str, int] = {}
+        for item in queue:
+            role_id = item.get("assigned_role") or item.get("recommended_role") or "unassigned"
+            role_counts[role_id] = role_counts.get(role_id, 0) + 1
         return {
             "session_id": session["id"],
             "project": session.get("project", {}),
@@ -1002,7 +1024,10 @@ class EncounterEngine:
                 ),
                 "advised": sum(item.get("status") == "advised" for item in queue),
                 "resolved": sum(item.get("status") == "resolved" for item in queue),
+                "assigned": sum(bool(item.get("assigned_role")) or item.get("status") == "assigned" for item in queue),
+                "needs_clarification": sum(item.get("status") == "needs_clarification" for item in queue),
             },
+            "role_counts": role_counts,
             "boundary": "Expert advice supports institutional review; this summary is not an approval decision.",
         }
 
@@ -1598,6 +1623,9 @@ class EncounterEngine:
                     "owner", "recommended_role", "recommended_role_label", "recommended_role_scope",
                     "priority", "status", "reviewer_role", "reviewer_name", "expert_advice",
                     "expert_rationale", "reviewed_at", "resolved_at", "review_history",
+                    "assigned_role", "assigned_role_label", "assigned_reviewer_name", "assigned_at",
+                    "researcher_response", "researcher_revised_text", "researcher_responded_at",
+                    "researcher_revision_history",
                 ):
                     if key in prior:
                         generated[key] = prior[key]
@@ -1627,7 +1655,12 @@ class EncounterEngine:
             "triage_factors": triage_factors,
             "suggested_method": "Review the cited passage and scenario in a short consultation before recruitment.",
             "deadline_stage": "Before recruitment or fieldwork",
+            "created_at": utc_now(),
             "status": "open",
+            "assigned_role": "",
+            "assigned_role_label": "",
+            "assigned_reviewer_name": "",
+            "assigned_at": "",
             "reviewer_role": "",
             "reviewer_name": "",
             "expert_advice": "",
@@ -1635,6 +1668,7 @@ class EncounterEngine:
             "reviewed_at": "",
             "resolved_at": "",
             "review_history": [],
+            "researcher_revision_history": [],
         }
 
     def _ensure_handoff(self, session: Dict[str, Any], issue: Dict[str, Any]) -> None:
