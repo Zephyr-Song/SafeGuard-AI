@@ -345,7 +345,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Research design (.docx)", workspace.data)
         self.assertIn(b"Expert workspace", workspace.data)
         self.assertIn(b'href="/safebars/expert"', workspace.data)
-        self.assertIn(b"Connected Trade-off Dandelion", workspace.data)
+        self.assertIn(b"Framework-linked Trade-off Board", workspace.data)
+        self.assertIn(b"Downstream outputs", workspace.data)
         self.assertIn(b"10.1145/3334480.3382795", workspace.data)
 
         legacy = self.client.get("/safebars/v1")
