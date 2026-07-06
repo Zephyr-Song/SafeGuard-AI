@@ -780,6 +780,8 @@
         .handoff-question { font-weight: 700; }
         .handoff-reason { margin-top: 5px; color: var(--muted); font-size: 11px; }
         .handoff-owner { color: var(--teal); font-weight: 700; }
+        .handoff-thread { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--muted); font-size: 10px; }
+        .handoff-thread strong { display: block; color: var(--ink); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .03em; font-size: 9px; }
 
         .toast {
             position: fixed;
@@ -852,6 +854,7 @@
             .trace-layout { grid-template-columns: 1fr; }
             .handoff-item { grid-template-columns: 1fr; }
             .handoff-response { grid-template-columns: 1fr; }
+            .handoff-thread { grid-template-columns: 1fr; }
             .tabbar {
                 display: grid;
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1982,6 +1985,20 @@
             lucide.createIcons();
         }
 
+        function enhanceResearcherHandoffThreads(handoffs) {
+            document.querySelectorAll("#handoffList .handoff-item").forEach((card, index) => {
+                const item = handoffs[index];
+                if (!item || card.querySelector(".handoff-thread")) return;
+                const thread = document.createElement("div");
+                thread.className = "handoff-thread";
+                const reviewCount = (item.review_history || []).length;
+                const replyCount = (item.researcher_revision_history || []).length;
+                const latestReview = (item.review_history || [])[reviewCount - 1];
+                thread.innerHTML = `<div><strong>Current assignment</strong>${escapeHtml(item.assigned_reviewer_name || "Not assigned to a named reviewer")}<br>${escapeHtml(item.assigned_role_label || item.recommended_role_label || item.owner || "")}</div><div><strong>Review status</strong>${escapeHtml((item.status || "open").replaceAll("_", " "))}<br>${reviewCount} expert action(s), ${replyCount} researcher response(s)</div><div><strong>Latest comment</strong>${escapeHtml(latestReview?.advice || latestReview?.rationale || item.expert_advice || "No expert comment yet")}</div>`;
+                card.appendChild(thread);
+            });
+        }
+
         function renderHandoffs() {
             const handoffs = state.session?.handoffs || [];
             $("handoffEmpty").hidden = handoffs.length > 0;
@@ -1991,6 +2008,7 @@
             $("copyExpertInvite").addEventListener("click", copyExpertInvite);
             $("rotateExpertInvite").addEventListener("click", rotateExpertInvite);
             $("openExpertReview").addEventListener("click", () => window.open(expertInviteUrl(), "_blank", "noopener"));
+            enhanceResearcherHandoffThreads(handoffs);
             document.querySelectorAll("[data-researcher-response]").forEach(button => button.addEventListener("click", () => submitHandoffResponse(button.dataset.researcherResponse)));
             lucide.createIcons();
         }
