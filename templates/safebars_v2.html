@@ -922,9 +922,9 @@
                     </button>
                 </div>
             </div>
-            <a class="btn btn-quiet" href="/safebars/expert" title="Switch to the expert caseload workspace">
-                <i data-lucide="user-check" size="16"></i><span>Expert workspace</span>
-            </a>
+            <button class="btn btn-quiet" id="expertWorkspaceButton" title="Open the current protocol's expert review">
+                <i data-lucide="user-check" size="16"></i><span id="expertWorkspaceLabel">Expert workspace</span>
+            </button>
             <a class="btn btn-quiet" href="/safebars/v1" title="Open the preserved v1 rehearsal interface">
                 <i data-lucide="history" size="16"></i><span>V1</span>
             </a>
@@ -1680,6 +1680,7 @@
             $("workflowMap").querySelector(".workflow-state").textContent = mapped ? `${state.session.passages.length} passages indexed` : "Awaiting materials";
             $("workflowTrace").querySelector(".workflow-state").textContent = audited ? `${state.session.traces.length} traces completed` : "Not run";
             $("workflowDecide").querySelector(".workflow-state").textContent = total ? `${decisions} of ${total} decided` : "No issues";
+            updateExpertWorkspaceEntry();
         }
 
         function renderAgents() {
@@ -2046,6 +2047,44 @@
             return `${window.location.origin}/safebars/expert/${state.session.id}#access=${encodeURIComponent(token)}`;
         }
 
+        function updateExpertWorkspaceEntry() {
+            const count = state.session?.handoffs?.length || 0;
+            const label = $("expertWorkspaceLabel");
+            const button = $("expertWorkspaceButton");
+            if (!state.session) {
+                label.textContent = "Expert workspace";
+                button.title = "Build the encounter map and run the audit before expert review";
+            } else if (!count) {
+                label.textContent = "Expert review · no handoffs yet";
+                button.title = "Run the audit to create questions that require expert judgment";
+            } else {
+                label.textContent = `Open expert review (${count})`;
+                button.title = "Open the current protocol's expert response form";
+            }
+            button.classList.toggle("btn-teal", count > 0);
+            button.classList.toggle("btn-quiet", count === 0);
+        }
+
+        function openCurrentExpertWorkspace() {
+            if (!state.session) {
+                toast("No protocol case exists yet. Complete the intake, then build the encounter map and run the audit.", true);
+                return;
+            }
+            if (!(state.session.handoffs || []).length) {
+                const message = state.session.status === "audited"
+                    ? "This audit produced no expert handoffs. Expert input appears only when SafeBARS defers a question for human judgment."
+                    : "Run the selected breakdown traces first. Expert input becomes available when the audit creates a human handoff.";
+                toast(message, true);
+                return;
+            }
+            const url = expertInviteUrl();
+            if (!url) {
+                toast("This protocol has no valid expert access token. Create or rotate the expert invitation first.", true);
+                return;
+            }
+            window.open(url, "_blank", "noopener");
+        }
+
         async function copyExpertInvite() {
             const url = expertInviteUrl();
             if (!url) return toast("No expert invitation token is available.", true);
@@ -2141,6 +2180,7 @@
         $("sampleButton").addEventListener("click", loadSample);
         $("newVersionButton").addEventListener("click", createProtocolVersion);
         $("guidedIntakeButton").addEventListener("click", openGuidedIntake);
+        $("expertWorkspaceButton").addEventListener("click", openCurrentExpertWorkspace);
         $("closeIntakeButton").addEventListener("click", () => $("intakeDialog").close());
         $("restartIntakeButton").addEventListener("click", restartIntake);
         $("skipIntakeButton").addEventListener("click", skipIntakeAnswer);
