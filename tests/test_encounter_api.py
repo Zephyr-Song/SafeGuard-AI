@@ -360,7 +360,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Application draft (.docx)", workspace.data)
         self.assertIn(b"Research design (.docx)", workspace.data)
         self.assertIn(b"Expert workspace", workspace.data)
-        self.assertIn(b'href="/safebars/expert"', workspace.data)
+        self.assertIn(b'id="expertWorkspaceButton"', workspace.data)
+        self.assertIn(b"Open expert review", workspace.data)
         self.assertIn(b"Framework-linked Trade-off Board", workspace.data)
         self.assertIn(b"Downstream outputs", workspace.data)
         self.assertIn(b"10.1145/3334480.3382795", workspace.data)
@@ -386,6 +387,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"SafeBARS Expert Caseload", expert_dashboard.data)
         self.assertIn(b"Download caseload summary", expert_dashboard.data)
         self.assertIn(b"filter by assigned or recommended expert role", expert_dashboard.data)
+        self.assertIn(b"No review case is open", expert_dashboard.data)
+        self.assertIn(b"not an empty input form", expert_dashboard.data)
 
 
 if __name__ == "__main__":

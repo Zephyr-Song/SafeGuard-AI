@@ -37,7 +37,9 @@
         .actions { display:flex; flex-direction:column; justify-content:center; gap:6px; min-width:138px; }
         .btn { min-height:34px; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:7px 10px; border:1px solid #bfc8cf; border-radius:5px; background:#fff; color:var(--ink); cursor:pointer; font-size:10px; font-weight:700; text-decoration:none; }
         .btn-primary { border-color:var(--green); background:var(--green); color:#fff; }
-        .empty { padding:70px 20px; border:1px solid var(--line); border-radius:8px; background:#fff; text-align:center; color:var(--muted); }
+        .empty { padding:54px 20px; border:1px solid var(--line); border-radius:8px; background:#fff; text-align:center; color:var(--muted); }
+        .empty h2 { color:var(--ink); font-size:16px; }
+        .empty p { width:min(560px,100%); margin:8px auto 14px; line-height:1.55; }
         @media (max-width:720px) { .summary { grid-template-columns:1fr 1fr; } .case { grid-template-columns:1fr; } .actions { flex-direction:row; } header,.heading { align-items:flex-start; flex-direction:column; } .heading-actions,.role-filter { width:100%; } }
     </style>
 </head>
@@ -47,7 +49,7 @@
         <div class="notice"><strong>Prototype access model.</strong> Cases appear only after their expert invitation has been opened in this browser session. This is not an institution-wide case-management or approval system.</div>
         <section class="summary" id="summary"></section>
         <div class="heading"><div><h2>Invited protocols</h2><p class="muted">Sorted by unresolved high-priority handoffs; filter by assigned or recommended expert role.</p></div><div class="heading-actions"><select class="role-filter" id="roleFilter"><option value="all">All expert roles</option></select><button class="btn btn-primary" id="downloadPortfolioButton"><i data-lucide="file-down" size="14"></i>Download caseload summary</button><button class="btn" id="refreshButton"><i data-lucide="refresh-cw" size="14"></i>Refresh</button></div></div>
-        <section class="cases" id="cases"><div class="empty">No expert invitations have been opened in this browser session.</div></section>
+        <section class="cases" id="cases"><div class="empty"><h2>No review case is open</h2><p>This page lists expert invitations already opened in this browser. To enter advice, return to the researcher workspace, run an audit until it creates a handoff, then choose <strong>Open expert review</strong>.</p><a class="btn btn-primary" href="/safebars"><i data-lucide="arrow-left" size="14"></i>Return to researcher workspace</a></div></section>
     </main>
     <script>
         const caseIndexKey = "safebars_expert_cases";
@@ -99,7 +101,7 @@
             $("cases").innerHTML = visibleCases.length ? visibleCases.map(item => {
                 const roles = caseRoles(item).map(role => roleLabel(role, cases)).slice(0, 3).join(" · ") || "No role routed";
                 return `<article class="case"><div><h3>${escapeHtml(item.project.title || "Untitled project")}</h3><p class="muted">${escapeHtml(item.project.context || "No context provided")}</p><div class="meta"><span class="badge">${escapeHtml((item.framework_pathway || "unassessed").replaceAll("_"," "))}</span><span class="badge high">${item.counts.unresolved_high_priority ?? item.counts.high_priority ?? 0} high unresolved</span><span class="badge open">${item.counts.unresolved || 0} unresolved</span><span class="badge resolved">${item.counts.resolved || 0} resolved</span><span class="badge">${escapeHtml(roles)}</span></div><p class="muted">Session ${escapeHtml(item.session_id.replace("encounter_",""))}</p></div><div class="actions"><a class="btn btn-primary" href="/safebars/expert/${escapeHtml(item.session_id)}#access=${encodeURIComponent(item.accessToken)}"><i data-lucide="clipboard-check" size="14"></i>Review case</a><button class="btn" data-remove-case="${escapeHtml(item.session_id)}"><i data-lucide="x" size="14"></i>Remove</button></div></article>`;
-            }).join("") : `<div class="empty">No cases match this expert-role filter.</div>`;
+            }).join("") : (cases.length ? `<div class="empty"><h2>No cases match this filter</h2><p>Choose another expert role or return to all roles.</p></div>` : `<div class="empty"><h2>No review case is open</h2><p>This is the expert caseload, not an empty input form. From the researcher workspace, run an audit until it creates a handoff, then choose <strong>Open expert review</strong> to enter advice.</p><a class="btn btn-primary" href="/safebars"><i data-lucide="arrow-left" size="14"></i>Return to researcher workspace</a></div>`);
             document.querySelectorAll("[data-remove-case]").forEach(button => button.addEventListener("click", () => removeCase(button.dataset.removeCase)));
             lucide.createIcons();
         }
