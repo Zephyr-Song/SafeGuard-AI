@@ -369,9 +369,13 @@ class EncounterApiTest(unittest.TestCase):
 
         expert = self.client.get("/safebars/expert/example_session")
         self.assertEqual(expert.status_code, 200)
-        self.assertIn(b"SafeBARS Expert Review", expert.data)
+        self.assertIn(b"SafeBARS Expert Workspace", expert.data)
         self.assertIn(b"All expert roles", expert.data)
         self.assertIn(b"Workflow timeline and comment history", expert.data)
+        self.assertIn(b"Needs expert action", expert.data)
+        self.assertIn(b"The decision you are being asked to make", expert.data)
+        self.assertIn(b"Downstream outputs", expert.data)
+        self.assertIn(b"Before you save a decision", expert.data)
 
         expert_dashboard = self.client.get("/safebars/expert")
         self.assertEqual(expert_dashboard.status_code, 200)
