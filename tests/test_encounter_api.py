@@ -354,6 +354,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Encounter stress-testing workspace", workspace.data)
         self.assertIn(b"Start quick intake", workspace.data)
         self.assertIn(b"Six core questions", workspace.data)
+        self.assertIn(b"Intake completed", workspace.data)
+        self.assertIn(b"Done \xc2\xb7 review populated fields", workspace.data)
         self.assertIn(b"Full audit report (.docx)", workspace.data)
         self.assertIn(b"Application draft (.docx)", workspace.data)
         self.assertIn(b"Research design (.docx)", workspace.data)
@@ -376,6 +378,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"The decision you are being asked to make", expert.data)
         self.assertIn(b"Downstream outputs", expert.data)
         self.assertIn(b"Before you save a decision", expert.data)
+        self.assertIn(b"Enter your expert response below", expert.data)
+        self.assertIn(b"Expert response \xc2\xb7 enter advice", expert.data)
 
         expert_dashboard = self.client.get("/safebars/expert")
         self.assertEqual(expert_dashboard.status_code, 200)

@@ -603,6 +603,11 @@
         .intake-compose { padding: 12px 16px 16px; border-top: 1px solid var(--line); }
         .intake-compose textarea { width: 100%; min-height: 82px; resize: vertical; }
         .intake-actions { display: flex; justify-content: space-between; gap: 9px; margin-top: 8px; }
+        .intake-complete-panel { display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center; padding: 12px; border: 1px solid #b7d4c3; border-radius: 8px; background: var(--green-soft); }
+        .intake-complete-panel[hidden] { display: none; }
+        .intake-complete-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: #fff; color: var(--green); }
+        .intake-complete-panel strong { display: block; margin-bottom: 3px; font-size: 12px; }
+        .intake-complete-panel p { color: #466052; font-size: 10px; line-height: 1.45; }
         .scenario-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -936,7 +941,7 @@
             </div>
 
             <button class="btn btn-teal full" id="guidedIntakeButton">
-                <i data-lucide="messages-square" size="16"></i>Start quick intake
+                <i data-lucide="messages-square" size="16"></i><span id="guidedIntakeLabel">Start quick intake</span>
             </button>
             <p class="section-kicker" style="margin:7px 0 12px">Six core questions populate the fields below; AI projects receive one additional question.</p>
 
@@ -1142,6 +1147,10 @@
         </div>
         <div class="intake-messages" id="intakeMessages"></div>
         <div class="intake-compose">
+            <div class="intake-complete-panel" id="intakeCompletePanel" hidden>
+                <div class="intake-complete-icon"><i data-lucide="circle-check-big" size="20"></i></div>
+                <div><strong>Intake completed</strong><p>Your answers have populated the protocol fields. Close this window to review them, then build the encounter map when ready.</p></div>
+            </div>
             <textarea id="intakeAnswer" placeholder="Describe this part of your study in your own words"></textarea>
             <div class="intake-actions">
                 <button class="btn btn-quiet" id="restartIntakeButton"><i data-lucide="rotate-ccw" size="14"></i>Restart</button>
@@ -1336,9 +1345,7 @@
                 state.intakeComplete = true;
                 appendIntakeMessage("bot", `Quick intake complete: ${coreIntakeSteps.length} core questions${$("usesAi").checked ? " plus one AI follow-up" : ""}. Review or refine the populated fields before building the encounter map.`);
                 $("intakeProgress").textContent = "Complete · review the structured fields or continue directly";
-                $("submitIntakeButton").disabled = true;
-                $("skipIntakeButton").disabled = true;
-                $("intakeAnswer").disabled = true;
+                showIntakeCompletion();
                 renderWorkflow();
                 return;
             }
@@ -1356,10 +1363,26 @@
             state.intakeComplete = false;
             $("intakeMessages").innerHTML = "";
             $("submitIntakeButton").disabled = false;
+            $("submitIntakeButton").innerHTML = `Save answer and continue<i data-lucide="arrow-right" size="15"></i>`;
             $("skipIntakeButton").disabled = false;
+            $("skipIntakeButton").hidden = false;
             $("intakeAnswer").disabled = false;
+            $("intakeAnswer").hidden = false;
+            $("intakeCompletePanel").hidden = true;
             appendIntakeMessage("bot", "This quick intake uses six core questions. You may skip any question and refine the structured fields later. AI projects receive one additional governance question; SafeBARS still cannot provide institutional ethics approval.");
             askCurrentIntakeQuestion();
+            lucide.createIcons();
+        }
+
+        function showIntakeCompletion() {
+            $("intakeCompletePanel").hidden = false;
+            $("intakeAnswer").disabled = true;
+            $("intakeAnswer").hidden = true;
+            $("skipIntakeButton").disabled = true;
+            $("skipIntakeButton").hidden = true;
+            $("submitIntakeButton").disabled = false;
+            $("submitIntakeButton").innerHTML = `<i data-lucide="check" size="15"></i>Done · review populated fields`;
+            lucide.createIcons();
         }
 
         function openGuidedIntake() {
@@ -1369,9 +1392,7 @@
                 if (state.intakeComplete) {
                     state.intakeStep = activeIntakeSteps().length;
                     $("intakeProgress").textContent = "Complete · review the structured fields or restart";
-                    $("submitIntakeButton").disabled = true;
-                    $("skipIntakeButton").disabled = true;
-                    $("intakeAnswer").disabled = true;
+                    showIntakeCompletion();
                 }
             }
             $("intakeDialog").showModal();
@@ -1415,6 +1436,11 @@
         }
 
         function submitIntakeAnswer() {
+            if (state.intakeComplete) {
+                $("intakeDialog").close();
+                toast("Quick intake complete. Review the populated protocol fields, then build the encounter map.");
+                return;
+            }
             const step = activeIntakeSteps()[state.intakeStep];
             if (!step) return;
             const answer = $("intakeAnswer").value.trim();
@@ -1650,6 +1676,7 @@
             $("workflowTrace").className = `workflow-step ${audited ? "complete" : (mapped ? "active" : "")}`;
             $("workflowDecide").className = `workflow-step ${audited ? "active" : ""}`;
             $("workflowIntake").querySelector(".workflow-state").textContent = intakeDone ? "Quick intake complete" : (intakeStarted ? "Quick intake in progress" : "Six-question quick intake available");
+            $("guidedIntakeLabel").textContent = intakeDone ? "Review completed intake" : (intakeStarted ? "Continue quick intake" : "Start quick intake");
             $("workflowMap").querySelector(".workflow-state").textContent = mapped ? `${state.session.passages.length} passages indexed` : "Awaiting materials";
             $("workflowTrace").querySelector(".workflow-state").textContent = audited ? `${state.session.traces.length} traces completed` : "Not run";
             $("workflowDecide").querySelector(".workflow-state").textContent = total ? `${decisions} of ${total} decided` : "No issues";
