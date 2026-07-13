@@ -386,6 +386,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Before you save a decision", expert.data)
         self.assertIn(b"Enter your expert response below", expert.data)
         self.assertIn(b"Expert response \xc2\xb7 enter advice", expert.data)
+        self.assertIn(b"function openDecisionForm", expert.data)
+        self.assertIn(b"field.scrollIntoView", expert.data)
 
         expert_dashboard = self.client.get("/safebars/expert")
         self.assertEqual(expert_dashboard.status_code, 200)
