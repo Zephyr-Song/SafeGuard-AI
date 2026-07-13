@@ -388,6 +388,11 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Expert response \xc2\xb7 enter advice", expert.data)
         self.assertIn(b"function openDecisionForm", expert.data)
         self.assertIn(b"field.scrollIntoView", expert.data)
+        self.assertIn(b"Send advice to researcher", expert.data)
+        self.assertIn(b"Ask researcher", expert.data)
+        self.assertIn(b"Redirect handoff", expert.data)
+        self.assertIn(b"Close handoff", expert.data)
+        self.assertIn(b"Advice sent to the researcher", expert.data)
 
         expert_dashboard = self.client.get("/safebars/expert")
         self.assertEqual(expert_dashboard.status_code, 200)
