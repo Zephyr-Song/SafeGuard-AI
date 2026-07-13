@@ -89,6 +89,7 @@
         .block ul { margin:7px 0 0; padding-left:18px; }
         .source { margin-top:8px; padding:9px 10px; border-left:3px solid var(--blue); background:var(--blue-soft); color:#365263; font-size:10px; line-height:1.5; }
         .source strong { color:#244152; }
+        .source-id-hint { display:inline-flex; align-items:center; margin-left:5px; color:var(--muted); font-size:9px; font-weight:600; cursor:help; }
         .routing { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
         .routing-card { padding:10px; border-radius:8px; background:var(--subtle); }
         .routing-card strong { display:block; margin-bottom:4px; font-size:9px; text-transform:uppercase; }
@@ -175,6 +176,23 @@
         function roleOptions(selected = "") { return options.expert_roles.map(role => `<option value="${escapeHtml(role.id)}" ${role.id === selected ? "selected" : ""}>${escapeHtml(role.label)}</option>`).join(""); }
         function roleLabel(roleId = "") { return options.expert_roles.find(role => role.id === roleId)?.label || roleId || "Unassigned"; }
         function passage(id) { return summary?.passages?.find(item => item.id === id); }
+        function passageNumber(id) { const raw=String(id || "").split("-").at(-1) || ""; return String(Number.parseInt(raw,10) || raw || "?"); }
+        function passageLabel(source) { return `${source.artifact_label} · passage ${passageNumber(source.id)}`; }
+        function passageIdHint(id) { return `Internal source ID ${id}. It identifies the exact submitted excerpt; it is not a risk score or approval number.`; }
+        function humanizeSourceLabels() {
+            document.querySelectorAll(".source strong").forEach(label => {
+                const match = label.textContent.match(/^(.*) · ([A-Z]{3}-\d{3})$/);
+                if (!match) return;
+                const [, artifactLabel, id] = match;
+                label.textContent = `${artifactLabel} · passage ${passageNumber(id)}`;
+                label.title = passageIdHint(id);
+                const hint = document.createElement("span");
+                hint.className = "source-id-hint";
+                hint.title = passageIdHint(id);
+                hint.textContent = "ⓘ source ID";
+                label.insertAdjacentElement("afterend", hint);
+            });
+        }
         function isWaiting(item) { return item.status === "needs_clarification" && !item.researcher_response && !(item.researcher_revision_history || []).length; }
         function isActionable(item) { return item.status !== "resolved" && !isWaiting(item); }
         function nextAction(item) {
@@ -267,6 +285,7 @@
             const next = nextAction(item);
             const index = summary.queue.findIndex(entry => entry.id === item.id) + 1;
             $("focusPanel").innerHTML = `<div class="workspace-head"><div><div class="meta-row"><span class="badge ${escapeHtml(item.priority)}">${escapeHtml(item.priority)} priority</span><span class="badge ${escapeHtml(item.status)}">${escapeHtml(item.status.replaceAll("_"," "))}</span><span class="badge">${escapeHtml(issue.category || "ethics issue")}</span></div><h2>${escapeHtml(issue.title || item.question)}</h2></div><div class="step-indicator"><strong>Handoff ${index} of ${summary.queue.length}</strong><span class="muted">${escapeHtml(item.deadline_stage || "Before fieldwork")}</span></div></div><div class="next-action"><div class="next-icon"><i data-lucide="${next.icon}" size="18"></i></div><div><h3>${escapeHtml(next.title)}</h3><p>${escapeHtml(next.text)}</p></div><button class="btn btn-primary" id="nextActionButton">${escapeHtml(next.cta)}</button></div><div class="tabs" role="tablist"><button class="tab ${activeTab === "decision" ? "active" : ""}" data-tab="decision">1. Expert response · enter advice</button><button class="tab ${activeTab === "evidence" ? "active" : ""}" data-tab="evidence">2. Evidence</button><button class="tab ${activeTab === "history" ? "active" : ""}" data-tab="history">3. History (${timelineEvents(item).length})</button></div><div class="tab-panel ${activeTab === "decision" ? "active" : ""}" data-panel="decision">${decisionPanel(item)}</div><div class="tab-panel ${activeTab === "evidence" ? "active" : ""}" data-panel="evidence">${evidencePanel(item)}</div><div class="tab-panel ${activeTab === "history" ? "active" : ""}" data-panel="history">${historyPanel(item)}</div>`;
+            humanizeSourceLabels();
             document.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", () => { activeTab = button.dataset.tab; renderFocus(); }));
             document.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => review(button.dataset.id, button.dataset.action)));
             document.querySelectorAll("[data-draft-field]").forEach(field => field.addEventListener("input", saveDraft));

@@ -7,6 +7,7 @@ what is documented, what is missing, and what requires situated human judgment.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, Iterable, List
 
 
@@ -122,7 +123,7 @@ DIMENSIONS = [
         "label": "Respect for persons",
         "question": "Are information, comprehension, voluntariness, withdrawal, and autonomy documented?",
         "artifacts": ["consent", "recruitment", "safety"],
-        "keywords": ["consent", "voluntary", "decline", "withdraw", "skip", "permission", "understand"],
+        "keywords": ["consent", "voluntary", "decline", "withdraw", "skip", "permission", "understand", "stop", "choice", "agree", "questions", "record"],
     },
     {
         "id": "beneficence",
@@ -130,7 +131,7 @@ DIMENSIONS = [
         "label": "Beneficence",
         "question": "Are foreseeable harms minimized and possible benefits and support pathways specified?",
         "artifacts": ["safety", "activity", "follow_up"],
-        "keywords": ["risk", "harm", "distress", "support", "pause", "referral", "benefit", "safeguard"],
+        "keywords": ["risk", "harm", "distress", "support", "pause", "referral", "benefit", "safeguard", "break", "uncomfortable", "wellbeing", "care", "help"],
     },
     {
         "id": "justice",
@@ -138,7 +139,7 @@ DIMENSIONS = [
         "label": "Justice",
         "question": "Are participant selection, access, burdens, benefits, and exclusions justified fairly?",
         "artifacts": ["recruitment", "activity", "follow_up"],
-        "keywords": ["eligible", "inclusion", "exclude", "access", "language", "compensation", "burden", "fair"],
+        "keywords": ["eligible", "eligibility", "inclusion", "exclude", "access", "language", "compensation", "burden", "fair", "invite", "aged", "age", "duration", "travel", "format"],
     },
     {
         "id": "law_public_interest",
@@ -146,7 +147,7 @@ DIMENSIONS = [
         "label": "Law and public interest",
         "question": "Are legal duties, accountability, transparency, and wider ICT impacts identified?",
         "artifacts": ["consent", "safety", "follow_up"],
-        "keywords": ["policy", "law", "ethics", "data protection", "accountable", "public", "report", "responsible"],
+        "keywords": ["policy", "law", "ethics", "data protection", "accountable", "public", "report", "responsible", "research paper", "findings", "complaint", "governance", "institution"],
         "conditional": "ict",
     },
     {
@@ -155,7 +156,7 @@ DIMENSIONS = [
         "label": "AI governance",
         "question": "Are AI roles, human oversight, accountability, policies, and decision authority explicit?",
         "artifacts": ["consent", "safety", "follow_up"],
-        "keywords": ["oversight", "human review", "responsible", "accountable", "approve", "policy", "audit"],
+        "keywords": ["oversight", "human review", "responsible", "accountable", "approve", "policy", "audit", "human decision", "override", "owner", "authority"],
         "conditional": "ai",
     },
     {
@@ -164,7 +165,7 @@ DIMENSIONS = [
         "label": "AI context mapping",
         "question": "Are intended use, affected stakeholders, data provenance, limits, and foreseeable impacts mapped?",
         "artifacts": ["recruitment", "consent", "activity", "follow_up"],
-        "keywords": ["purpose", "stakeholder", "training data", "provenance", "limitation", "impact", "context"],
+        "keywords": ["purpose", "stakeholder", "training data", "provenance", "limitation", "limit", "impact", "context", "intended use", "affected", "provider", "model"],
         "conditional": "ai",
     },
     {
@@ -173,7 +174,7 @@ DIMENSIONS = [
         "label": "AI measurement",
         "question": "Are validity, reliability, bias, privacy, safety, and failure evaluation procedures defined?",
         "artifacts": ["activity", "safety", "follow_up"],
-        "keywords": ["evaluate", "test", "benchmark", "bias", "valid", "reliable", "privacy", "failure"],
+        "keywords": ["evaluate", "evaluation", "test", "benchmark", "bias", "valid*", "reliab*", "privacy", "failure", "accuracy", "error", "performance", "quality"],
         "conditional": "ai",
     },
     {
@@ -182,7 +183,7 @@ DIMENSIONS = [
         "label": "AI risk management",
         "question": "Are mitigations, monitoring, incident response, fallback, and stopping rules defined?",
         "artifacts": ["safety", "follow_up"],
-        "keywords": ["mitigate", "monitor", "incident", "fallback", "stop", "escalat", "review", "update"],
+        "keywords": ["mitigate", "mitigation", "monitor*", "incident", "fallback", "stop", "escalat*", "review", "update", "override", "appeal", "correct*", "failure"],
         "conditional": "ai",
     },
     {
@@ -190,16 +191,16 @@ DIMENSIONS = [
         "framework": "vsd",
         "label": "Stakeholders and value tensions",
         "question": "Are direct and indirect stakeholders, their values, and important tensions represented?",
-        "artifacts": ["recruitment", "consent", "activity", "safety", "follow_up"],
-        "keywords": ["participant", "family", "community", "partner", "stakeholder", "value", "trade-off", "tension"],
+        "artifacts": ["recruitment", "consent", "interview", "activity", "safety", "follow_up"],
+        "keywords": ["participant", "family", "community", "partner", "stakeholder", "value", "trade-off", "tradeoff", "tension", "helper", "facilitator", "team", "other"],
     },
     {
         "id": "societal_review",
         "framework": "esr",
         "label": "Societal risks and mitigation",
         "question": "Are risks to groups and society, representation, dual use, and mitigation commitments addressed?",
-        "artifacts": ["recruitment", "activity", "safety", "follow_up"],
-        "keywords": ["society", "group", "minority", "represent", "dual use", "misuse", "mitigation", "community"],
+        "artifacts": ["recruitment", "interview", "activity", "safety", "follow_up"],
+        "keywords": ["society", "group", "minority", "represent*", "dual use", "misuse", "mitigation", "community", "family", "older", "public", "other", "research paper"],
     },
 ]
 
@@ -258,6 +259,27 @@ def _contains_any(text: str, terms: Iterable[str]) -> bool:
     return any(term in padded for term in terms)
 
 
+def _matching_terms(text: str, terms: Iterable[str]) -> List[str]:
+    """Return concepts found in text without accidental substring matches.
+
+    Multi-word concepts are matched after whitespace normalization. A trailing
+    asterisk marks an intentional word stem, for example ``escalat*``.
+    """
+    normalized = re.sub(r"\s+", " ", str(text).lower()).strip()
+    found: List[str] = []
+    for raw_term in terms:
+        term = str(raw_term).lower().strip()
+        if not term:
+            continue
+        if term.endswith("*"):
+            pattern = rf"\b{re.escape(term[:-1])}[a-z-]*\b"
+        else:
+            pattern = rf"\b{re.escape(term).replace(r'\ ', r'\s+')}\b"
+        if re.search(pattern, normalized):
+            found.append(term.rstrip("*"))
+    return found
+
+
 def build_framework_assessment(session: Dict[str, Any]) -> Dict[str, Any]:
     project = session.get("project", {})
     artifacts = session.get("artifacts", {})
@@ -282,17 +304,36 @@ def build_framework_assessment(session: Dict[str, Any]) -> Dict[str, Any]:
         relevant = [
             item for item in passages if item.get("artifact_type") in definition["artifacts"]
         ]
-        matching = [
-            item
+        matches_with_terms = [
+            (item, _matching_terms(item.get("text", ""), definition["keywords"]))
             for item in relevant
-            if any(keyword in item.get("text", "").lower() for keyword in definition["keywords"])
         ]
-        if len(matching) >= 2:
+        matching = [item for item, terms in matches_with_terms if terms]
+        matched_terms = list(
+            dict.fromkeys(
+                term
+                for _, terms in matches_with_terms
+                for term in terms
+            )
+        )
+        matched_artifact_types = {item.get("artifact_type") for item in matching}
+        if len(matched_terms) >= 4 or (
+            len(matched_terms) >= 3 and len(matched_artifact_types) >= 2
+        ):
             coverage = "documented"
         elif matching:
             coverage = "partial"
         else:
             coverage = "missing"
+        related = [item for item in relevant if item not in matching][:3]
+        if coverage == "documented":
+            coverage_reason = f"Found {len(matched_terms)} relevant concepts across {len(matched_artifact_types)} submitted material type(s)."
+        elif coverage == "partial":
+            coverage_reason = f"Found some relevant evidence ({', '.join(matched_terms[:4])}), but the framework question is not fully documented."
+        elif related:
+            coverage_reason = "Relevant material was submitted, but it does not yet state the concepts required by this framework question."
+        else:
+            coverage_reason = "No material relevant to this framework question was submitted."
         nodes.append(
             {
                 "id": definition["id"],
@@ -301,7 +342,10 @@ def build_framework_assessment(session: Dict[str, Any]) -> Dict[str, Any]:
                 "question": definition["question"],
                 "coverage": coverage,
                 "source_passage_ids": [item["id"] for item in matching[:4]],
+                "related_passage_ids": [item["id"] for item in related],
+                "matched_terms": matched_terms,
                 "evidence_count": len(matching),
+                "coverage_reason": coverage_reason,
                 "boundary": "Evidence coverage is not ethical approval or a compliance score.",
             }
         )
