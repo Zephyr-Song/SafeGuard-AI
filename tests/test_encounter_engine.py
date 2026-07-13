@@ -180,6 +180,8 @@ class EncounterEngineTest(unittest.TestCase):
         )
         saved = next(item for item in reviewed["handoffs"] if item["id"] == handoff["id"])
         self.assertEqual(saved["status"], "advised")
+        self.assertEqual(saved["assigned_role"], "ethics_board")
+        self.assertEqual(saved["assigned_reviewer_name"], "School ethics advisor")
         self.assertIn("deletion limit", saved["expert_advice"])
         self.assertEqual(len(saved["review_history"]), 1)
         self.assertEqual(reviewed["event_log"][-1]["event_type"], "expert_handoff_review")

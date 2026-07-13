@@ -930,6 +930,11 @@ class EncounterEngine:
         handoff["expert_advice"] = advice.strip() or handoff.get("expert_advice", "")
         handoff["expert_rationale"] = rationale.strip() or handoff.get("expert_rationale", "")
         handoff["reviewed_at"] = now
+        if action in {"advise", "request_clarification", "resolve"} and not handoff.get("assigned_role"):
+            handoff["assigned_role"] = reviewer_role
+            handoff["assigned_role_label"] = EXPERT_ROLES[reviewer_role]["label"]
+            handoff["assigned_reviewer_name"] = reviewer_name.strip() or EXPERT_ROLES[reviewer_role]["label"]
+            handoff["assigned_at"] = now
         if action == "assign":
             handoff["assigned_role"] = reviewer_role
             handoff["assigned_role_label"] = EXPERT_ROLES[reviewer_role]["label"]
