@@ -356,6 +356,7 @@ class EncounterEngine:
                     "category": item["category"],
                     "title": item["title"],
                     "trigger": item["trigger"],
+                    "trigger_stage": item["trigger_stage"],
                 }
                 for item in SCENARIO_LIBRARY
             ],

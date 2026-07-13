@@ -469,6 +469,28 @@
         .stage-name { margin: 4px 0 8px; font-size: 13px; font-weight: 720; }
         .stage-sources { min-height: 28px; color: var(--muted); font-size: 11px; }
         .stage-note { margin-top: 8px; min-height: 31px !important; padding: 6px 7px !important; font-size: 11px; }
+        .stage-card.journey-focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(23,111,115,.13); }
+
+        .journey-panel { margin: 14px 0; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-subtle); }
+        .journey-controls { display: flex; flex-wrap: wrap; gap: 6px; }
+        .journey-controls .btn.active { border-color: var(--teal); background: var(--teal-soft); color: var(--teal); }
+        .journey-viewport { margin-top: 9px; overflow-x: auto; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
+        .journey-viewport svg { display: block; width: 100%; min-width: 920px; height: 176px; }
+        .journey-path { stroke: #cbd5da; stroke-width: 5; stroke-linecap: round; }
+        .journey-node { cursor: pointer; }
+        .journey-node circle { stroke-width: 3; transition: r 120ms ease, filter 120ms ease; }
+        .journey-node:hover circle, .journey-node.selected circle { r: 25px; filter: drop-shadow(0 2px 3px rgba(28,47,53,.24)); }
+        .journey-node.covered circle { fill: var(--green-soft); stroke: var(--green); }
+        .journey-node.partial circle { fill: var(--amber-soft); stroke: #c38b2c; }
+        .journey-node.missing circle, .journey-node.gap circle { fill: var(--red-soft); stroke: var(--red); }
+        .journey-node.untested circle, .journey-node.not_run circle { fill: #eef1f3; stroke: #8c99a1; }
+        .journey-node.excluded circle { fill: #fff; stroke: #8c99a1; stroke-dasharray: 4 3; opacity: .72; }
+        .journey-node text { text-anchor: middle; pointer-events: none; fill: var(--ink); font-size: 9px; font-weight: 700; }
+        .journey-node .journey-index { fill: var(--muted); font-size: 9px; font-weight: 800; }
+        .journey-detail { margin-top: 8px; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+        .journey-detail-title { font-size: 11px; font-weight: 800; }
+        .journey-detail-copy { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+        .journey-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 
         .coverage, .severity, .decision-badge, .trace-status {
             display: inline-flex;
@@ -499,7 +521,21 @@
         .framework-status.partial { border-color: #ddc483; background: var(--amber-soft); color: #8b5a12; }
         .framework-status.missing { border-color: #d99b95; background: var(--red-soft); color: var(--red); }
         .framework-status.active { box-shadow: 0 0 0 2px rgba(46,116,181,.18); }
+        .coverage-visual { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center; margin-top: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-subtle); }
+        .coverage-donut { min-height: 126px; display: grid; place-items: center; }
+        .coverage-donut svg { width: 126px; height: 126px; overflow: visible; }
+        .coverage-slice { cursor: pointer; transition: opacity 140ms ease, transform 140ms ease; transform-origin: 63px 63px; }
+        .coverage-slice:hover, .coverage-slice.active { opacity: .82; transform: scale(1.035); }
+        .coverage-slice.documented { fill: var(--green); }
+        .coverage-slice.partial { fill: #c38b2c; }
+        .coverage-slice.missing { fill: var(--red); }
+        .coverage-donut-hole { fill: var(--surface); pointer-events: none; }
+        .coverage-donut text { text-anchor: middle; pointer-events: none; fill: var(--ink); }
+        .coverage-visual-copy strong { display: block; font-size: 11px; }
+        .coverage-visual-copy p { margin: 3px 0 7px; color: var(--muted); font-size: 10px; line-height: 1.45; }
         .source-key { margin-top: 7px; padding: 7px 9px; border-left: 3px solid var(--blue); background: var(--blue-soft); color: #365263; font-size: 9px; line-height: 1.45; }
+        .analysis-freshness { margin-top: 7px; padding: 7px 9px; border-left: 3px solid var(--green); background: var(--green-soft); color: #315542; font-size: 9px; line-height: 1.45; }
+        .analysis-freshness.stale { border-left-color: #c38b2c; background: var(--amber-soft); color: #6d531d; }
         .framework-layout {
             display: grid;
             grid-template-columns: minmax(320px, 0.9fr) minmax(360px, 1.1fr);
@@ -900,7 +936,8 @@
         }
 
         @media (max-width: 780px) {
-            .guide-roles, .guide-glossary-grid { grid-template-columns: 1fr; }
+            .guide-roles, .guide-glossary-grid, .coverage-visual, .journey-detail { grid-template-columns: 1fr; }
+            .journey-actions { justify-content: flex-start; }
             .app-header { position: static; align-items: flex-start; padding: 10px 12px; }
             .header-actions .btn span { display: none; }
             .workspace { display: block; }
@@ -1137,8 +1174,12 @@
                             <select id="frameworkFilter" aria-label="Filter by cited framework"><option value="all">All cited frameworks</option></select>
                             <span class="framework-result-count" id="frameworkResultCount"></span>
                         </div>
-                        <div class="framework-status-summary" id="frameworkCoverageSummary" aria-label="Framework evidence coverage counts"></div>
+                        <div class="coverage-visual">
+                            <div class="coverage-donut" id="frameworkCoverageDonut" aria-label="Interactive framework evidence coverage chart"></div>
+                            <div class="coverage-visual-copy"><strong>Evidence coverage at a glance</strong><p>Click a donut segment or count to filter the framework map. Coverage describes submitted material, not ethical quality or approval.</p><div class="framework-status-summary" id="frameworkCoverageSummary" aria-label="Framework evidence coverage counts"></div></div>
+                        </div>
                         <div class="source-key"><strong>How to read a source label:</strong> “Interview questions · passage 1” means the first numbered excerpt taken from the Interview questions field. The hidden internal ID (for example INT-001) is only a traceability reference—not a risk or approval score.</div>
+                        <div class="analysis-freshness" id="analysisFreshness"><strong>Saved analysis:</strong> charts reflect the current protocol case.</div>
                         <div class="framework-layout">
                             <div class="framework-graph" id="frameworkGraph"></div>
                             <div class="framework-detail">
@@ -1169,6 +1210,15 @@
                         <div class="readiness-fields" id="readinessFields"></div>
                         <div class="framework-boundary" id="readinessBoundary"></div>
                     </div>
+                    <section class="journey-panel" aria-labelledby="journeyHeading">
+                        <div class="panel-heading">
+                            <div><h2 class="section-heading" id="journeyHeading">Participant journey stress map</h2><p class="section-kicker">Switch lenses to compare written protocol coverage with scenario-test outcomes.</p></div>
+                            <div class="journey-controls" aria-label="Journey map lens"><button type="button" class="btn active" data-journey-lens="combined">Combined</button><button type="button" class="btn" data-journey-lens="coverage">Protocol coverage</button><button type="button" class="btn" data-journey-lens="audit">Scenario results</button></div>
+                        </div>
+                        <div class="journey-viewport" id="journeyStressMap"></div>
+                        <div class="tradeoff-legend"><span><i class="legend-swatch" style="background:var(--green-soft);border-color:var(--green)"></i>Covered in selected lens</span><span><i class="legend-swatch" style="background:var(--amber-soft);border-color:#c38b2c"></i>Partial or untested in Combined</span><span><i class="legend-swatch" style="background:var(--red-soft);border-color:var(--red)"></i>Missing or audit gap</span><span><i class="legend-swatch" style="background:#eef1f3;border-color:#8c99a1"></i>No scenario result</span><span><i class="legend-swatch" style="background:#fff;border-color:#8c99a1;border-style:dashed"></i>Excluded from scope</span><span>Number inside each node = linked tests run</span></div>
+                        <div class="journey-detail" id="journeyDetail"></div>
+                    </section>
                     <div class="panel-heading">
                         <div><h2 class="section-heading">Encounter stages</h2><p class="section-kicker">Edit scope and responsibility before running scenarios.</p></div>
                         <button class="btn btn-quiet" id="saveMapButton"><i data-lucide="save" size="15"></i>Save scope</button>
@@ -1286,6 +1336,9 @@
             selectedDimensionId: null,
             frameworkCoverageFilter: "all",
             frameworkIdFilter: "all",
+            journeyLens: "combined",
+            selectedStageId: null,
+            analysisDirty: false,
             tradeoffSessionId: null,
             tradeoffValues: {},
             tradeoffRationales: {},
@@ -1407,6 +1460,7 @@
                 state.access = access;
                 const result = await api(`/api/safebars/v2/sessions/${sessionId}`);
                 state.session = result.session;
+                state.analysisDirty = false;
                 state.selectedTraceId = state.session.traces?.[0]?.id || null;
                 populateInputsFromSession();
                 renderScenarioOptions();
@@ -1425,6 +1479,20 @@
             return [...document.querySelectorAll("input[name='scenario']:checked")].map(input => input.value);
         }
 
+        function updateAnalysisFreshness() {
+            if (!$("analysisFreshness")) return;
+            $("analysisFreshness").classList.toggle("stale", state.analysisDirty);
+            $("analysisFreshness").innerHTML = state.analysisDirty
+                ? `<strong>Unsaved material changes:</strong> charts still reflect the saved protocol case. Build a new encounter map or create a new version before treating them as current.`
+                : `<strong>Saved analysis:</strong> charts reflect the current protocol case${state.session?.updated_at ? ` as of ${escapeHtml(state.session.updated_at)}` : ""}.`;
+        }
+
+        function markAnalysisDirty() {
+            if (!state.session) return;
+            state.analysisDirty = true;
+            updateAnalysisFreshness();
+        }
+
         function loadSample() {
             const sample = state.options.sample_project;
             $("projectTitle").value = sample.project.title;
@@ -1433,6 +1501,7 @@
             $("usesAi").checked = false;
             Object.entries(artifactInputs).forEach(([key, id]) => $(id).value = sample.artifacts[key] || "");
             document.querySelectorAll("details.artifact").forEach((details, index) => details.open = index < 3);
+            markAnalysisDirty();
             toast("Sample protocol loaded.");
         }
 
@@ -1549,6 +1618,7 @@
                 const existing = $(step.appendTarget).value.trim();
                 $(step.appendTarget).value = `${existing}${existing ? "\n\n" : ""}AI governance details: ${answer}`;
             } else if (step.target) $(step.target).value = answer;
+            markAnalysisDirty();
         }
 
         function submitIntakeAnswer() {
@@ -1584,6 +1654,7 @@
                 const result = await api("/api/safebars/v2/sessions", {method: "POST", body: JSON.stringify(collectPayload())});
                 state.session = result.session;
                 state.access = result.access;
+                state.analysisDirty = false;
                 persistCurrentSession();
                 state.selectedTraceId = null;
                 renderAll();
@@ -1795,6 +1866,7 @@
             renderIssues();
             renderHandoffs();
             bindSourceNavigation();
+            updateAnalysisFreshness();
             $("exportButton").disabled = !state.session;
             $("newVersionButton").disabled = !state.session;
             $("sessionLabel").textContent = state.session ? state.session.id.replace("encounter_", "") : "not created";
@@ -2007,6 +2079,37 @@
             } catch (error) { toast(error.message, true); }
         }
 
+        function polarPoint(cx, cy, radius, degrees) {
+            const angle = degrees * Math.PI / 180;
+            return {x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle)};
+        }
+
+        function donutSegmentPath(startDegrees, endDegrees, outerRadius = 57, innerRadius = 35) {
+            const cx = 63, cy = 63;
+            const outerStart = polarPoint(cx, cy, outerRadius, startDegrees);
+            const outerEnd = polarPoint(cx, cy, outerRadius, endDegrees);
+            const innerEnd = polarPoint(cx, cy, innerRadius, endDegrees);
+            const innerStart = polarPoint(cx, cy, innerRadius, startDegrees);
+            const largeArc = endDegrees - startDegrees > 180 ? 1 : 0;
+            return `M ${outerStart.x.toFixed(2)} ${outerStart.y.toFixed(2)} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${outerEnd.x.toFixed(2)} ${outerEnd.y.toFixed(2)} L ${innerEnd.x.toFixed(2)} ${innerEnd.y.toFixed(2)} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${innerStart.x.toFixed(2)} ${innerStart.y.toFixed(2)} Z`;
+        }
+
+        function renderCoverageDonut(counts) {
+            const order = ["documented", "partial", "missing"];
+            const total = order.reduce((sum, coverage) => sum + Number(counts[coverage] || 0), 0);
+            let cursor = -90;
+            const slices = order.map(coverage => {
+                const value = Number(counts[coverage] || 0);
+                if (!value || !total) return "";
+                const sweep = value / total * 360;
+                const gap = sweep > 8 ? 1.5 : 0;
+                const path = donutSegmentPath(cursor + gap, cursor + sweep - gap);
+                cursor += sweep;
+                return `<path class="coverage-slice ${coverage} ${state.frameworkCoverageFilter === coverage ? "active" : ""}" d="${path}" data-framework-coverage="${coverage}" role="button" tabindex="0" aria-label="Show ${value} ${coverage} framework dimensions"></path>`;
+            }).join("");
+            return `<svg viewBox="0 0 126 126" role="img" aria-label="Framework evidence coverage: ${counts.documented || 0} documented, ${counts.partial || 0} partial, ${counts.missing || 0} missing">${slices}<circle class="coverage-donut-hole" cx="63" cy="63" r="31"></circle><text x="63" y="59" style="font-size:22px;font-weight:850">${total}</text><text x="63" y="74" style="font-size:8px;fill:var(--muted)">dimensions</text></svg>`;
+        }
+
         function frameworkDimensionVisible(dimension) {
             const coverageVisible = state.frameworkCoverageFilter === "all"
                 || (state.frameworkCoverageFilter === "needs_attention" && dimension.coverage !== "documented")
@@ -2039,10 +2142,17 @@
                 counts[dimension.coverage] = (counts[dimension.coverage] || 0) + 1;
                 return counts;
             }, {documented: 0, partial: 0, missing: 0});
+            $("frameworkCoverageDonut").innerHTML = renderCoverageDonut(coverageCounts);
             $("frameworkCoverageSummary").innerHTML = ["documented", "partial", "missing"].map(coverage => `<button type="button" class="framework-status ${coverage}" data-framework-coverage="${coverage}" title="Show only ${coverage} framework dimensions">${coverageCounts[coverage] || 0} ${coverage}</button>`).join("");
             document.querySelectorAll("[data-framework-coverage]").forEach(button => {
                 button.classList.toggle("active", button.dataset.frameworkCoverage === state.frameworkCoverageFilter);
                 button.onclick = () => setFrameworkCoverageFilter(button.dataset.frameworkCoverage);
+                if (button.classList.contains("coverage-slice")) button.onkeydown = event => {
+                    if (["Enter", " "].includes(event.key)) {
+                        event.preventDefault();
+                        setFrameworkCoverageFilter(button.dataset.frameworkCoverage);
+                    }
+                };
             });
             $("frameworkFilter").onchange = () => {
                 state.frameworkIdFilter = $("frameworkFilter").value;
@@ -2143,19 +2253,112 @@
             bindSourceNavigation();
         }
 
+        function journeyAuditState(stageTraces) {
+            if (!stageTraces.length) return "untested";
+            if (stageTraces.some(trace => ["gap", "missing"].includes(trace.status))) return "gap";
+            if (stageTraces.some(trace => trace.status === "covered")) return "covered";
+            return "not_run";
+        }
+
+        function journeyNodeState(stage, stageTraces) {
+            if (stage.included === false) return "excluded";
+            const auditState = journeyAuditState(stageTraces);
+            if (state.journeyLens === "coverage") return stage.coverage;
+            if (state.journeyLens === "audit") return auditState;
+            if (auditState === "gap" || stage.coverage === "missing") return "gap";
+            if (auditState === "not_run") return "not_run";
+            if (stage.coverage === "partial" || auditState === "untested") return "partial";
+            return "covered";
+        }
+
+        function renderJourneyStressMap() {
+            const stages = state.session?.encounter_map || [];
+            if (!stages.length) {
+                $("journeyStressMap").innerHTML = "";
+                $("journeyDetail").innerHTML = "";
+                return;
+            }
+            const traces = state.session?.traces || [];
+            if (!state.selectedStageId || !stages.some(stage => stage.id === state.selectedStageId)) state.selectedStageId = stages[0].id;
+            document.querySelectorAll("[data-journey-lens]").forEach(button => {
+                button.classList.toggle("active", button.dataset.journeyLens === state.journeyLens);
+                button.onclick = () => { state.journeyLens = button.dataset.journeyLens; renderJourneyStressMap(); };
+            });
+
+            const width = 980, y = 66, startX = 58, stepX = 108;
+            const pathEnd = startX + stepX * (stages.length - 1);
+            const nodes = stages.map((stage, index) => {
+                const x = startX + stepX * index;
+                const stageTraces = traces.filter(trace => trace.trigger_stage === stage.id);
+                const visualState = journeyNodeState(stage, stageTraces);
+                const labels = splitNodeLabel(stage.name).slice(0, 3).map((line, lineIndex) => `<tspan x="0" y="${112 + lineIndex * 11}">${escapeHtml(line)}</tspan>`).join("");
+                const traceCopy = stage.included === false ? "excluded from audit scope" : stageTraces.length ? `${stageTraces.length} test${stageTraces.length === 1 ? "" : "s"}` : "not tested";
+                return `<g class="journey-node ${escapeHtml(visualState)} ${stage.id === state.selectedStageId ? "selected" : ""}" data-journey-stage="${escapeHtml(stage.id)}" transform="translate(${x} 0)" role="button" tabindex="0" aria-label="${escapeHtml(stage.name)}; ${escapeHtml(visualState)}; ${escapeHtml(traceCopy)}"><title>${escapeHtml(stage.name)} · ${escapeHtml(visualState)} · ${escapeHtml(traceCopy)}</title><text class="journey-index" x="0" y="30">${String(index + 1).padStart(2, "0")}</text><circle cx="0" cy="${y}" r="21"></circle><text x="0" y="${y + 3}" style="font-size:9px">${stageTraces.length || "—"}</text><text>${labels}</text></g>`;
+            }).join("");
+            $("journeyStressMap").innerHTML = `<svg viewBox="0 0 ${width} 176" role="img" aria-label="Interactive participant journey stress map"><line class="journey-path" x1="${startX}" y1="${y}" x2="${pathEnd}" y2="${y}"></line>${nodes}</svg>`;
+
+            const selectedStage = stages.find(stage => stage.id === state.selectedStageId);
+            const selectedTraces = traces.filter(trace => trace.trigger_stage === selectedStage.id);
+            const selectedTraceIds = new Set(selectedTraces.map(trace => trace.id));
+            const selectedIssues = (state.session?.issues || []).filter(issue => selectedTraceIds.has(issue.trigger_trace_id));
+            const selectedIssueIds = new Set(selectedIssues.map(issue => issue.id));
+            const selectedHandoffs = (state.session?.handoffs || []).filter(handoff => selectedIssueIds.has(handoff.issue_id));
+            const linkedScenarios = (state.options?.scenarios || []).filter(scenario => scenario.trigger_stage === selectedStage.id);
+            const auditCopy = selectedStage.included === false
+                ? "Excluded from the current audit scope. Re-enable the stage card before selecting new tests."
+                : selectedTraces.length
+                ? selectedTraces.map(trace => `${trace.title}: ${trace.status.replaceAll("_", " ")}`).join(" · ")
+                : linkedScenarios.length ? `${linkedScenarios.length} linked scenario test(s) have not run yet.` : "No scenario test is currently linked to this stage.";
+            const resultAction = selectedTraces.length
+                ? `<button type="button" class="btn btn-teal" id="openJourneyTrace">Open scenario result</button>`
+                : selectedStage.included !== false && linkedScenarios.length ? `<button type="button" class="btn btn-teal" id="selectJourneyScenarios">Select linked tests (${linkedScenarios.length})</button>` : "";
+            $("journeyDetail").innerHTML = `<div><div class="journey-detail-title">${escapeHtml(selectedStage.name)}</div><div class="journey-detail-copy">Protocol coverage: <strong>${escapeHtml(selectedStage.coverage)}</strong> · ${escapeHtml(auditCopy)}${selectedIssues.length ? ` · ${selectedIssues.length} decision item(s) · ${selectedHandoffs.length} expert review request(s)` : ""}</div></div><div class="journey-actions"><button type="button" class="btn" id="openJourneyStage">Show stage card</button>${resultAction}</div>`;
+
+            document.querySelectorAll("[data-journey-stage]").forEach(node => {
+                const select = () => { state.selectedStageId = node.dataset.journeyStage; renderJourneyStressMap(); };
+                node.onclick = select;
+                node.onkeydown = event => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); select(); } };
+            });
+            $("openJourneyStage").onclick = () => {
+                const card = $(`stage-card-${selectedStage.id}`);
+                if (!card) return;
+                card.scrollIntoView({behavior:"smooth", block:"center"});
+                card.classList.add("journey-focus");
+                setTimeout(() => card.classList.remove("journey-focus"), 1500);
+            };
+            if ($("openJourneyTrace")) $("openJourneyTrace").onclick = () => {
+                state.selectedTraceId = selectedTraces[0].id;
+                switchTab("traces");
+                renderTraces();
+                lucide.createIcons();
+            };
+            if ($("selectJourneyScenarios")) $("selectJourneyScenarios").onclick = () => {
+                const ids = new Set(linkedScenarios.map(scenario => scenario.id));
+                document.querySelectorAll('input[name="scenario"]').forEach(input => { if (ids.has(input.value)) input.checked = true; });
+                $("scenarioGrid").scrollIntoView({behavior:"smooth", block:"center"});
+                toast(`Selected ${ids.size} scenario test(s) linked to ${selectedStage.name}.`);
+            };
+        }
+
         function renderMap() {
             const stages = state.session?.encounter_map || [];
             $("mapEmpty").hidden = stages.length > 0;
             $("mapContent").hidden = stages.length === 0;
             if (!stages.length) return;
             $("mapGrid").innerHTML = stages.map((stage, index) => `<div class="stage-card ${stage.included ? "" : "disabled"}" id="stage-card-${escapeHtml(stage.id)}">
-                <div class="stage-top"><span class="stage-number">${String(index + 1).padStart(2, "0")}</span><label class="switch" title="Include stage in audit"><input id="stage-${escapeHtml(stage.id)}-included" type="checkbox" ${stage.included ? "checked" : ""}><span></span></label></div>
+                <div class="stage-top"><span class="stage-number">${String(index + 1).padStart(2, "0")}</span><label class="switch" title="Include stage in audit"><input id="stage-${escapeHtml(stage.id)}-included" data-stage-id="${escapeHtml(stage.id)}" type="checkbox" ${stage.included ? "checked" : ""}><span></span></label></div>
                 <div class="stage-name">${escapeHtml(stage.name)}</div>
                 <div class="coverage ${escapeHtml(stage.coverage)}">${escapeHtml(stage.coverage)}</div>
                 <div class="stage-sources">${stage.source_passage_ids.length ? sourceChips(stage.source_passage_ids) : "No source passage located"}</div>
                 <input class="stage-note" id="stage-${escapeHtml(stage.id)}-notes" type="text" value="${escapeHtml(stage.notes || "")}" placeholder="Responsibility or local note">
             </div>`).join("");
-            document.querySelectorAll("[id$='-included']").forEach(input => input.addEventListener("change", event => event.target.closest(".stage-card").classList.toggle("disabled", !event.target.checked)));
+            document.querySelectorAll("[id$='-included']").forEach(input => input.addEventListener("change", event => {
+                event.target.closest(".stage-card").classList.toggle("disabled", !event.target.checked);
+                const stage = stages.find(item => item.id === event.target.dataset.stageId);
+                if (stage) stage.included = event.target.checked;
+                renderJourneyStressMap();
+            }));
+            renderJourneyStressMap();
         }
 
         function renderScenarioOptions() {
@@ -2350,16 +2553,18 @@
 
         async function createProtocolVersion() {
             if (!state.session || !confirm("Create a new protocol version? The current audit and human review record will remain unchanged.")) return;
+            const hadUnsavedMaterialChanges = state.analysisDirty;
             setLoading(true, "Creating protocol version", "SafeBARS is copying the submitted materials into a new review record.");
             try {
                 const result = await api(`/api/safebars/v2/sessions/${state.session.id}/versions`, {method: "POST", body: "{}"});
                 state.session = result.session;
                 state.access = result.access;
+                state.analysisDirty = hadUnsavedMaterialChanges;
                 persistCurrentSession();
                 state.selectedTraceId = null;
                 renderAll();
                 switchTab("map");
-                toast(`Protocol version ${state.session.lineage?.version_number || 2} created. Review the copied materials before running a new audit.`);
+                toast(`Protocol version ${state.session.lineage?.version_number || 2} created.${hadUnsavedMaterialChanges ? " Your unsaved form edits remain visible but are not yet part of its saved analysis." : " Review the copied materials before running a new audit."}`);
             } catch (error) { toast(error.message, true); }
             finally { setLoading(false); }
         }
@@ -2414,6 +2619,8 @@
         $("runAuditButton").addEventListener("click", runAudit);
         $("severityFilter").addEventListener("change", renderIssues);
         $("decisionFilter").addEventListener("change", renderIssues);
+        ["projectTitle", "projectContext", "targetPeople", ...Object.values(artifactInputs)].forEach(id => $(id).addEventListener("input", markAnalysisDirty));
+        $("usesAi").addEventListener("change", markAnalysisDirty);
         initialize();
     </script>
 </body>

@@ -25,6 +25,7 @@ class EncounterApiTest(unittest.TestCase):
         options = self.client.get("/api/safebars/v2/options")
         self.assertEqual(options.status_code, 200)
         self.assertEqual(len(options.get_json()["scenarios"]), 6)
+        self.assertTrue(all(item["trigger_stage"] for item in options.get_json()["scenarios"]))
 
         payload = json.loads(json.dumps(SAMPLE_PROJECT))
         payload["use_llm"] = False
@@ -377,6 +378,14 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Connected design decisions", workspace.data)
         self.assertIn(b"Research rehearsal", workspace.data)
         self.assertIn(b"frameworkCoverageSummary", workspace.data)
+        self.assertIn(b"frameworkCoverageDonut", workspace.data)
+        self.assertIn(b"Evidence coverage at a glance", workspace.data)
+        self.assertIn(b"Participant journey stress map", workspace.data)
+        self.assertIn(b'data-journey-lens="combined"', workspace.data)
+        self.assertIn(b"Open scenario result", workspace.data)
+        self.assertIn(b"Unsaved material changes", workspace.data)
+        self.assertIn(b"Excluded from scope", workspace.data)
+        self.assertIn(b"hadUnsavedMaterialChanges", workspace.data)
         self.assertIn(b"Run this check again", workspace.data)
         self.assertIn(b"The plan has already run", workspace.data)
         self.assertNotIn(b">V1</span>", workspace.data)
