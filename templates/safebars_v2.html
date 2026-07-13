@@ -386,6 +386,13 @@
         .task-badge.missing { background: var(--red-soft); color: var(--red); }
         .task-badge.blocked, .task-badge.skipped { background: #eceff1; color: #65717a; }
         .task-rerun { min-height: 29px; padding: 4px 7px; font-size: 10px; white-space: nowrap; }
+        .task-plan-note { padding: 8px 9px; border-left: 3px solid var(--blue); background: var(--blue-soft); color: #365263; font-size: 10px; line-height: 1.45; }
+        .task-action-menu { position: relative; }
+        .task-action-menu > summary { list-style: none; cursor: pointer; padding: 5px 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--muted); font-size: 10px; font-weight: 700; white-space: nowrap; }
+        .task-action-menu > summary::-webkit-details-marker { display: none; }
+        .task-action-menu[open] > summary { border-color: var(--blue); color: var(--blue); }
+        .task-action-menu .task-rerun { margin-top: 5px; width: 100%; }
+        .task-action-menu:not([open]) > .task-rerun { display: none; }
 
         .tabbar {
             margin-top: 18px;
@@ -486,6 +493,12 @@
         .framework-toolbar .btn.active { border-color: var(--teal); background: var(--teal-soft); color: var(--teal); }
         .framework-toolbar select { width: auto; min-width: 180px; min-height: 34px; padding: 6px 28px 6px 8px; font-size: 10px; }
         .framework-result-count { margin-left: auto; color: var(--muted); font-size: 10px; }
+        .framework-status-summary { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+        .framework-status { border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; font: inherit; font-size: 9px; font-weight: 750; cursor: pointer; }
+        .framework-status.documented { border-color: #9ac5aa; background: var(--green-soft); color: var(--green); }
+        .framework-status.partial { border-color: #ddc483; background: var(--amber-soft); color: #8b5a12; }
+        .framework-status.missing { border-color: #d99b95; background: var(--red-soft); color: var(--red); }
+        .framework-status.active { box-shadow: 0 0 0 2px rgba(46,116,181,.18); }
         .source-key { margin-top: 7px; padding: 7px 9px; border-left: 3px solid var(--blue); background: var(--blue-soft); color: #365263; font-size: 9px; line-height: 1.45; }
         .framework-layout {
             display: grid;
@@ -976,8 +989,8 @@
             <button class="btn btn-quiet" id="expertWorkspaceButton" title="Open the current protocol's expert review">
                 <i data-lucide="user-check" size="16"></i><span id="expertWorkspaceLabel">Expert workspace</span>
             </button>
-            <a class="btn btn-quiet" href="/safebars/v1" title="Open the preserved v1 rehearsal interface">
-                <i data-lucide="history" size="16"></i><span>V1</span>
+            <a class="btn btn-quiet" href="/safebars/v1" title="Open the earlier research rehearsal workspace">
+                <i data-lucide="history" size="16"></i><span>Research rehearsal</span>
             </a>
         </div>
     </header>
@@ -1124,6 +1137,7 @@
                             <select id="frameworkFilter" aria-label="Filter by cited framework"><option value="all">All cited frameworks</option></select>
                             <span class="framework-result-count" id="frameworkResultCount"></span>
                         </div>
+                        <div class="framework-status-summary" id="frameworkCoverageSummary" aria-label="Framework evidence coverage counts"></div>
                         <div class="source-key"><strong>How to read a source label:</strong> “Interview questions · passage 1” means the first numbered excerpt taken from the Interview questions field. The hidden internal ID (for example INT-001) is only a traceability reference—not a risk or approval score.</div>
                         <div class="framework-layout">
                             <div class="framework-graph" id="frameworkGraph"></div>
@@ -1631,12 +1645,12 @@
         }
 
         async function rerunTask(taskId) {
-            setLoading(true, "Rerunning one bounded task", "Only this specialist output will be refreshed; the boundary and handoff state will then be checked again.");
+            setLoading(true, "Running one check again", "Only this specialist output will be refreshed; the boundary and expert-review state will then be checked again.");
             try {
                 const result = await api(`/api/safebars/v2/sessions/${state.session.id}/tasks/${taskId}/rerun`, {method: "POST"});
                 state.session = result.session;
                 renderAll();
-                toast("Specialist task rerun completed and boundary state refreshed.");
+                toast("The selected check ran again and its downstream state was refreshed.");
             } catch (error) { toast(error.message, true); }
             finally { setLoading(false); }
         }
@@ -1831,14 +1845,15 @@
                 return;
             }
             const audited = state.session?.status === "audited";
-            $("taskPlan").innerHTML = tasks.map(task => {
-                const canRerun = audited && ["scenario", "relationship", "llm_critic"].includes(task.kind) && task.status !== "skipped";
+            const optionalActionNote = audited ? `<div class="task-plan-note"><strong>The plan has already run.</strong> “Run this check again” is an optional advanced action for refreshing one specialist result; it is not another required workflow step and does not include unsaved edits.</div>` : "";
+            $("taskPlan").innerHTML = optionalActionNote + tasks.map(task => {
+                const canRerun = audited && ["scenario", "relationship", "llm_critic"].includes(task.kind) && ["completed", "paused"].includes(task.status) && Number(task.attempts || 0) > 0;
                 const dependencyCopy = task.depends_on?.length ? `${task.depends_on.length} prerequisite(s)` : "No prerequisite";
                 const resultCopy = task.result_summary ? `<div class="task-meta"><strong>Result:</strong> ${escapeHtml(task.result_summary)}</div>` : "";
                 return `<div class="task-card">
                     <div><div class="task-badges"><span class="task-badge ${escapeHtml(task.priority)}">${escapeHtml(task.priority)}</span><span class="task-badge ${escapeHtml(task.status)}">${escapeHtml(task.status)}</span></div><div class="task-title">${escapeHtml(task.title)}</div><div class="task-agent">${escapeHtml(task.agent)} · attempt ${escapeHtml(task.attempts || 0)}</div></div>
                     <div><div class="task-reason"><strong>Routing:</strong> ${escapeHtml(task.reason)}</div><div class="task-meta"><strong>Tools:</strong> ${escapeHtml((task.tools || []).join(", "))}</div><div class="task-meta"><strong>Stop:</strong> ${escapeHtml(task.stop_condition)}</div><div class="task-meta">${escapeHtml(dependencyCopy)} · ${(task.input_passage_ids || []).length} input passage(s)</div>${resultCopy}</div>
-                    <div>${canRerun ? `<button class="btn btn-quiet task-rerun" data-task-rerun="${escapeHtml(task.id)}"><i data-lucide="rotate-cw" size="13"></i>Rerun</button>` : ""}</div>
+                    <div>${canRerun ? `<details class="task-action-menu"><summary title="Optional task controls">Advanced ▾</summary><button class="btn btn-quiet task-rerun" data-task-rerun="${escapeHtml(task.id)}" title="Refresh only this completed specialist check"><i data-lucide="rotate-cw" size="13"></i>Run this check again</button></details>` : ""}</div>
                 </div>`;
             }).join("");
             document.querySelectorAll("[data-task-rerun]").forEach(button => button.addEventListener("click", () => rerunTask(button.dataset.taskRerun)));
@@ -2020,6 +2035,11 @@
             $("frameworkList").innerHTML = assessment.frameworks.map(framework => `<div class="framework-chip"><a href="${escapeHtml(framework.url)}" target="_blank" rel="noopener">${escapeHtml(framework.name)}</a><div>${escapeHtml(framework.scope)} · ${escapeHtml(framework.citation)}</div></div>`).join("");
             $("frameworkBoundary").textContent = assessment.interpretation_boundary;
             $("frameworkFilter").innerHTML = `<option value="all">All cited frameworks</option>` + assessment.frameworks.map(framework => `<option value="${escapeHtml(framework.id)}" ${framework.id === state.frameworkIdFilter ? "selected" : ""}>${escapeHtml(framework.name)}</option>`).join("");
+            const coverageCounts = assessment.dimensions.reduce((counts, dimension) => {
+                counts[dimension.coverage] = (counts[dimension.coverage] || 0) + 1;
+                return counts;
+            }, {documented: 0, partial: 0, missing: 0});
+            $("frameworkCoverageSummary").innerHTML = ["documented", "partial", "missing"].map(coverage => `<button type="button" class="framework-status ${coverage}" data-framework-coverage="${coverage}" title="Show only ${coverage} framework dimensions">${coverageCounts[coverage] || 0} ${coverage}</button>`).join("");
             document.querySelectorAll("[data-framework-coverage]").forEach(button => {
                 button.classList.toggle("active", button.dataset.frameworkCoverage === state.frameworkCoverageFilter);
                 button.onclick = () => setFrameworkCoverageFilter(button.dataset.frameworkCoverage);
