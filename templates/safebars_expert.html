@@ -34,6 +34,7 @@
         input,select,textarea { width:100%; border:1px solid #c8d2cc; border-radius:7px; background:#fff; color:var(--ink); }
         input,select { min-height:36px; padding:7px 9px; }
         textarea { min-height:108px; padding:9px 10px; resize:vertical; line-height:1.5; }
+        textarea.decision-focus { border-color:var(--green); box-shadow:0 0 0 4px rgba(31,104,71,.14); transition:border-color .2s ease,box-shadow .2s ease; }
         .progress-wrap { width:min(360px,36vw); }
         .progress-label { display:flex; justify-content:space-between; margin-bottom:5px; color:var(--muted); font-size:10px; }
         .progress { height:8px; overflow:hidden; border-radius:99px; background:#e8edea; }
@@ -246,8 +247,35 @@
             document.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", () => { activeTab = button.dataset.tab; renderFocus(); }));
             document.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => review(button.dataset.id, button.dataset.action)));
             document.querySelectorAll("[data-draft-field]").forEach(field => field.addEventListener("input", saveDraft));
-            $("nextActionButton").addEventListener("click", () => { if (item.status === "resolved") activeTab = "history"; else if (isWaiting(item)) activeTab = "history"; else if (!item.assigned_role) review(item.id,"assign"); else activeTab = item.researcher_response ? "evidence" : "decision"; renderFocus(); });
+            $("nextActionButton").addEventListener("click", () => {
+                if (item.status === "resolved" || isWaiting(item)) {
+                    activeTab = "history";
+                    renderFocus();
+                } else if (!item.assigned_role) {
+                    review(item.id,"assign");
+                } else if (item.researcher_response) {
+                    activeTab = "evidence";
+                    renderFocus();
+                } else {
+                    openDecisionForm(item.id);
+                }
+            });
             lucide.createIcons();
+        }
+        function focusDecisionField(id) {
+            requestAnimationFrame(() => {
+                const field = $(`advice-${id}`);
+                if (!field) return;
+                field.classList.add("decision-focus");
+                field.focus({preventScroll:true});
+                field.scrollIntoView({behavior:"smooth",block:"center"});
+                setTimeout(() => field.classList.remove("decision-focus"), 1400);
+            });
+        }
+        function openDecisionForm(id) {
+            activeTab = "decision";
+            renderFocus();
+            focusDecisionField(id);
         }
         function saveDraft() {
             const item = summary.queue.find(entry => entry.id === selectedId);
@@ -285,6 +313,7 @@
                 await loadSummary();
                 activeTab = ["request_clarification","resolve"].includes(action) ? "history" : "decision";
                 renderFocus();
+                if (action === "assign") focusDecisionField(id);
                 toast(`Saved: ${action.replaceAll("_"," ")}.`);
             } catch (error) { toast(error.message, true); }
         }
