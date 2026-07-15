@@ -155,6 +155,32 @@ token (`X-SafeBARS-Access` header).
 
 Legacy rehearsal endpoints (`/api/safebars/*`) back the v1 interface.
 
+### Framework selector (pre-session helper)
+
+Before committing to a full audit, a researcher can ask SafeBARS which
+ethics frameworks and expert-review roles a protocol maps to, and why. This is
+the explicit "traditional / AI dual-path" routing: it decides between a
+human-subjects pathway, an ICT/digital pathway, and an AI-assisted pathway from
+the project description, and returns the activated frameworks, recommended
+expert roles, a confidence level, and a plain-language rationale. It does not
+produce an ethics approval or compliance score.
+
+| Method | Path | Role | Purpose |
+|--------|------|------|---------|
+| POST | `/api/safebars/select-framework` | — | Dual-path routing decision (pathway, frameworks, expert roles, confidence) |
+
+```bash
+curl -X POST https://your-host/api/safebars/select-framework \
+  -H 'Content-Type: application/json' \
+  -d '{"project": {"title": "AI tutor for high-school students",
+                    "context": "We evaluate an LLM tutoring chatbot.",
+                    "target_people": "High-school students",
+                    "uses_ai": true}}'
+```
+
+The decision logic lives in `modules/framework_selector.py`; the v2 session
+creation reuses the same underlying detection.
+
 ## Export types
 
 - **Application draft (.docx):** submission-oriented sections, completeness
@@ -224,13 +250,34 @@ FLASK_DEBUG=0
 
 ```bash
 pytest tests/ -v
+python tests/evaluation/run_technical_evaluation.py
 ```
 
 The suite runs offline (the engine falls back to deterministic responses when no
 LLM provider is configured) and covers the audit engine, ethics-framework
 routing, application profiles, report exports, role authorization, expert
 invitation rotation, revision linkage, and protocol versioning. A GitHub Actions
-workflow runs the suite on every push and pull request.
+workflow runs both the suite and the technical evaluation on every push and pull
+request.
+
+### Technical evaluation harness
+
+`tests/evaluation/` operationalizes the "Small Technical Evaluation" from the
+CHI 2027 study plan: **21 seeded fictional protocol cases** across three domains
+(academic HCI, qualitative social/health, applied UX/service), each containing
+exactly one seeded missing transition or boundary violation. The deterministic
+runner asserts, for every case, that:
+
+- the dual-path routing (human-subjects / ICT / AI) is correct;
+- the activated framework set matches the pathway;
+- the seeded missing transition is surfaced as `missing` rather than hidden;
+- every documented/partial dimension links back to a source passage (provenance);
+- repeated runs are identical (no silent model variance on this offline path).
+
+This is a *spec-conformance* check, not an ethics-reasoning validation. The seed
+cases are sized and counterbalanced to match the planned formative study, so the
+same material can support both engineering regression tests and study
+piloting.
 
 ## Deployment boundary
 

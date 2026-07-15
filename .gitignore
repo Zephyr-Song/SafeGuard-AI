@@ -10,3 +10,4 @@ data/*.db
 data/*.db-shm
 data/*.db-wal
 research/chi2027/screenshots/
+tests/evaluation/results.json

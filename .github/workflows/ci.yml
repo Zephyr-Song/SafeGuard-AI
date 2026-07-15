@@ -36,5 +36,10 @@ jobs:
           SAFEBARS_REQUIRE_ROLE_AUTH: "0"
         run: pytest tests/ -v --tb=short
 
+      - name: Run offline technical evaluation
+        env:
+          SAFEBARS_REQUIRE_ROLE_AUTH: "0"
+        run: python tests/evaluation/run_technical_evaluation.py
+
       - name: Import smoke test
         run: python -c "import app; print('app import OK')"

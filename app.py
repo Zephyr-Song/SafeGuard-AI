@@ -28,6 +28,7 @@ from modules.reflection_dashboard import ReflectionDashboard
 from modules.rehearsal_logger import RehearsalLogger
 from modules.encounter_api import encounter_api
 from modules.ratelimit import rate_limit
+from modules.framework_selector import select_framework_path
 from config import FRAUD_CATEGORIES, DIFFICULTY_LEVELS, SAFETY_CONFIG, ACTIVE_MODEL
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates'))
@@ -414,6 +415,31 @@ def safebars_options():
         "llm_configured": rehearsal_engine.llm_client.is_configured(),
         "llm_providers": rehearsal_engine.list_llm_providers()
     })
+
+@app.route('/api/safebars/select-framework', methods=['POST'])
+@rate_limit(max_requests=20, window_seconds=60, scope="framework_selector")
+def safebars_select_framework():
+    """框架选择器：根据项目描述显式返回双路径路由决策。
+
+    接受 {"project": {...}, "passages": [...]} 或平铺的项目字段。
+    返回激活的框架、推荐专家角色、置信度与透明理由。不提供伦理批准判定。
+    """
+    payload = request.get_json(silent=True) or {}
+    project = payload.get("project")
+    if not isinstance(project, dict):
+        # Allow a flat payload where top-level keys describe the project.
+        project = {k: v for k, v in payload.items() if k not in ("passages",)}
+    passages = payload.get("passages")
+    if not isinstance(passages, list):
+        passages = []
+    try:
+        selection = select_framework_path(project, passages=passages)
+    except Exception as exc:  # pragma: no cover - defensive
+        return jsonify({
+            "success": False,
+            "error": f"Framework selection failed: {str(exc)[:300]}",
+        }), 500
+    return jsonify({"success": True, "selection": selection})
 
 @app.route('/api/safebars/start', methods=['POST'])
 @rate_limit(max_requests=15, window_seconds=60, scope="safebars_start")
