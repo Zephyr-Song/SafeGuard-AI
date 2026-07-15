@@ -1356,6 +1356,8 @@
             follow_up: "artifactFollowUp",
         };
 
+        let intakePlan = null;  // server-driven question schema; falls back to the built-in steps below
+
         const coreIntakeSteps = [
             {id: "context", target: "projectContext", question: "What are you studying, where and how will the research happen, and does AI play any role?", hint: "Include the aim, setting, method, why human participation is needed, and either describe the AI role or write 'No AI'.", min: 30, detectAi: true},
             {id: "people_recruitment", question: "Who is involved and how will participants be recruited?", hint: "Use two lines if possible:\nPeople/relationships: participants, helpers, gatekeepers, affected communities.\nRecruitment: contact, eligibility, compensation, and pressure safeguards.", min: 30, sections: [
@@ -1374,7 +1376,12 @@
         const aiIntakeStep = {id: "ai_governance", appendTarget: "projectContext", question: "Because this project uses AI, what needs human oversight and what happens when the AI is wrong?", hint: "Describe the model/provider, prompts or outputs, participant disclosure, human review and override, data/training use, monitoring, fallback, correction, and complaints.", min: 30};
 
         function activeIntakeSteps() {
-            return [...coreIntakeSteps, ...($("usesAi").checked ? [aiIntakeStep] : [])];
+            const core = (intakePlan && Array.isArray(intakePlan.core)) ? intakePlan.core : coreIntakeSteps;
+            let aiStep = (intakePlan && Array.isArray(intakePlan.conditional))
+                ? intakePlan.conditional.find(s => s.id === "ai_governance")
+                : null;
+            if (!aiStep) aiStep = aiIntakeStep;  // built-in fallback preserves live reactivity
+            return [...core, ...($("usesAi").checked ? [aiStep] : [])];
         }
 
         const $ = (id) => document.getElementById(id);
@@ -1528,7 +1535,8 @@
             const step = steps[state.intakeStep];
             if (!step) {
                 state.intakeComplete = true;
-                appendIntakeMessage("bot", `Quick intake complete: ${coreIntakeSteps.length} core questions${$("usesAi").checked ? " plus one AI follow-up" : ""}. Review or refine the populated fields before building the encounter map.`);
+                const coreCount = (intakePlan && Array.isArray(intakePlan.core)) ? intakePlan.core.length : coreIntakeSteps.length;
+                appendIntakeMessage("bot", `Quick intake complete: ${coreCount} core questions${$("usesAi").checked ? " plus one AI follow-up" : ""}. Review or refine the populated fields before building the encounter map.`);
                 $("intakeProgress").textContent = "Complete · review the structured fields or continue directly";
                 showIntakeCompletion();
                 renderWorkflow();
@@ -1542,7 +1550,27 @@
             $("intakeAnswer").focus();
         }
 
-        function restartIntake() {
+        async function loadIntakePlan() {
+            try {
+                const plan = await api("/api/safebars/v2/adaptive-intake/plan", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        project: {
+                            title: $("projectTitle").value,
+                            context: $("projectContext").value,
+                            target_people: $("targetPeople").value,
+                            uses_ai: $("usesAi").checked,
+                        },
+                    }),
+                });
+                intakePlan = plan;
+            } catch {
+                intakePlan = null;  // fall back to built-in questions
+            }
+        }
+
+        async function restartIntake() {
+            await loadIntakePlan();
             state.intakeStep = 0;
             state.intakeTranscript = [];
             state.intakeComplete = false;

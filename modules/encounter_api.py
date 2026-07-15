@@ -9,6 +9,7 @@ from flask import Blueprint, Response, current_app, g, jsonify, request
 
 from .encounter_engine import EncounterEngine
 from .ratelimit import rate_limit
+from .adaptive_intake import build_intake_plan
 from .encounter_report import (
     build_docx_report,
     build_ethics_application_docx,
@@ -56,6 +57,22 @@ def options():
         **encounter_engine.public_options(),
         "role_auth_required": current_app.config.get("SAFEBARS_REQUIRE_ROLE_AUTH", True),
     })
+
+
+@encounter_api.post("/adaptive-intake/plan")
+@rate_limit(max_requests=20, window_seconds=60, scope="adaptive_intake_plan")
+def adaptive_intake_plan():
+    """Return the adaptive guided-intake question plan for a project.
+
+    Accepts either ``{"project": {...}}`` (matching the workspace payload) or a
+    flat project description. No session token is required: this is a
+    pre-session helper that lets the frontend render the conversational intake
+    from the server's canonical question schema.
+    """
+    payload = request.get_json(silent=True) or {}
+    project = payload.get("project", payload) if isinstance(payload, dict) else {}
+    plan = build_intake_plan(project or {})
+    return jsonify({"success": True, **plan})
 
 
 @encounter_api.post("/sessions")

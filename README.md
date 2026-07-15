@@ -117,8 +117,8 @@ maintained separately in Notion.
 
 ## Key features
 
-- six-question guided intake that populates structured protocol fields, with one
-  conditional AI-governance follow-up;
+- six-question guided intake (server-driven from a tested question engine, with a
+  conditional AI-governance follow-up) that populates structured protocol fields;
 - Belmont baseline with conditional Menlo and NIST AI RMF extensions;
 - Value Sensitive Design-informed trade-off exploration;
 - Ethics Dandelion evidence visualization and a connected Trade-off Dandelion
@@ -168,6 +168,7 @@ produce an ethics approval or compliance score.
 | Method | Path | Role | Purpose |
 |--------|------|------|---------|
 | POST | `/api/safebars/select-framework` | — | Dual-path routing decision (pathway, frameworks, expert roles, confidence) |
+| POST | `/api/safebars/v2/adaptive-intake/plan` | — | Adaptive guided-intake question plan (six core questions + conditional AI-governance follow-up) |
 
 ```bash
 curl -X POST https://your-host/api/safebars/select-framework \
