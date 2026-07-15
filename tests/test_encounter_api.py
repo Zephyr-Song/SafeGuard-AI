@@ -429,5 +429,49 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"not an empty input form", expert_dashboard.data)
 
 
+    def test_tradeoffs_rejects_out_of_range_and_unknown_ids(self):
+        payload = json.loads(json.dumps(SAMPLE_PROJECT))
+        payload["use_llm"] = False
+        created = self.client.post("/api/safebars/v2/sessions", json=payload)
+        self.assertEqual(created.status_code, 201)
+        researcher_headers = {
+            "X-SafeBARS-Access": created.get_json()["access"]["researcher_token"]
+        }
+        session_id = created.get_json()["session"]["id"]
+
+        # Out-of-range position -> 400 (server-side validation, never trusted blindly).
+        bad_range = self.client.patch(
+            f"/api/safebars/v2/sessions/{session_id}/tradeoffs",
+            json={"deliberations": [{"id": "recruitment_reach", "value": 250}]},
+            headers=researcher_headers,
+        )
+        self.assertEqual(bad_range.status_code, 400)
+
+        # Only unrecognized ids -> 400.
+        bad_ids = self.client.patch(
+            f"/api/safebars/v2/sessions/{session_id}/tradeoffs",
+            json={"deliberations": [{"id": "ghost", "value": 50}]},
+            headers=researcher_headers,
+        )
+        self.assertEqual(bad_ids.status_code, 400)
+
+        # A mixed payload with one valid id still saves the valid one (200).
+        mixed = self.client.patch(
+            f"/api/safebars/v2/sessions/{session_id}/tradeoffs",
+            json={
+                "deliberations": [
+                    {"id": "recruitment_reach", "value": 65},
+                    {"id": "ghost", "value": 50},
+                ]
+            },
+            headers=researcher_headers,
+        )
+        self.assertEqual(mixed.status_code, 200)
+        self.assertIn(
+            "recruitment_reach",
+            mixed.get_json()["session"]["tradeoff_deliberations"],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

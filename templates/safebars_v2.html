@@ -1985,11 +1985,15 @@
         function renderTradeoffDandelion(assessment) {
             const tradeoffs = assessment.tradeoffs || [];
             const dimensions = assessment.dimensions || [];
-            if (!tradeoffs.length || !dimensions.length) {
+            if (!tradeoffs.length) {
                 $("tradeoffDandelion").innerHTML = "";
                 $("tradeoffComparisonSummary").innerHTML = "";
                 return;
             }
+            // When no evidence has been mapped yet, dimensions is empty. The
+            // board still shows the trade-off petals and center so the
+            // relationship overview is never blank; missing-coverage nodes are
+            // themselves a valid (red-outline) state per the design doc.
             initializeTradeoffState(assessment);
             const width = 760, height = 420, cx = 380, cy = 210, outerRadius = 168;
             const dimensionPositions = dimensions.map((node, index) => {

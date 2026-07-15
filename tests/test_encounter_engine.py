@@ -191,5 +191,71 @@ class EncounterEngineTest(unittest.TestCase):
         self.assertEqual(summary["queue"][0]["issue"]["title"], handoff["question"].removeprefix("How should the project address: ").removesuffix("?"))
 
 
+    def test_update_tradeoff_deliberations_validates_and_persists(self):
+        session = self.create_sample()
+
+        # Happy path: valid positions + rationale are stored.
+        updated = self.engine.update_tradeoff_deliberations(
+            session["id"],
+            [
+                {"id": "recruitment_reach", "value": 72, "rationale": "Broader access is justified by community need."},
+                {"id": "data_richness_privacy", "value": 40, "rationale": "Minimize identifiable data for this sensitive topic."},
+            ],
+        )
+        stored = updated["tradeoff_deliberations"]
+        self.assertEqual(stored["recruitment_reach"]["value"], 72)
+        self.assertEqual(
+            stored["recruitment_reach"]["rationale"],
+            "Broader access is justified by community need.",
+        )
+        # Persisted to the store, not only in memory.
+        reloaded = self.engine.get_session(session["id"])
+        self.assertEqual(
+            reloaded["tradeoff_deliberations"]["data_richness_privacy"]["value"], 40
+        )
+
+    def test_update_tradeoff_deliberations_rejects_invalid_values(self):
+        session = self.create_sample()
+
+        # Out-of-range positions are rejected with a clear error.
+        with self.assertRaises(ValueError):
+            self.engine.update_tradeoff_deliberations(
+                session["id"], [{"id": "recruitment_reach", "value": 150}]
+            )
+        with self.assertRaises(ValueError):
+            self.engine.update_tradeoff_deliberations(
+                session["id"], [{"id": "recruitment_reach", "value": -5}]
+            )
+
+        # Submitting only unrecognized trade-off ids is rejected because the
+        # deliberation would record nothing.
+        with self.assertRaises(ValueError):
+            self.engine.update_tradeoff_deliberations(
+                session["id"], [{"id": "not_a_real_tradeoff", "value": 50}]
+            )
+
+        # A recognized id among others is kept; the bad id is ignored and a
+        # valid deliberation is still saved.
+        updated = self.engine.update_tradeoff_deliberations(
+            session["id"],
+            [
+                {"id": "recruitment_reach", "value": 60},
+                {"id": "ghost_tradeoff", "value": 99},
+            ],
+        )
+        self.assertIn("recruitment_reach", updated["tradeoff_deliberations"])
+        self.assertNotIn("ghost_tradeoff", updated["tradeoff_deliberations"])
+
+    def test_update_tradeoff_deliberations_caps_rationale_length(self):
+        session = self.create_sample()
+        updated = self.engine.update_tradeoff_deliberations(
+            session["id"],
+            [{"id": "recruitment_reach", "value": 50, "rationale": "x" * 5000}],
+        )
+        self.assertEqual(
+            len(updated["tradeoff_deliberations"]["recruitment_reach"]["rationale"]), 2000
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
