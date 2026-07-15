@@ -1,0 +1,32 @@
+# Version control / CI
+.git
+.github
+.gitignore
+
+# Python caches
+__pycache__
+*.pyc
+.pytest_cache
+*.egg-info
+
+# Tests and research artifacts (not needed at runtime)
+tests/
+research/
+
+# Local data and docs
+data/
+docs/
+*.md
+!requirements.txt
+
+# Local run scripts / secrets
+.env
+*.bat
+*.ps1
+run_safebars*.py
+run_safebars*.bat
+run_safebars*.ps1
+
+# The image files themselves
+Dockerfile
+.dockerignore

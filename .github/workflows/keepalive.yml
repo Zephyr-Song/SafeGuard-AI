@@ -1,0 +1,31 @@
+name: Keep SafeBARS awake
+
+# Render's Free Tier spins the service down after ~15 minutes of inactivity,
+# which makes the first request after a lull take 30-60s (cold start). This
+# scheduled workflow pings the lightweight /healthz endpoint every 10 minutes
+# to keep the instance warm and avoid that cold start for visitors.
+#
+# Caveat: GitHub automatically disables scheduled workflows after ~60 days of
+# repository inactivity. For a fully hands-off alternative, point an external
+# uptime monitor (e.g. UptimeRobot, free tier) at:
+#   https://safebars.onrender.com/healthz
+# You can also run this manually via the "Run workflow" button (workflow_dispatch).
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping health endpoint
+        run: |
+          code=$(curl -fsS -o /dev/null -w "%{http_code}" \
+            https://safebars.onrender.com/healthz || true)
+          echo "healthz responded: ${code:-no-response}"
+          if [ -z "$code" ] || [ "$code" != "200" ]; then
+            echo "Note: non-200 response is usually a cold start in progress; the next ping should succeed."
+          fi

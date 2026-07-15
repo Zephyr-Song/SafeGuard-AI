@@ -287,6 +287,24 @@ ephemeral local storage, so SQLite sessions and invitation tokens can disappear
 after a restart or redeploy. Use a persistent database and institution-managed
 identity before handling real or confidential ethics applications.
 
+### Free-tier keep-alive
+
+Render's Free Tier spins the service down after ~15 minutes of inactivity, so the
+first visit after a lull waits through a 30-60s cold start. A scheduled GitHub
+Action (`.github/workflows/keepalive.yml`) pings `/healthz` every 10 minutes to
+stay under that threshold and keep the demo responsive. GitHub disables scheduled
+workflows after ~60 days of repository inactivity, so for a fully hands-off
+fallback you can also point an external uptime monitor (e.g. UptimeRobot, free
+tier) at `https://safebars.onrender.com/healthz`.
+
+### Optional: Docker deployment
+
+`Dockerfile` reproduces the exact runtime (Python 3.12 + gunicorn, identical start
+command to `render.yaml`). Build with `docker build -t safebars .` and run with
+`docker run --rm -p 5000:5000 -e FLASK_SECRET_KEY=dev-only safebars`. To deploy via
+Docker on Render, set `env: docker` and `dockerfile: Dockerfile` in `render.yaml`
+and redeploy; runtime behaviour is otherwise unchanged.
+
 See [DEPLOY_RENDER.md](DEPLOY_RENDER.md) for deployment steps and
 [research/chi2027/](research/chi2027/) for the current research and
 implementation boundary.
