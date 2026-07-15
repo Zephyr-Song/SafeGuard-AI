@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run test suite
+        env:
+          # No LLM provider is configured in CI; the engine falls back to
+          # deterministic responses, so the suite runs end-to-end offline.
+          SAFEBARS_REQUIRE_ROLE_AUTH: "0"
+        run: pytest tests/ -v --tb=short
+
+      - name: Import smoke test
+        run: python -c "import app; print('app import OK')"

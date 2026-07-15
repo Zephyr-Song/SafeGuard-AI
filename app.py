@@ -27,14 +27,73 @@ from modules.rehearsal_engine import RehearsalEngine
 from modules.reflection_dashboard import ReflectionDashboard
 from modules.rehearsal_logger import RehearsalLogger
 from modules.encounter_api import encounter_api
+from modules.ratelimit import rate_limit
 from config import FRAUD_CATEGORIES, DIFFICULTY_LEVELS, SAFETY_CONFIG, ACTIVE_MODEL
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates'))
-app.secret_key = os.getenv("FLASK_SECRET_KEY") or os.urandom(24)
+
+# SECURITY: never silently fall back to a random key in production. A fixed
+# key keeps Flask sessions stable across restarts; a random one only makes
+# sense for throwaway local dev.
+_flask_secret_key = os.getenv("FLASK_SECRET_KEY")
+if not _flask_secret_key:
+    if os.getenv("FLASK_ENV") == "production" or os.getenv("RENDER"):
+        raise RuntimeError(
+            "FLASK_SECRET_KEY is not set. Refusing to start in production "
+            "with an ephemeral session key."
+        )
+    _flask_secret_key = os.urandom(24)
+app.secret_key = _flask_secret_key
+
 app.config["SAFEBARS_REQUIRE_ROLE_AUTH"] = os.getenv(
     "SAFEBARS_REQUIRE_ROLE_AUTH", "1"
 ) == "1"
 app.register_blueprint(encounter_api)
+
+
+# ---------------------------------------------------------------------------
+# Security headers + safe error handling (publication-grade hardening)
+# ---------------------------------------------------------------------------
+
+def _is_production() -> bool:
+    return os.getenv("FLASK_ENV") == "production" or bool(os.getenv("RENDER"))
+
+
+@app.after_request
+def apply_security_headers(response):
+    """Attach defensive HTTP headers to every response."""
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "no-referrer")
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+        "script-src 'self' 'unsafe-inline'; connect-src 'self'",
+    )
+    if _is_production():
+        response.headers.setdefault(
+            "Strict-Transport-Security",
+            "max-age=31536000; includeSubDomains",
+        )
+    return response
+
+
+@app.errorhandler(404)
+def handle_not_found(error):
+    return jsonify({
+        "success": False,
+        "error": "Not found",
+    }), 404
+
+
+@app.errorhandler(500)
+def handle_server_error(error):
+    # Log the real exception server-side; never leak internals to clients.
+    app.logger.error("Unhandled exception: %s", error, exc_info=True)
+    return jsonify({
+        "success": False,
+        "error": "Internal server error",
+    }), 500
 
 
 @app.before_request
@@ -357,6 +416,7 @@ def safebars_options():
     })
 
 @app.route('/api/safebars/start', methods=['POST'])
+@rate_limit(max_requests=15, window_seconds=60, scope="safebars_start")
 def safebars_start():
     """开始SafeBARS预演会话"""
     try:
@@ -373,6 +433,7 @@ def safebars_start():
         }), 500
 
 @app.route('/api/safebars/message', methods=['POST'])
+@rate_limit(max_requests=30, window_seconds=60, scope="safebars_message")
 def safebars_message():
     """向synthetic stakeholder发送消息"""
     data = request.json or {}
@@ -397,6 +458,7 @@ def safebars_message():
     })
 
 @app.route('/api/safebars/compare', methods=['POST'])
+@rate_limit(max_requests=15, window_seconds=60, scope="safebars_compare")
 def safebars_compare():
     """Compare template and configured LLM providers for one rehearsal prompt."""
     data = request.json or {}
@@ -452,6 +514,7 @@ def safebars_export_comparison():
     })
 
 @app.route('/api/safebars/reflection', methods=['POST'])
+@rate_limit(max_requests=15, window_seconds=60, scope="safebars_reflection")
 def safebars_reflection():
     """生成研究计划反思报告"""
     data = request.json or {}
@@ -583,6 +646,7 @@ def safebars_session(session_id):
     })
 
 @app.route('/api/safebars/export/<session_id>')
+@rate_limit(max_requests=15, window_seconds=60, scope="safebars_export")
 def safebars_export(session_id):
     """导出SafeBARS会话"""
     rehearsal_session = rehearsal_engine.get_session(session_id)
@@ -747,5 +811,10 @@ if __name__ == '__main__':
     print("=" * 60)
     print("访问 http://localhost:5000 开始使用")
     print("=" * 60)
-    
-    app.run(debug=True, host='0.0.0.0', port=5000)
+
+    # SECURITY: debug mode must never be enabled in shared/production
+    # deployments. It exposes the Werkzeug interactive debugger (RCE) and
+    # leaks source/stack traces. Gate it behind an explicit env flag that
+    # defaults to OFF.
+    debug_enabled = os.getenv("FLASK_DEBUG") == "1"
+    app.run(debug=debug_enabled, host='0.0.0.0', port=5000)

@@ -8,6 +8,7 @@ from functools import wraps
 from flask import Blueprint, Response, current_app, g, jsonify, request
 
 from .encounter_engine import EncounterEngine
+from .ratelimit import rate_limit
 from .encounter_report import (
     build_docx_report,
     build_ethics_application_docx,
@@ -148,6 +149,7 @@ def update_tradeoffs(session_id: str):
 
 
 @encounter_api.post("/sessions/<session_id>/audit")
+@rate_limit(max_requests=10, window_seconds=120, scope="v2_audit")
 @require_session_role("researcher")
 def run_audit(session_id: str):
     payload = request.get_json(silent=True) or {}
@@ -163,6 +165,7 @@ def run_audit(session_id: str):
 
 
 @encounter_api.post("/sessions/<session_id>/tasks/<task_id>/rerun")
+@rate_limit(max_requests=20, window_seconds=120, scope="v2_rerun")
 @require_session_role("researcher")
 def rerun_task(session_id: str, task_id: str):
     try:
