@@ -274,7 +274,8 @@ def _matching_terms(text: str, terms: Iterable[str]) -> List[str]:
         if term.endswith("*"):
             pattern = rf"\b{re.escape(term[:-1])}[a-z-]*\b"
         else:
-            pattern = rf"\b{re.escape(term).replace(r'\ ', r'\s+')}\b"
+            escaped_term = re.escape(term).replace(r"\ ", r"\s+")
+            pattern = rf"\b{escaped_term}\b"
         if re.search(pattern, normalized):
             found.append(term.rstrip("*"))
     return found

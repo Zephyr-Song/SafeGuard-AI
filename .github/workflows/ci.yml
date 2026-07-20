@@ -34,7 +34,7 @@ jobs:
           # No LLM provider is configured in CI; the engine falls back to
           # deterministic responses, so the suite runs end-to-end offline.
           SAFEBARS_REQUIRE_ROLE_AUTH: "0"
-        run: pytest tests/ -v --tb=short
+        run: python -m pytest tests/ -v --tb=short
 
       - name: Run offline technical evaluation
         env:
