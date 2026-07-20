@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SafeBARS Encounter Workspace</title>
-    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" integrity="sha384-uTYyvsSSUZeaPhb5RbKlQa0zY/WpX/QHfvg2mczXyBQOpkWPEDy9lczyp+w7SKXu" crossorigin="anonymous"></script>
+    <script>
+        function refreshIcons() {
+            const iconLibrary = window.lucide;
+            if (!iconLibrary || typeof iconLibrary.createIcons !== "function") return false;
+            iconLibrary.createIcons();
+            return true;
+        }
+    </script>
     <style>
         :root {
             --canvas: #f5f6f7;
@@ -1585,7 +1593,7 @@
             $("intakeCompletePanel").hidden = true;
             appendIntakeMessage("bot", "This quick intake uses six core questions. You may skip any question and refine the structured fields later. AI projects receive one additional governance question; SafeBARS still cannot provide institutional ethics approval.");
             askCurrentIntakeQuestion();
-            lucide.createIcons();
+            refreshIcons();
         }
 
         function showIntakeCompletion() {
@@ -1596,7 +1604,7 @@
             $("skipIntakeButton").hidden = true;
             $("submitIntakeButton").disabled = false;
             $("submitIntakeButton").innerHTML = `<i data-lucide="check" size="15"></i>Done · review populated fields`;
-            lucide.createIcons();
+            refreshIcons();
         }
 
         function openGuidedIntake() {
@@ -1610,7 +1618,7 @@
                 }
             }
             $("intakeDialog").showModal();
-            lucide.createIcons();
+            refreshIcons();
         }
 
         function applySectionAnswer(answer, sections) {
@@ -1899,7 +1907,7 @@
             $("exportButton").disabled = !state.session;
             $("newVersionButton").disabled = !state.session;
             $("sessionLabel").textContent = state.session ? state.session.id.replace("encounter_", "") : "not created";
-            lucide.createIcons();
+            refreshIcons();
         }
 
         function renderCounts() {
@@ -1958,7 +1966,7 @@
                 </div>`;
             }).join("");
             document.querySelectorAll("[data-task-rerun]").forEach(button => button.addEventListener("click", () => rerunTask(button.dataset.taskRerun)));
-            lucide.createIcons();
+            refreshIcons();
         }
 
         function splitNodeLabel(label) {
@@ -2225,7 +2233,7 @@
                 state.tradeoffRationales[input.dataset.tradeoffRationale] = input.value;
             }));
             if (state.selectedDimensionId) showDimension(state.selectedDimensionId);
-            lucide.createIcons();
+            refreshIcons();
         }
 
         function renderApplicationReadiness() {
@@ -2363,7 +2371,7 @@
                 state.selectedTraceId = selectedTraces[0].id;
                 switchTab("traces");
                 renderTraces();
-                lucide.createIcons();
+                refreshIcons();
             };
             if ($("selectJourneyScenarios")) $("selectJourneyScenarios").onclick = () => {
                 const ids = new Set(linkedScenarios.map(scenario => scenario.id));
@@ -2413,7 +2421,7 @@
                 <span class="trace-status ${escapeHtml(trace.status)}">${escapeHtml(trace.status.replace("_", " "))}</span>
                 <div class="trace-button-title">${escapeHtml(trace.title)}</div>
             </button>`).join("");
-            document.querySelectorAll("[data-trace-id]").forEach(button => button.addEventListener("click", () => { state.selectedTraceId = button.dataset.traceId; renderTraces(); lucide.createIcons(); }));
+            document.querySelectorAll("[data-trace-id]").forEach(button => button.addEventListener("click", () => { state.selectedTraceId = button.dataset.traceId; renderTraces(); refreshIcons(); }));
             const trace = traces.find(item => item.id === state.selectedTraceId);
             $("traceDetail").innerHTML = `<div class="inline" style="justify-content:space-between;gap:12px"><h3>${escapeHtml(trace.title)}</h3><span class="trace-status ${escapeHtml(trace.status)}">${escapeHtml(trace.status.replace("_", " "))}</span></div>
                 <div class="trace-limitation">${escapeHtml(trace.uncertainty)}</div>
@@ -2439,7 +2447,7 @@
                 <div class="issue-decision"><div class="field"><label for="revision-${escapeHtml(issue.id)}">Revision text</label><textarea id="revision-${escapeHtml(issue.id)}" placeholder="Edit the affected wording or procedure">${escapeHtml(issue.revised_text || "")}</textarea></div><div class="field"><label for="rationale-${escapeHtml(issue.id)}">Decision rationale</label><textarea class="textarea-short" id="rationale-${escapeHtml(issue.id)}" placeholder="Why this decision fits the real project">${escapeHtml(issue.decision_rationale || "")}</textarea></div><div class="button-row"><button class="btn decision-btn ${issue.decision === "accept" ? "selected" : ""}" data-issue="${escapeHtml(issue.id)}" data-decision="accept"><i data-lucide="check" size="14"></i>Accept</button><button class="btn decision-btn ${issue.decision === "edit" ? "selected" : ""}" data-issue="${escapeHtml(issue.id)}" data-decision="edit"><i data-lucide="pencil" size="14"></i>Edit</button><button class="btn decision-btn ${issue.decision === "reject" ? "selected" : ""}" data-issue="${escapeHtml(issue.id)}" data-decision="reject"><i data-lucide="x" size="14"></i>Reject</button><button class="btn decision-btn ${issue.decision === "defer" ? "selected" : ""}" data-issue="${escapeHtml(issue.id)}" data-decision="defer"><i data-lucide="send" size="14"></i>Defer</button></div></div></div>
             </article>`).join("") : `<div class="empty-state"><div><div class="empty-title">No issues match these filters</div></div></div>`;
             document.querySelectorAll("[data-decision]").forEach(button => button.addEventListener("click", () => decide(button.dataset.issue, button.dataset.decision)));
-            lucide.createIcons();
+            refreshIcons();
         }
 
         function enhanceResearcherHandoffThreads(handoffs) {
@@ -2473,7 +2481,7 @@
             $("openExpertReview").addEventListener("click", () => window.location.assign(expertInviteUrl()));
             enhanceResearcherHandoffThreads(handoffs);
             document.querySelectorAll("[data-researcher-response]").forEach(button => button.addEventListener("click", () => submitHandoffResponse(button.dataset.researcherResponse)));
-            lucide.createIcons();
+            refreshIcons();
         }
 
         function expertInviteUrl() {
@@ -2616,7 +2624,7 @@
                     sessionStorage.setItem("safebars_usage_guide_seen", "1");
                 }
             } catch (error) { toast(error.message, true); }
-            lucide.createIcons();
+            refreshIcons();
         }
 
         document.querySelectorAll(".tab").forEach(button => button.addEventListener("click", () => switchTab(button.dataset.tab)));

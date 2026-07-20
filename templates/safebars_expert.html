@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SafeBARS Expert Workspace</title>
-    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" integrity="sha384-uTYyvsSSUZeaPhb5RbKlQa0zY/WpX/QHfvg2mczXyBQOpkWPEDy9lczyp+w7SKXu" crossorigin="anonymous"></script>
+    <script>
+        function refreshIcons() {
+            const iconLibrary = window.lucide;
+            if (!iconLibrary || typeof iconLibrary.createIcons !== "function") return false;
+            iconLibrary.createIcons();
+            return true;
+        }
+    </script>
     <style>
         :root { --ink:#15231d; --muted:#68766f; --line:#d8dfdb; --surface:#fff; --subtle:#f5f7f5; --green:#1f6847; --green-dark:#174e36; --green-soft:#e8f3ed; --blue:#326b87; --blue-soft:#eaf3f7; --amber:#a96f18; --amber-soft:#fff5df; --red:#a3443e; --red-soft:#fcecea; --shadow:0 16px 42px rgba(27,48,38,.08); }
         * { box-sizing:border-box; }
@@ -300,7 +308,7 @@
                     openDecisionForm(item.id);
                 }
             });
-            lucide.createIcons();
+            refreshIcons();
         }
         function focusDecisionField(id) {
             requestAnimationFrame(() => {
@@ -336,7 +344,7 @@
             renderStats();
             renderQueue();
             renderFocus();
-            lucide.createIcons();
+            refreshIcons();
         }
         async function review(id, action) {
             const adviceField = $(`advice-${id}`);
@@ -385,7 +393,7 @@
                 $("reviewerName").value = profile.name || "";
                 await loadSummary();
             } catch (error) { $("queue").innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`; $("focusPanel").innerHTML = `<div class="focus-empty">${escapeHtml(error.message)}</div>`; toast(error.message, true); }
-            lucide.createIcons();
+            refreshIcons();
         }
         $("statusFilter").addEventListener("change", render);
         $("roleFilter").addEventListener("change", render);

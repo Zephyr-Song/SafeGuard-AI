@@ -352,7 +352,13 @@ class EncounterApiTest(unittest.TestCase):
     def test_workspace_and_v1_routes_are_available(self):
         workspace = self.client.get("/safebars")
         self.assertEqual(workspace.status_code, 200)
+        self.assertIn(
+            "https://unpkg.com",
+            workspace.headers.get("Content-Security-Policy", ""),
+        )
         self.assertIn(b"Encounter stress-testing workspace", workspace.data)
+        self.assertIn(b"function refreshIcons()", workspace.data)
+        self.assertIn(b'integrity="sha384-', workspace.data)
         self.assertIn(b"Start quick intake", workspace.data)
         self.assertIn(b"How to use SafeBARS", workspace.data)
         self.assertIn(b'aria-label="Close instructions"', workspace.data)

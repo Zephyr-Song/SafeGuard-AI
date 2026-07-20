@@ -69,7 +69,7 @@ def apply_security_headers(response):
     response.headers.setdefault(
         "Content-Security-Policy",
         "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
-        "script-src 'self' 'unsafe-inline'; connect-src 'self'",
+        "script-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self'",
     )
     if _is_production():
         response.headers.setdefault(

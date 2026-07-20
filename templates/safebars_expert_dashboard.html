@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SafeBARS Expert Caseload</title>
-    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" integrity="sha384-uTYyvsSSUZeaPhb5RbKlQa0zY/WpX/QHfvg2mczXyBQOpkWPEDy9lczyp+w7SKXu" crossorigin="anonymous"></script>
+    <script>
+        function refreshIcons() {
+            const iconLibrary = window.lucide;
+            if (!iconLibrary || typeof iconLibrary.createIcons !== "function") return false;
+            iconLibrary.createIcons();
+            return true;
+        }
+    </script>
     <style>
         :root { --ink:#17202a; --muted:#66727f; --line:#d9dee3; --surface:#fff; --subtle:#f5f7f8; --green:#246b49; --green-soft:#e7f3ec; --teal:#176f73; --amber:#b7791f; --amber-soft:#fff8e8; --red:#a4423b; --red-soft:#fcebea; }
         * { box-sizing:border-box; }
@@ -103,7 +111,7 @@
                 return `<article class="case"><div><h3>${escapeHtml(item.project.title || "Untitled project")}</h3><p class="muted">${escapeHtml(item.project.context || "No context provided")}</p><div class="meta"><span class="badge">${escapeHtml((item.framework_pathway || "unassessed").replaceAll("_"," "))}</span><span class="badge high">${item.counts.unresolved_high_priority ?? item.counts.high_priority ?? 0} high unresolved</span><span class="badge open">${item.counts.unresolved || 0} unresolved</span><span class="badge resolved">${item.counts.resolved || 0} resolved</span><span class="badge">${escapeHtml(roles)}</span></div><p class="muted">Session ${escapeHtml(item.session_id.replace("encounter_",""))}</p></div><div class="actions"><a class="btn btn-primary" href="/safebars/expert/${escapeHtml(item.session_id)}#access=${encodeURIComponent(item.accessToken)}"><i data-lucide="clipboard-check" size="14"></i>Review case</a><button class="btn" data-remove-case="${escapeHtml(item.session_id)}"><i data-lucide="x" size="14"></i>Remove</button></div></article>`;
             }).join("") : (cases.length ? `<div class="empty"><h2>No cases match this filter</h2><p>Choose another expert role or return to all roles.</p></div>` : `<div class="empty"><h2>No review case is open</h2><p>This is the expert caseload, not an empty input form. From the researcher workspace, run an audit until it creates a handoff, then choose <strong>Open expert review</strong> to enter advice.</p><a class="btn btn-primary" href="/safebars"><i data-lucide="arrow-left" size="14"></i>Return to researcher workspace</a></div>`);
             document.querySelectorAll("[data-remove-case]").forEach(button => button.addEventListener("click", () => removeCase(button.dataset.removeCase)));
-            lucide.createIcons();
+            refreshIcons();
         }
         async function loadAll() {
             const valid = [];
@@ -138,7 +146,7 @@
         $("roleFilter").addEventListener("change", () => render(loadedCases));
         $("downloadPortfolioButton").addEventListener("click", () => downloadPortfolio().catch(error => alert(error.message)));
         loadAll();
-        lucide.createIcons();
+        refreshIcons();
     </script>
 </body>
 </html>
