@@ -1368,7 +1368,7 @@
         let intakePlan = null;  // server-driven question schema; falls back to the built-in steps below
 
         const coreIntakeSteps = [
-            {id: "context", target: "projectContext", question: "What are you studying, where and how will the research happen, and does AI play any role?", hint: "Include the aim, setting, method, why human participation is needed, and either describe the AI role or write 'No AI'.", min: 30, detectAi: true},
+            {id: "context", target: "projectContext", question: "What is the research area, and which school or university is sponsoring this work? Describe where and how the research will happen, and whether AI plays any role.", hint: "Include the research area, sponsoring institution, aim, setting, method, why human participation is needed, and either describe the AI role or write 'No AI'.", min: 30, detectAi: true},
             {id: "people_recruitment", question: "Who is involved and how will participants be recruited?", hint: "Use two lines if possible:\nPeople/relationships: participants, helpers, gatekeepers, affected communities.\nRecruitment: contact, eligibility, compensation, and pressure safeguards.", min: 30, sections: [
                 {target: "targetPeople", labels: ["people", "participants", "relationships"]},
                 {target: "artifactRecruitment", labels: ["recruitment", "eligibility", "contact"]},
@@ -1591,7 +1591,7 @@
             $("intakeAnswer").disabled = false;
             $("intakeAnswer").hidden = false;
             $("intakeCompletePanel").hidden = true;
-            appendIntakeMessage("bot", "This quick intake uses six core questions. You may skip any question and refine the structured fields later. AI projects receive one additional governance question; SafeBARS still cannot provide institutional ethics approval.");
+            appendIntakeMessage("bot", "This quick intake uses six core questions. You may skip any question and refine the structured fields later. AI projects receive one additional governance question. SafeBARS helps you prepare and stress-test your protocol, but it does not replace or grant your institution's ethics approval — use its output to support your university ethics committee application.");
             askCurrentIntakeQuestion();
             refreshIcons();
         }

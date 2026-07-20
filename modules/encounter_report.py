@@ -716,6 +716,50 @@ def build_pdf_report(session: Dict[str, Any]) -> bytes:
     return output.getvalue()
 
 
+def _add_esr_societal_risk_section(document, assessment):
+    """Add an ESR-style societal/community risk statement to the committee draft.
+
+    Operationalizes Bernstein et al. (2021), PNAS: beyond the individual-participant
+    focus of a standard IRB, researchers should state risks to society, to subgroups,
+    and globally, and commit to mitigation strategies. SafeBARS surfaces the societal
+    dimensions it already assessed (Menlo / NIST AI RMF / VSD / ESR) and leaves the
+    mitigation statements for the researcher to complete.
+    """
+    document.add_paragraph(
+        "Standard ethics review (for example an IRB under the Common Rule) focuses on risks to "
+        "individual participants. The Ethics and Society Review (ESR; Bernstein, Levi, Magnus, "
+        "Rajala, Satz & Waeiss, PNAS 2021, DOI 10.1073/pnas.2117261118) argues that research can "
+        "also create risks to society, to subgroups within society, and globally, and that "
+        "researchers should state those risks and commit to mitigation strategies. SafeBARS "
+        "surfaced the considerations below from your framework assessment; you must write the "
+        "mitigation statements and include them in your university ethics-committee application. "
+        "This statement supplements, and does not replace, individual-participant review."
+    )
+    societal_frameworks = {"menlo", "nist_ai_rmf", "vsd", "esr"}
+    dimensions = [
+        d for d in assessment.get("dimensions", [])
+        if d.get("framework") in societal_frameworks
+    ]
+    if not dimensions:
+        document.add_paragraph(
+            "No societal, ICT, AI-governance, or stakeholder-value dimensions were activated for "
+            "this protocol. Even so, state any foreseeable risks to subgroups or to society and "
+            "your planned mitigations in the space below."
+        )
+    for dim in dimensions:
+        document.add_heading(
+            f"{dim.get('label', 'Consideration')}  [{dim.get('framework')}, {_text(dim.get('coverage')).upper()}]",
+            level=2,
+        )
+        document.add_paragraph(_text(dim.get("question")))
+        document.add_paragraph(
+            f"Coverage evidence: {', '.join(dim.get('source_passage_ids', [])) or 'none located'}."
+        )
+        blank = document.add_paragraph()
+        _set_run(blank.add_run("Mitigation statement (researcher to complete): "), bold=True)
+        blank.add_run("_" * 60)
+
+
 def build_ethics_application_docx(session: Dict[str, Any]) -> bytes:
     """Build a generic application draft, never an approval or compliance verdict."""
     document = Document()
@@ -800,7 +844,11 @@ def build_ethics_application_docx(session: Dict[str, Any]) -> bytes:
     else:
         next_section = 7
 
-    document.add_heading(f"{next_section}. Researcher decisions and revisions", level=1)
+    # ESR societal & community risk statement — required beyond individual-subject IRB review.
+    document.add_heading(f"{next_section}. Societal & Community Risk Statement (Ethics and Society Review)", level=1)
+    _add_esr_societal_risk_section(document, assessment)
+
+    document.add_heading(f"{next_section + 1}. Researcher decisions and revisions", level=1)
     if not session.get("issues"):
         document.add_paragraph("No encounter-audit issues have been generated yet.")
     for issue in session.get("issues", []):
@@ -809,7 +857,7 @@ def build_ethics_application_docx(session: Dict[str, Any]) -> bytes:
         _add_label_paragraph(document, "Researcher rationale", issue.get("decision_rationale"))
         _add_label_paragraph(document, "Revised text", issue.get("revised_text"))
 
-    document.add_heading(f"{next_section + 1}. Outstanding expert and stakeholder review", level=1)
+    document.add_heading(f"{next_section + 2}. Outstanding expert and stakeholder review", level=1)
     if not session.get("handoffs"):
         document.add_paragraph("No handoffs have been generated yet.")
     for handoff in session.get("handoffs", []):
@@ -821,11 +869,28 @@ def build_ethics_application_docx(session: Dict[str, Any]) -> bytes:
         _add_label_paragraph(document, "Researcher response", handoff.get("researcher_response"))
         _add_label_paragraph(document, "Linked protocol revision", handoff.get("researcher_revised_text"))
 
-    document.add_heading(f"{next_section + 2}. Submission readiness statement", level=1)
+    document.add_heading(f"{next_section + 3}. Submission readiness statement", level=1)
     document.add_paragraph(
         f"This draft is {readiness.get('completion_percent', 0)}% documented under the selected generic profile and "
         f"contains {readiness.get('unresolved_handoff_count', 0)} unresolved handoff(s). The researcher must verify every section, "
         "complete the institution-specific form, disclose AI assistance where required, and obtain formal approval before recruitment or data collection."
+    )
+
+    document.add_heading("References", level=1)
+    document.add_paragraph(
+        "Bernstein, M. S., Levi, M., Magnus, D., Rajala, B. A., Satz, D., & Waeiss, C. (2021). "
+        "Ethics and society review: Ethics reflection as a precondition to research funding. "
+        "Proceedings of the National Academy of Sciences, 118(52), e2117261118. "
+        "https://doi.org/10.1073/pnas.2117261118"
+    )
+    document.add_paragraph(
+        "U.S. National Commission for the Protection of Human Subjects (1979). The Belmont Report: "
+        "Ethical Principles and Guidelines for the Protection of Human Subjects of Research."
+    )
+    document.add_paragraph(
+        "Menlo Report (2012). Identifying Empirical Research Opportunities in Cybersecurity and "
+        "Privacy; NIST AI Risk Management Framework (NIST AI 100-1); Value Sensitive Design "
+        "(Friedman, Kahn & Borning)."
     )
 
     output = BytesIO()

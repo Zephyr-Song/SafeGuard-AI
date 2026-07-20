@@ -59,8 +59,8 @@ CORE_INTAKE_STEPS: List[Dict[str, Any]] = [
     {
         "id": "context",
         "target": "projectContext",
-        "question": "What are you studying, where and how will the research happen, and does AI play any role?",
-        "hint": "Include the aim, setting, method, why human participation is needed, and either describe the AI role or write 'No AI'.",
+        "question": "What is the research area, and which school or university is sponsoring this work? Describe where and how the research will happen, and whether AI plays any role.",
+        "hint": "Include the research area, sponsoring institution, aim, setting, method, why human participation is needed, and either describe the AI role or write 'No AI'.",
         "min": 30,
         "detectAi": True,
     },
