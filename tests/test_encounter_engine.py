@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from modules.encounter_engine import EncounterEngine, SAMPLE_PROJECT
+from modules.llm_client import LLMProvider
 
 
 class EncounterEngineTest(unittest.TestCase):
@@ -19,6 +20,21 @@ class EncounterEngineTest(unittest.TestCase):
         payload = json.loads(json.dumps(SAMPLE_PROJECT))
         payload["use_llm"] = False
         return self.engine.create_session(payload)
+
+    def test_provider_summary_does_not_expose_key_or_fingerprint(self):
+        provider = LLMProvider(
+            id="test",
+            label="Test provider",
+            api_key="secret-provider-key",
+            base_url="https://example.invalid/v1",
+            model="test-model",
+        )
+
+        summary = provider.public_dict()
+
+        self.assertNotIn("api_key", summary)
+        self.assertNotIn("key_hint", summary)
+        self.assertNotIn("secret-provider-key", json.dumps(summary))
 
     def test_session_builds_nine_stage_encounter_map_and_persists(self):
         session = self.create_sample()

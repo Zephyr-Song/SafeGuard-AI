@@ -1094,8 +1094,8 @@
                 </label>
             </div>
             <div class="switch-row">
-                <span id="llmLabel">Bounded LLM critic</span>
-                <label class="switch" title="Use the configured provider for up to two additional passage-grounded issues">
+                <span id="llmLabel">Optional bounded LLM critic · off by default</span>
+                <label class="switch" title="Optional: use the configured provider for up to two additional passage-grounded issues">
                     <input id="useLlm" type="checkbox">
                     <span></span>
                 </label>
@@ -2606,8 +2606,8 @@
                 state.options = await api("/api/safebars/v2/options");
                 const provider = state.options.active_provider;
                 $("useLlm").disabled = !state.options.llm_configured;
-                $("useLlm").checked = !!state.options.llm_configured;
-                $("llmLabel").textContent = provider ? `Bounded LLM critic · ${provider.label}` : "Bounded LLM critic · unavailable";
+                $("useLlm").checked = false;
+                $("llmLabel").textContent = provider ? `Optional LLM critic · ${provider.label} · off by default` : "Optional LLM critic · unavailable";
                 const restored = await restoreCurrentSession();
                 if (!restored) renderScenarioOptions();
                 if (!sessionStorage.getItem("safebars_usage_guide_seen")) {

@@ -21,15 +21,7 @@ class LLMProvider:
     def public_dict(self) -> Dict[str, Any]:
         data = asdict(self)
         data.pop("api_key", None)
-        data["key_hint"] = self._mask_key()
         return data
-
-    def _mask_key(self) -> str:
-        if not self.api_key:
-            return "not configured"
-        if len(self.api_key) <= 8:
-            return "***"
-        return f"{self.api_key[:4]}...{self.api_key[-4:]}"
 
 
 class LLMClient:

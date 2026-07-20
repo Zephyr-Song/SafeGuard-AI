@@ -386,6 +386,7 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Unsaved material changes", workspace.data)
         self.assertIn(b"Excluded from scope", workspace.data)
         self.assertIn(b"hadUnsavedMaterialChanges", workspace.data)
+        self.assertIn(b"Optional bounded LLM critic", workspace.data)
         self.assertIn(b"Run this check again", workspace.data)
         self.assertIn(b"The plan has already run", workspace.data)
         self.assertNotIn(b">V1</span>", workspace.data)
