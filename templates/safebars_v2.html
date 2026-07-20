@@ -195,6 +195,7 @@
         .btn-teal:hover { background: #125d60; border-color: #125d60; }
         .btn-quiet { min-height: 32px; padding: 5px 8px; background: transparent; }
         .btn-icon { width: 36px; padding: 0; }
+        .dialog-close-symbol { display: block; font-size: 24px; font-weight: 400; line-height: 1; transform: translateY(-1px); }
         .full { width: 100%; }
 
         .export-control { position: relative; }
@@ -1266,7 +1267,7 @@
     <dialog class="intake-dialog" id="intakeDialog">
         <div class="intake-header">
             <div><h2 class="section-heading">Quick guided protocol intake</h2><div class="intake-progress" id="intakeProgress">Step 1</div></div>
-            <button class="btn btn-quiet btn-icon" id="closeIntakeButton" title="Close guided intake"><i data-lucide="x" size="17"></i></button>
+            <button class="btn btn-quiet btn-icon" id="closeIntakeButton" type="button" title="Close guided intake" aria-label="Close guided intake"><span class="dialog-close-symbol" aria-hidden="true">&times;</span></button>
         </div>
         <div class="intake-messages" id="intakeMessages"></div>
         <div class="intake-compose">
@@ -1286,7 +1287,7 @@
     <dialog class="guide-dialog" id="usageGuideDialog">
         <div class="intake-header">
             <div><h2 class="section-heading">How to use SafeBARS</h2><div class="intake-progress">Researcher workflow, expert review, and record continuity</div></div>
-            <button class="btn btn-quiet btn-icon" id="closeUsageGuideButton" title="Close instructions"><i data-lucide="x" size="17"></i></button>
+            <button class="btn btn-quiet btn-icon" id="closeUsageGuideButton" type="button" title="Close instructions" aria-label="Close instructions"><span class="dialog-close-symbol" aria-hidden="true">&times;</span></button>
         </div>
         <div class="guide-body">
             <div class="guide-intro"><strong>SafeBARS is a staged workflow.</strong> Expert input does not appear immediately after intake. First create the protocol case and run the audit; expert fields appear only when the AI creates a human handoff.</div>

@@ -355,6 +355,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Encounter stress-testing workspace", workspace.data)
         self.assertIn(b"Start quick intake", workspace.data)
         self.assertIn(b"How to use SafeBARS", workspace.data)
+        self.assertIn(b'aria-label="Close instructions"', workspace.data)
+        self.assertIn(b'class="dialog-close-symbol"', workspace.data)
         self.assertIn(b"For researchers", workspace.data)
         self.assertIn(b"For ethics experts", workspace.data)
         self.assertIn(b"Keep your record", workspace.data)
