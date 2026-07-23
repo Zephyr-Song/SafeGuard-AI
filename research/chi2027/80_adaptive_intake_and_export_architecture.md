@@ -10,14 +10,21 @@ The export menu also described outputs mainly by file format. Users could not ea
 
 SafeBARS now asks six core questions:
 
-1. research aim, setting, method, and whether AI is involved;
+1. research area, university or organisation, school or department, review
+   pathway and jurisdiction, followed by the proposed aim, setting, method, and
+   whether AI is involved;
 2. participants, relationships, and recruitment;
 3. consent and withdrawal;
 4. questions, procedures, activities, accessibility, and alternatives;
 5. risk, safeguarding, and support;
 6. follow-up, complaints, and data management.
 
-If the first answer indicates AI use, SafeBARS adds one conditional question covering provider/model use, disclosure, oversight, data and training, failure, correction, and complaints.
+If the first answer indicates AI use, SafeBARS adds one structured conditional
+supplement covering the AI purpose and decision role, data source and intended
+population, performance and subgroup bias, disclosure and consent, privacy and
+security, human oversight and monitoring, stopping and fallback, correction,
+complaints, and accountable ownership. The supplement is informed by Makridis
+et al. (2023) and Connelly et al. (2025), alongside NIST AI RMF.
 
 Researchers may skip any question and refine the visible structured fields later. Missing or partial information remains visible in the application-readiness view rather than being hidden by forced completion.
 

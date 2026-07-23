@@ -51,7 +51,8 @@ Review”*. The design contributions are:
 2. **Bounded multi-agent audit** — orchestrator, breakdown-scenario,
    relationship-and-power, and boundary-and-handoff types that stop at their
    epistemic limits instead of fabricating judgements.
-3. **Framework-driven scaffolding** — Belmont / Menlo / NIST AI RMF / VSD / ESR
+3. **Framework-driven scaffolding** — Belmont / Menlo / AI review literature /
+   NIST AI RMF / VSD / ESR
    coverage checks that shape what the system asks for, never what it decides.
 4. **Human-in-the-loop handoff** — unresolved situated questions are routed to
    real experts with provenance and version history.
@@ -100,7 +101,7 @@ maintained separately in Notion.
 | `modules/scenarios.py` | Scenario library, encounter-stage definitions, sample data |
 | `modules/encounter_api.py` | Role-gated v2 REST API (Blueprint) |
 | `modules/encounter_report.py` | Word/PDF report generation |
-| `modules/ethics_framework.py` | Belmont/Menlo/NIST/VSD/ESR coverage + expert routing |
+| `modules/ethics_framework.py` | Human-subjects, AI-review, NIST, VSD, and ESR coverage + expert routing |
 | `modules/ethics_application.py` | Application-profile completeness checks |
 | `modules/ratelimit.py` | In-memory rate limiting for LLM-backed endpoints |
 | `templates/` | `safebars_v2.html`, `safebars_expert.html`, `safebars.html`, … |
@@ -117,9 +118,13 @@ maintained separately in Notion.
 
 ## Key features
 
-- six-question guided intake (server-driven from a tested question engine, with a
-  conditional AI-governance follow-up) that populates structured protocol fields;
-- Belmont baseline with conditional Menlo and NIST AI RMF extensions;
+- six-question guided intake that records the research area, institution or
+  organisation, review pathway, project plan, people, procedures, safeguards,
+  and data plan;
+- one conditional, structured AI ethics-review supplement, without expanding
+  the core intake into a long questionnaire;
+- Belmont baseline with conditional Menlo, AI human-subjects review, university
+  REC guidance, and NIST AI RMF extensions;
 - Value Sensitive Design-informed trade-off exploration;
 - Ethics Dandelion evidence visualization and a connected Trade-off Dandelion
   comparing parameter lean, linked framework dimensions, framework family, and
@@ -313,6 +318,12 @@ implementation boundary.
 
 - The Belmont Report: respect for persons, beneficence, and justice.
 - The Menlo Report Companion: ICT and data-research extension.
+- Makridis et al. (2023), *Informing the ethical review of human subjects
+  research utilizing artificial intelligence*: modular AI-specific IRB review
+  questions.
+- Connelly, Osborne, Black, and Terras (2025), *Guidance for research ethics
+  committees and researchers on designing research in the age of AI*: university
+  REC guidance, risk/impact assessment, and checklist support.
 - NIST AI Risk Management Framework 1.0: Govern, Map, Measure, and Manage.
 - Value Sensitive Design: stakeholder and value-tension investigation.
 - Ethics and Society Review: interdisciplinary expert review and iteration.

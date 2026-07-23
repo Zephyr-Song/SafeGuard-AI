@@ -50,8 +50,18 @@ class EthicsFrameworkTest(unittest.TestCase):
         self.assertEqual(assessment["pathway"], "ai_research")
         framework_ids = {item["id"] for item in assessment["frameworks"]}
         self.assertIn("nist_ai_rmf", framework_ids)
+        self.assertIn("ai_irb_questions", framework_ids)
+        self.assertIn("ai_rec_guidance", framework_ids)
         dimension_ids = {item["id"] for item in assessment["dimensions"]}
-        self.assertTrue({"ai_govern", "ai_map", "ai_measure", "ai_manage"}.issubset(dimension_ids))
+        self.assertTrue(
+            {
+                "ai_govern",
+                "ai_map",
+                "ai_review_pathway",
+                "ai_measure",
+                "ai_manage",
+            }.issubset(dimension_ids)
+        )
         self.assertEqual(len(assessment["tradeoffs"]), 3)
         self.assertIn("does not determine ethical acceptability", assessment["interpretation_boundary"])
 

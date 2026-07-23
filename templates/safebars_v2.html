@@ -1053,15 +1053,19 @@
             <button class="btn btn-teal full" id="guidedIntakeButton">
                 <i data-lucide="messages-square" size="16"></i><span id="guidedIntakeLabel">Start quick intake</span>
             </button>
-            <p class="section-kicker" style="margin:7px 0 12px">Six core questions populate the fields below; AI projects receive one additional question.</p>
+            <p class="section-kicker" style="margin:7px 0 12px">Six short questions organise the protocol; AI projects receive one structured ethics-review supplement.</p>
 
             <div class="field">
                 <label for="projectTitle">Project title</label>
                 <input id="projectTitle" type="text" value="Sensitive fieldwork plan">
             </div>
             <div class="field">
-                <label for="projectContext">Context</label>
-                <textarea id="projectContext" class="textarea-short" placeholder="Research goal, setting, and planned method"></textarea>
+                <label for="projectReviewContext">Research area and ethics-review context</label>
+                <textarea id="projectReviewContext" class="textarea-short" placeholder="Research area; university or organisation; school/department; committee or pathway; jurisdiction"></textarea>
+            </div>
+            <div class="field">
+                <label for="projectContext">Project plan</label>
+                <textarea id="projectContext" class="textarea-short" placeholder="Research aim, setting, method, and why human participation is needed"></textarea>
             </div>
             <div class="field">
                 <label for="targetPeople">People and relationships</label>
@@ -1093,11 +1097,18 @@
                     <summary><span>Follow-up and data use</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
                     <div class="artifact-body"><textarea id="artifactFollowUp" placeholder="Debrief, follow-up, storage, reporting, deletion"></textarea></div>
                 </details>
+                <details class="artifact" id="aiGovernanceArtifact" hidden>
+                    <summary><span>AI ethics-review supplement</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
+                    <div class="artifact-body">
+                        <div class="source-key" style="margin:0 0 8px"><strong>Why this appears:</strong> the prompts adapt AI-specific human-subjects review questions from <a href="https://doi.org/10.3389/fcomp.2023.1235226" target="_blank" rel="noopener">Makridis et al. (2023)</a> and university REC guidance from <a href="https://doi.org/10.5281/zenodo.13739834" target="_blank" rel="noopener">Connelly et al. (2025)</a>, alongside NIST AI RMF.</div>
+                        <textarea id="artifactAiGovernance" placeholder="AI role & decision authority:&#10;Data source & intended population:&#10;Participant disclosure & consent:&#10;Performance & subgroup bias:&#10;Privacy & security:&#10;Human oversight & monitoring:&#10;Stopping rule & fallback:&#10;Correction, complaints & accountable owner:"></textarea>
+                    </div>
+                </details>
             </div>
 
             <div class="switch-row">
                 <span>Project researches or uses AI</span>
-                <label class="switch" title="Enable the NIST AI RMF extension for projects that build, study, or use AI">
+                <label class="switch" title="Enable AI-specific university ethics-review questions and the NIST AI RMF extension">
                     <input id="usesAi" type="checkbox">
                     <span></span>
                 </label>
@@ -1173,7 +1184,7 @@
                 <div id="mapContent" hidden>
                     <div class="framework-section">
                         <div class="panel-heading">
-                            <div><h2 class="section-heading">Framework-grounded ethics map</h2><p class="section-kicker">Belmont baseline, conditional Menlo and NIST AI RMF extensions, with VSD and ESR process support.</p></div>
+                            <div><h2 class="section-heading">Framework-grounded ethics map</h2><p class="section-kicker">Belmont baseline; conditional Menlo, AI human-subjects review, REC guidance, and NIST extensions; VSD and ESR process support.</p></div>
                             <span class="coverage partial" id="frameworkPathway">Not assessed</span>
                         </div>
                         <div class="framework-toolbar" aria-label="Filter framework dimensions">
@@ -1203,7 +1214,7 @@
                             <details class="tradeoff-overview">
                                 <summary>Show optional framework relationship overview</summary>
                                 <div class="tradeoff-dandelion" id="tradeoffDandelion"></div>
-                                <div class="tradeoff-legend"><span><i class="legend-swatch traditional"></i>Foundational ethics / VSD / ESR</span><span><i class="legend-swatch ict"></i>Menlo ICT extension</span><span><i class="legend-swatch ai"></i>NIST AI RMF extension</span><span>Green / amber / red outline = documented / partial / missing evidence</span></div>
+                                <div class="tradeoff-legend"><span><i class="legend-swatch traditional"></i>Foundational ethics / VSD / ESR</span><span><i class="legend-swatch ict"></i>Menlo ICT extension</span><span><i class="legend-swatch ai"></i>AI ethics-review and risk extensions</span><span>Green / amber / red outline = documented / partial / missing evidence</span></div>
                             </details>
                             <div class="framework-boundary">Visualization rationale: adapted from the synthesized-data principle of <a href="https://doi.org/10.1145/3334480.3382795" target="_blank" rel="noopener">An et al.'s Dandelion Diagram (CHI EA 2020)</a>; SafeBARS keeps the relationship overview but adds a decision board because ethics trade-offs need inspectable consequences, not only spatial attention patterns.</div>
                         </div>
@@ -1302,7 +1313,7 @@
             <div class="guide-roles">
                 <section class="guide-role">
                     <h3>For researchers</h3><p>Prepare and stress-test a sensitive human-facing protocol.</p>
-                    <div class="guide-step"><span class="guide-step-number">1</span><div><strong>Complete Quick Intake</strong><p>Answer six core questions. AI projects receive one additional governance question.</p></div></div>
+                    <div class="guide-step"><span class="guide-step-number">1</span><div><strong>Complete Quick Intake</strong><p>Answer six short questions about the review context, research plan, people, procedures, safeguards, and data. AI projects receive one structured ethics-review supplement.</p></div></div>
                     <div class="guide-step"><span class="guide-step-number">2</span><div><strong>Review the populated fields</strong><p>Correct the protocol materials in the left panel before analysis.</p></div></div>
                     <div class="guide-step"><span class="guide-step-number">3</span><div><strong>Build encounter map</strong><p>Create the case, index passages, and inspect the participant journey.</p></div></div>
                     <div class="guide-step"><span class="guide-step-number">4</span><div><strong>Run selected traces</strong><p>Choose breakdown scenarios and run the audit to identify issues and human handoffs.</p></div></div>
@@ -1363,12 +1374,16 @@
             activity: "artifactActivity",
             safety: "artifactSafety",
             follow_up: "artifactFollowUp",
+            ai_governance: "artifactAiGovernance",
         };
 
         let intakePlan = null;  // server-driven question schema; falls back to the built-in steps below
 
         const coreIntakeSteps = [
-            {id: "context", target: "projectContext", question: "What is the research area, and which school or university is sponsoring this work? Describe where and how the research will happen, and whether AI plays any role.", hint: "Include the research area, sponsoring institution, aim, setting, method, why human participation is needed, and either describe the AI role or write 'No AI'.", min: 30, detectAi: true},
+            {id: "context", question: "Which research area and ethics-review context applies, and what research plan will be submitted?", hint: "Use two sections if possible:\nReview context: research area; university or organisation; school or department; ethics committee or review pathway; country or jurisdiction.\nProject plan: aim, setting, method, why human participation is needed, and either describe the AI role or write 'No AI'.", min: 30, detectAi: true, fallbackTarget: "projectContext", sections: [
+                {target: "projectReviewContext", labels: ["review context", "research area", "institution", "university", "organisation", "organization", "school", "department", "committee", "jurisdiction"]},
+                {target: "projectContext", labels: ["project plan", "plan", "aim", "purpose", "method", "research"]},
+            ]},
             {id: "people_recruitment", question: "Who is involved and how will participants be recruited?", hint: "Use two lines if possible:\nPeople/relationships: participants, helpers, gatekeepers, affected communities.\nRecruitment: contact, eligibility, compensation, and pressure safeguards.", min: 30, sections: [
                 {target: "targetPeople", labels: ["people", "participants", "relationships"]},
                 {target: "artifactRecruitment", labels: ["recruitment", "eligibility", "contact"]},
@@ -1382,7 +1397,7 @@
             {id: "follow_up", target: "artifactFollowUp", question: "What happens after participation and to the research data?", hint: "Cover debriefing, complaints, follow-up, access, storage, security, retention, deletion, reporting, and withdrawal after collection.", min: 30},
         ];
 
-        const aiIntakeStep = {id: "ai_governance", appendTarget: "projectContext", question: "Because this project uses AI, what needs human oversight and what happens when the AI is wrong?", hint: "Describe the model/provider, prompts or outputs, participant disclosure, human review and override, data/training use, monitoring, fallback, correction, and complaints.", min: 30};
+        const aiIntakeStep = {id: "ai_governance", target: "artifactAiGovernance", question: "Complete the AI ethics-review supplement: how is AI used, governed, disclosed, tested, and corrected?", hint: "Use short labelled lines: AI role & decision authority; data source & intended population; participant disclosure & consent; performance & subgroup bias; privacy & security; human oversight & monitoring; stopping/fallback; correction, complaints & accountable owner.", min: 30};
 
         function activeIntakeSteps() {
             const core = (intakePlan && Array.isArray(intakePlan.core)) ? intakePlan.core : coreIntakeSteps;
@@ -1431,12 +1446,20 @@
             document.querySelectorAll(".tabview").forEach(view => view.classList.toggle("active", view.id === `tab-${name}`));
         }
 
+        function updateAiSupplementVisibility() {
+            const panel = $("aiGovernanceArtifact");
+            if (!panel) return;
+            panel.hidden = !$("usesAi").checked;
+            if (!panel.hidden && $("artifactAiGovernance").value.trim()) panel.open = true;
+        }
+
         function collectPayload() {
             const artifacts = {};
             Object.entries(artifactInputs).forEach(([key, id]) => artifacts[key] = $(id).value.trim());
             return {
                 project: {
                     title: $("projectTitle").value.trim(),
+                    review_context: $("projectReviewContext").value.trim(),
                     context: $("projectContext").value.trim(),
                     target_people: $("targetPeople").value.trim(),
                     uses_ai: $("usesAi").checked,
@@ -1458,9 +1481,11 @@
             if (!state.session) return;
             const project = state.session.project || {};
             $("projectTitle").value = project.title || "";
+            $("projectReviewContext").value = project.review_context || "";
             $("projectContext").value = project.context || "";
             $("targetPeople").value = project.target_people || "";
             $("usesAi").checked = !!project.uses_ai;
+            updateAiSupplementVisibility();
             $("useLlm").checked = !!state.session.use_llm && !$("useLlm").disabled;
             Object.entries(artifactInputs).forEach(([key, id]) => $(id).value = state.session.artifacts?.[key] || "");
             state.intakeTranscript = state.session.intake_transcript || [];
@@ -1512,9 +1537,11 @@
         function loadSample() {
             const sample = state.options.sample_project;
             $("projectTitle").value = sample.project.title;
+            $("projectReviewContext").value = sample.project.review_context || "";
             $("projectContext").value = sample.project.context;
             $("targetPeople").value = sample.project.target_people;
             $("usesAi").checked = false;
+            updateAiSupplementVisibility();
             Object.entries(artifactInputs).forEach(([key, id]) => $(id).value = sample.artifacts[key] || "");
             document.querySelectorAll("details.artifact").forEach((details, index) => details.open = index < 3);
             markAnalysisDirty();
@@ -1566,6 +1593,7 @@
                     body: JSON.stringify({
                         project: {
                             title: $("projectTitle").value,
+                            review_context: $("projectReviewContext").value,
                             context: $("projectContext").value,
                             target_people: $("targetPeople").value,
                             uses_ai: $("usesAi").checked,
@@ -1591,7 +1619,7 @@
             $("intakeAnswer").disabled = false;
             $("intakeAnswer").hidden = false;
             $("intakeCompletePanel").hidden = true;
-            appendIntakeMessage("bot", "This quick intake uses six core questions. You may skip any question and refine the structured fields later. AI projects receive one additional governance question. SafeBARS helps you prepare and stress-test your protocol, but it does not replace or grant your institution's ethics approval — use its output to support your university ethics committee application.");
+            appendIntakeMessage("bot", "I will use six short questions to organise your protocol. You may skip a question and edit every populated field later. If AI is involved, one structured ethics-review supplement will appear.");
             askCurrentIntakeQuestion();
             refreshIcons();
         }
@@ -1621,7 +1649,7 @@
             refreshIcons();
         }
 
-        function applySectionAnswer(answer, sections) {
+        function applySectionAnswer(answer, sections, fallbackTarget = null) {
             const collected = new Map(sections.map(section => [section.target, []]));
             let currentTarget = null;
             answer.split(/\r?\n/).forEach(line => {
@@ -1637,6 +1665,10 @@
                 }
             });
             const recognized = [...collected.values()].some(lines => lines.length);
+            if (!recognized && fallbackTarget) {
+                $(fallbackTarget).value = answer;
+                return;
+            }
             sections.forEach(section => {
                 const value = collected.get(section.target).join("\n").trim();
                 $(section.target).value = value || (recognized ? $(section.target).value : answer);
@@ -1649,8 +1681,9 @@
                 const explicitlyNoAi = /\b(no ai|without ai|does not use ai|do not use ai|not using ai)\b/.test(normalized);
                 const mentionsAi = /\b(ai|artificial intelligence|llm|language model|machine learning|algorithmic|automated model)\b/.test(normalized);
                 $("usesAi").checked = mentionsAi && !explicitlyNoAi;
+                updateAiSupplementVisibility();
             }
-            if (step.sections) applySectionAnswer(answer, step.sections);
+            if (step.sections) applySectionAnswer(answer, step.sections, step.fallbackTarget);
             else if (step.appendTarget) {
                 const existing = $(step.appendTarget).value.trim();
                 $(step.appendTarget).value = `${existing}${existing ? "\n\n" : ""}AI governance details: ${answer}`;
@@ -1998,7 +2031,7 @@
         }
 
         function frameworkFamily(node) {
-            if (node.framework === "nist_ai_rmf") return "ai";
+            if (["nist_ai_rmf", "ai_irb_questions", "ai_rec_guidance"].includes(node.framework)) return "ai";
             if (node.framework === "menlo") return "ict";
             return "traditional";
         }
@@ -2660,8 +2693,12 @@
         $("runAuditButton").addEventListener("click", runAudit);
         $("severityFilter").addEventListener("change", renderIssues);
         $("decisionFilter").addEventListener("change", renderIssues);
-        ["projectTitle", "projectContext", "targetPeople", ...Object.values(artifactInputs)].forEach(id => $(id).addEventListener("input", markAnalysisDirty));
-        $("usesAi").addEventListener("change", markAnalysisDirty);
+        ["projectTitle", "projectReviewContext", "projectContext", "targetPeople", ...Object.values(artifactInputs)].forEach(id => $(id).addEventListener("input", markAnalysisDirty));
+        $("usesAi").addEventListener("change", () => {
+            updateAiSupplementVisibility();
+            markAnalysisDirty();
+        });
+        updateAiSupplementVisibility();
         initialize();
     </script>
 </body>

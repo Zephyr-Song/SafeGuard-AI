@@ -17,6 +17,7 @@ ARTIFACT_LABELS = {
     "activity": "Workshop or activity plan",
     "safety": "Safety and escalation procedure",
     "follow_up": "Debrief, follow-up, and data use",
+    "ai_governance": "AI ethics-review supplement",
 }
 
 
@@ -166,6 +167,7 @@ PRIORITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 SAMPLE_PROJECT = {
     "project": {
         "title": "Community workshop on online fraud prevention",
+        "review_context": "Social computing; university human-research ethics committee; United Kingdom",
         "context": "A research team plans interviews and a workshop with older adults who have encountered suspicious online messages.",
         "target_people": "Older adults, family helpers, and a community facilitator",
     },
@@ -176,6 +178,7 @@ SAMPLE_PROJECT = {
         "activity": "Participants review three scam messages, explain their decisions, and develop advice for other older adults.",
         "safety": "The facilitator may offer a short break if a participant becomes uncomfortable.",
         "follow_up": "The team will summarize workshop findings in a research paper.",
+        "ai_governance": "",
     },
 }
 

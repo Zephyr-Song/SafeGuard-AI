@@ -281,7 +281,12 @@ def build_docx_report(session: Dict[str, Any]) -> bytes:
     _add_docx_boundary_callout(document)
 
     document.add_heading("1. Project context", level=1)
-    _add_label_paragraph(document, "Context", session.get("project", {}).get("context"))
+    _add_label_paragraph(
+        document,
+        "Research area and ethics-review context",
+        session.get("project", {}).get("review_context"),
+    )
+    _add_label_paragraph(document, "Project plan", session.get("project", {}).get("context"))
     _add_label_paragraph(document, "People and relationships", session.get("project", {}).get("target_people"))
     _add_label_paragraph(document, "Decision summary", _decision_summary(session))
 
@@ -559,7 +564,14 @@ def build_pdf_report(session: Dict[str, Any]) -> bytes:
     story.append(boundary)
 
     story.append(Paragraph("1. Project context", styles["h1"]))
-    story.append(_label_pdf("Context", session.get("project", {}).get("context"), styles["body"]))
+    story.append(
+        _label_pdf(
+            "Research area and ethics-review context",
+            session.get("project", {}).get("review_context"),
+            styles["body"],
+        )
+    )
+    story.append(_label_pdf("Project plan", session.get("project", {}).get("context"), styles["body"]))
     story.append(_label_pdf("People and relationships", session.get("project", {}).get("target_people"), styles["body"]))
     story.append(_label_pdf("Decision summary", _decision_summary(session), styles["body"]))
 
@@ -722,8 +734,8 @@ def _add_esr_societal_risk_section(document, assessment):
     Operationalizes Bernstein et al. (2021), PNAS: beyond the individual-participant
     focus of a standard IRB, researchers should state risks to society, to subgroups,
     and globally, and commit to mitigation strategies. SafeBARS surfaces the societal
-    dimensions it already assessed (Menlo / NIST AI RMF / VSD / ESR) and leaves the
-    mitigation statements for the researcher to complete.
+    dimensions it already assessed and leaves the mitigation statements for the
+    researcher to verify and complete.
     """
     document.add_paragraph(
         "Standard ethics review (for example an IRB under the Common Rule) focuses on risks to "
@@ -731,11 +743,19 @@ def _add_esr_societal_risk_section(document, assessment):
         "Rajala, Satz & Waeiss, PNAS 2021, DOI 10.1073/pnas.2117261118) argues that research can "
         "also create risks to society, to subgroups within society, and globally, and that "
         "researchers should state those risks and commit to mitigation strategies. SafeBARS "
-        "surfaced the considerations below from your framework assessment; you must write the "
-        "mitigation statements and include them in your university ethics-committee application. "
-        "This statement supplements, and does not replace, individual-participant review."
+        "surfaced the considerations below from your framework assessment. Verify and complete "
+        "the mitigation statements, then map them to the institution's current form in "
+        "consultation with the responsible committee. This statement supplements, and does not "
+        "replace, individual-participant review."
     )
-    societal_frameworks = {"menlo", "nist_ai_rmf", "vsd", "esr"}
+    societal_frameworks = {
+        "menlo",
+        "ai_irb_questions",
+        "ai_rec_guidance",
+        "nist_ai_rmf",
+        "vsd",
+        "esr",
+    }
     dimensions = [
         d for d in assessment.get("dimensions", [])
         if d.get("framework") in societal_frameworks
@@ -803,6 +823,11 @@ def build_ethics_application_docx(session: Dict[str, Any]) -> bytes:
 
     document.add_heading("1. Application overview", level=1)
     _add_label_paragraph(document, "Project title", project.get("title"))
+    _add_label_paragraph(
+        document,
+        "Research area and ethics-review context",
+        project.get("review_context"),
+    )
     _add_label_paragraph(document, "Research context and purpose", project.get("context"))
     _add_label_paragraph(document, "Participants and affected relationships", project.get("target_people"))
     _add_label_paragraph(document, "Framework pathway", assessment.get("pathway"))
@@ -832,19 +857,46 @@ def build_ethics_application_docx(session: Dict[str, Any]) -> bytes:
     if project.get("uses_ai") or assessment.get("uses_ai"):
         document.add_heading("7. AI use and risk-management appendix", level=1)
         _add_label_paragraph(document, "AI role described by researcher", project.get("context"))
-        for function in ("ai_govern", "ai_map", "ai_measure", "ai_manage"):
+        _add_label_paragraph(
+            document,
+            "Submitted AI ethics-review supplement",
+            artifacts.get("ai_governance"),
+        )
+        _add_label_paragraph(
+            document,
+            "Review basis",
+            (
+                "Makridis et al. (2023), AI-specific questions for human-subjects review "
+                "(doi:10.3389/fcomp.2023.1235226); Connelly et al. (2025), guidance for "
+                "research ethics committees and researchers in the age of AI "
+                "(doi:10.5281/zenodo.13739834); and NIST AI RMF 1.0."
+            ),
+        )
+        frameworks = {
+            item.get("id"): item for item in assessment.get("frameworks", [])
+        }
+        for function in (
+            "ai_govern",
+            "ai_map",
+            "ai_review_pathway",
+            "ai_measure",
+            "ai_manage",
+        ):
             dimension = next((item for item in assessment.get("dimensions", []) if item.get("id") == function), None)
             if dimension:
+                framework_name = frameworks.get(dimension.get("framework"), {}).get(
+                    "name", dimension.get("framework")
+                )
                 _add_label_paragraph(
                     document,
-                    f"NIST AI RMF - {dimension.get('label')}",
+                    f"{framework_name} - {dimension.get('label')}",
                     f"{_text(dimension.get('coverage')).upper()}: {dimension.get('question')} Evidence: {', '.join(dimension.get('source_passage_ids', [])) or 'none located'}",
                 )
         next_section = 8
     else:
         next_section = 7
 
-    # ESR societal & community risk statement — required beyond individual-subject IRB review.
+    # ESR societal and community risk statement beyond individual-subject review.
     document.add_heading(f"{next_section}. Societal & Community Risk Statement (Ethics and Society Review)", level=1)
     _add_esr_societal_risk_section(document, assessment)
 
@@ -884,6 +936,16 @@ def build_ethics_application_docx(session: Dict[str, Any]) -> bytes:
         "https://doi.org/10.1073/pnas.2117261118"
     )
     document.add_paragraph(
+        "Makridis, C. A., et al. (2023). Informing the ethical review of human subjects "
+        "research utilizing artificial intelligence. Frontiers in Computer Science, 5, "
+        "1235226. https://doi.org/10.3389/fcomp.2023.1235226"
+    )
+    document.add_paragraph(
+        "Connelly, R., Osborne, N., Black, S., & Terras, M. (2025). Guidance for research "
+        "ethics committees and researchers on designing research in the age of AI. "
+        "https://doi.org/10.5281/zenodo.13739834"
+    )
+    document.add_paragraph(
         "U.S. National Commission for the Protection of Human Subjects (1979). The Belmont Report: "
         "Ethical Principles and Guidelines for the Protection of Human Subjects of Research."
     )
@@ -918,6 +980,11 @@ def build_research_design_docx(session: Dict[str, Any]) -> bytes:
     )
 
     document.add_heading("1. Study purpose, setting, and methodological rationale", level=1)
+    _add_label_paragraph(
+        document,
+        "Research area and ethics-review context",
+        project.get("review_context"),
+    )
     _add_label_paragraph(document, "Submitted research context", project.get("context"))
     _add_label_paragraph(document, "Research aims or questions to verify", project.get("context"))
     _add_label_paragraph(document, "Framework pathway", assessment.get("pathway"))
@@ -974,12 +1041,38 @@ def build_research_design_docx(session: Dict[str, Any]) -> bytes:
     if project.get("uses_ai") or assessment.get("uses_ai"):
         document.add_heading("7. AI role, human oversight, and failure response", level=1)
         _add_label_paragraph(document, "Submitted AI role", project.get("context"))
-        for function in ("ai_govern", "ai_map", "ai_measure", "ai_manage"):
+        _add_label_paragraph(
+            document,
+            "Submitted AI ethics-review supplement",
+            artifacts.get("ai_governance"),
+        )
+        _add_label_paragraph(
+            document,
+            "Design basis",
+            (
+                "AI-specific human-subjects review questions (Makridis et al., 2023), "
+                "university REC guidance for research in the age of AI (Connelly et al., "
+                "2025), and NIST AI RMF 1.0."
+            ),
+        )
+        frameworks = {
+            item.get("id"): item for item in assessment.get("frameworks", [])
+        }
+        for function in (
+            "ai_govern",
+            "ai_map",
+            "ai_review_pathway",
+            "ai_measure",
+            "ai_manage",
+        ):
             dimension = next((item for item in assessment.get("dimensions", []) if item.get("id") == function), None)
             if dimension:
+                framework_name = frameworks.get(dimension.get("framework"), {}).get(
+                    "name", dimension.get("framework")
+                )
                 _add_label_paragraph(
                     document,
-                    f"NIST AI RMF - {dimension.get('label')}",
+                    f"{framework_name} - {dimension.get('label')}",
                     f"{_text(dimension.get('coverage')).upper()}: {dimension.get('question')} Evidence: {', '.join(dimension.get('source_passage_ids', [])) or 'none located'}",
                 )
         next_section = 8

@@ -199,6 +199,7 @@ class EncounterApiTest(unittest.TestCase):
         word_document = Document(BytesIO(word_report.data))
         word_text = "\n".join(paragraph.text for paragraph in word_document.paragraphs)
         self.assertIn(SAMPLE_PROJECT["project"]["title"], word_text)
+        self.assertIn(SAMPLE_PROJECT["project"]["review_context"], word_text)
         self.assertIn("SAFEBARS FULL AUDIT REPORT", word_text)
         self.assertIn("Framework-grounded ethics map", word_text)
         self.assertIn("Inspectable audit plan", word_text)
@@ -225,6 +226,8 @@ class EncounterApiTest(unittest.TestCase):
         )
         self.assertIn("ETHICS APPLICATION DRAFT", application_text)
         self.assertIn("formal approval", application_text)
+        self.assertIn("Research area and ethics-review context", application_text)
+        self.assertIn(SAMPLE_PROJECT["project"]["review_context"], application_text)
 
         research_design = self.client.get(
             f"/api/safebars/v2/sessions/{session_id}/export.research-design.docx",
@@ -235,6 +238,7 @@ class EncounterApiTest(unittest.TestCase):
         design_document = Document(BytesIO(research_design.data))
         design_text = "\n".join(paragraph.text for paragraph in design_document.paragraphs)
         self.assertIn("RESEARCH DESIGN AND ETHICS-IN-PRACTICE PLAN", design_text)
+        self.assertIn(SAMPLE_PROJECT["project"]["review_context"], design_text)
         self.assertIn("Research setting, procedures, and participant journey", design_text)
         self.assertIn("Ethics-informed trade-offs and design decisions", design_text)
         self.assertIn("Expert dependencies and unresolved design questions", design_text)
@@ -366,7 +370,10 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"For researchers", workspace.data)
         self.assertIn(b"For ethics experts", workspace.data)
         self.assertIn(b"Keep your record", workspace.data)
-        self.assertIn(b"Six core questions", workspace.data)
+        self.assertIn(b"Six short questions", workspace.data)
+        self.assertIn(b"Research area and ethics-review context", workspace.data)
+        self.assertIn(b"AI ethics-review supplement", workspace.data)
+        self.assertNotIn(b"What are you studying", workspace.data)
         self.assertIn(b"Intake completed", workspace.data)
         self.assertIn(b"Done \xc2\xb7 review populated fields", workspace.data)
         self.assertIn(b"Full audit report (.docx)", workspace.data)

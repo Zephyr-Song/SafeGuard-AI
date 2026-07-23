@@ -26,7 +26,15 @@ from typing import Any, Dict, List
 # Framework id sets per pathway (must match build_framework_assessment ordering).
 _HS_FRAMEWORKS = ["belmont", "vsd", "esr"]
 _ICT_FRAMEWORKS = ["belmont", "menlo", "vsd", "esr"]
-_AI_FRAMEWORKS = ["belmont", "menlo", "vsd", "esr", "nist_ai_rmf"]
+_AI_FRAMEWORKS = [
+    "belmont",
+    "menlo",
+    "vsd",
+    "esr",
+    "ai_irb_questions",
+    "ai_rec_guidance",
+    "nist_ai_rmf",
+]
 
 
 def _p(pid: str, artifact_type: str, text: str) -> Dict[str, str]:

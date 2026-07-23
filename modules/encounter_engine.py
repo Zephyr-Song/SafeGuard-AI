@@ -106,17 +106,18 @@ class EncounterEngine:
         created_at = utc_now()
         session = {
             "id": session_id,
-            "version": "2.1",
+            "version": "2.2",
             "status": "mapped",
             "project": {
                 "title": str(project.get("title", "Untitled fieldwork plan")).strip(),
+                "review_context": str(project.get("review_context", "")).strip(),
                 "context": str(project.get("context", "")).strip(),
                 "target_people": str(project.get("target_people", "")).strip(),
                 "uses_ai": bool(project.get("uses_ai", False)),
             },
             "artifacts": artifacts,
             "intake_transcript": payload.get("intake_transcript", []),
-            "passages": self._extract_passages(artifacts),
+            "passages": self._extract_passages(artifacts, project),
             "encounter_map": [],
             "framework_assessment": {},
             "tradeoff_deliberations": payload.get("tradeoff_deliberations", {}),
@@ -971,7 +972,11 @@ class EncounterEngine:
         ]
         session["status"] = "mapped"
 
-    def _extract_passages(self, artifacts: Dict[str, str]) -> List[Dict[str, str]]:
+    def _extract_passages(
+        self,
+        artifacts: Dict[str, str],
+        project: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, str]]:
         passages: List[Dict[str, str]] = []
         for artifact_type, text in artifacts.items():
             if not text:
@@ -990,6 +995,38 @@ class EncounterEngine:
                         "id": f"{prefix}-{index:03d}",
                         "artifact_type": artifact_type,
                         "artifact_label": ARTIFACT_LABELS[artifact_type],
+                        "text": chunk,
+                    }
+                )
+        project_sources = [
+            ("review_context", "REV", "Research area and review context"),
+            ("context", "CTX", "Project plan"),
+            ("target_people", "PEO", "People and relationships"),
+        ]
+        for field, prefix, label in project_sources:
+            text = str((project or {}).get(field, "") or "").strip()
+            if not text:
+                continue
+            chunks = [
+                chunk.strip(" -\t")
+                for chunk in re.split(r"\r?\n+", text)
+                if chunk.strip(" -\t")
+            ]
+            if len(chunks) == 1 and len(chunks[0]) > 260:
+                chunks = [
+                    chunk.strip()
+                    for chunk in re.split(r"(?<=[.!?])\s+", chunks[0])
+                    if chunk.strip()
+                ]
+            artifact_type = "review_context" if field == "review_context" else (
+                "project_context" if field == "context" else "target_people"
+            )
+            for index, chunk in enumerate(chunks, start=1):
+                passages.append(
+                    {
+                        "id": f"{prefix}-{index:03d}",
+                        "artifact_type": artifact_type,
+                        "artifact_label": label,
                         "text": chunk,
                     }
                 )

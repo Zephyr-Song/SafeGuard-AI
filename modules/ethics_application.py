@@ -33,6 +33,17 @@ CORE_FIELDS = [
         "prompt": "Give the study a specific working title.",
     },
     {
+        "id": "review_context",
+        "label": "Research area and ethics-review context",
+        "sources": [("project", "review_context")],
+        "minimum_chars": 25,
+        "prompt": (
+            "Identify the research area, university or organisation, school or department, "
+            "ethics committee or review pathway, and country or jurisdiction. Verify the "
+            "institution's current form and policy."
+        ),
+    },
+    {
         "id": "purpose_context",
         "label": "Purpose, setting, and method",
         "sources": [("project", "context")],
@@ -96,35 +107,67 @@ CORE_FIELDS = [
 AI_FIELDS = [
     {
         "id": "ai_role_disclosure",
-        "label": "AI role and participant disclosure",
-        "sources": [("project", "context"), ("artifacts", "consent")],
+        "label": "AI purpose, decision role, and participant disclosure",
+        "sources": [
+            ("project", "context"),
+            ("artifacts", "ai_governance"),
+            ("artifacts", "consent"),
+        ],
         "minimum_chars": 100,
-        "keywords": ["ai", "model", "algorithm", "automated"],
-        "prompt": "Explain where AI is used, what participants are told, and which outputs may affect them.",
+        "keywords": ["ai", "model", "decision", "disclosure", "consent"],
+        "prompt": (
+            "Explain the AI purpose, whether it informs, recommends, or decides, which outputs "
+            "may affect participants, what participants are told, and whether they can decline "
+            "AI processing."
+        ),
     },
     {
         "id": "ai_human_oversight",
         "label": "Human oversight and decision authority",
-        "sources": [("artifacts", "activity"), ("artifacts", "safety"), ("artifacts", "follow_up")],
+        "sources": [
+            ("artifacts", "ai_governance"),
+            ("artifacts", "activity"),
+            ("artifacts", "safety"),
+            ("artifacts", "follow_up"),
+        ],
         "minimum_chars": 100,
-        "keywords": ["human", "review", "override", "responsible", "approval"],
-        "prompt": "Name who reviews, overrides, pauses, and remains accountable for AI-supported actions.",
+        "keywords": ["human", "review", "override", "monitor", "responsible"],
+        "prompt": (
+            "Name who reviews, overrides, monitors, pauses, and remains accountable for "
+            "AI-supported actions, including the stopping rule and non-AI fallback."
+        ),
     },
     {
         "id": "ai_data_model_governance",
-        "label": "AI data and model governance",
-        "sources": [("artifacts", "follow_up"), ("artifacts", "consent")],
+        "label": "AI data, population, validity, and model governance",
+        "sources": [
+            ("project", "target_people"),
+            ("artifacts", "ai_governance"),
+            ("artifacts", "follow_up"),
+            ("artifacts", "consent"),
+        ],
         "minimum_chars": 120,
-        "keywords": ["training", "provider", "model", "retention", "access", "data"],
-        "prompt": "Describe provider access, training use, prompts/outputs, model version, retention, security, and monitoring.",
+        "keywords": ["data", "population", "bias", "model", "privacy", "security"],
+        "prompt": (
+            "Describe data sources and rights, intended population versus training or evaluation "
+            "samples, subgroup bias and effectiveness measures, provider access, model version, "
+            "privacy, security, retention, and training use."
+        ),
     },
     {
         "id": "ai_failure_redress",
         "label": "AI failure, contestability, and redress",
-        "sources": [("artifacts", "safety"), ("artifacts", "follow_up")],
+        "sources": [
+            ("artifacts", "ai_governance"),
+            ("artifacts", "safety"),
+            ("artifacts", "follow_up"),
+        ],
         "minimum_chars": 100,
-        "keywords": ["error", "failure", "appeal", "contest", "complaint", "correct"],
-        "prompt": "Define foreseeable failures, detection, fallback, correction, explanation, complaints, and redress.",
+        "keywords": ["error", "failure", "fallback", "complaint", "correct", "owner"],
+        "prompt": (
+            "Define foreseeable failures, how they are detected, fallback and correction, "
+            "explanation and complaint routes, redress, and the accountable owner."
+        ),
     },
 ]
 

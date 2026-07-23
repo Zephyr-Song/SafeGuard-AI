@@ -1,9 +1,16 @@
 # Briefing for Erick — Anchor Paper for AI-Era Ethics Approval
 
-> Purpose: this is the paper that should anchor how SafeBARS frames ethical
-> approval in the AI era, plus a short note on how the app already follows its
-> framework. Forward to Erick and ask for (a) confirmation this is the right
-> backbone and (b) any institutional-specific requirements we should mirror.
+> **Positioning update:** ESR is a valuable process precedent for societal-risk
+> reflection and interdisciplinary iteration, but it is not a university
+> ethics-approval standard or the sole AI-era anchor. SafeBARS now also uses
+> Makridis et al. (2023), DOI 10.3389/fcomp.2023.1235226, for AI-specific
+> human-subjects review questions and Connelly et al. (2025), DOI
+> 10.5281/zenodo.13739834, for university REC guidance. See
+> `83_supervisor_feedback_ai_ethics_and_study_plan.md`.
+
+> Purpose: this paper provides a complementary societal-risk and expert-review
+> process lens for SafeBARS. Forward it with the AI-specific review sources and
+> ask Erick which parts fit the institution's actual requirements.
 
 ## The paper
 
@@ -25,9 +32,9 @@ the risks their work creates for **society, for subgroups within society, and
 globally**, plus the **mitigation strategies** they commit to. An
 interdisciplinary panel then iterates on that statement with the researchers.
 
-It is the best anchor for SafeBARS because it names exactly the gap our tool
-fills: turning a rough protocol into a committee-ready statement of societal
-risk + mitigations, without the tool ever pretending to *grant* approval.
+It is a useful process anchor because it identifies a gap that SafeBARS can
+help researchers discuss: turning a rough protocol into a reviewable statement
+of societal risk and mitigations, without pretending to *grant* approval.
 
 ## What the paper argues (short version)
 
@@ -53,8 +60,8 @@ risk + mitigations, without the tool ever pretending to *grant* approval.
 
 ## Suggested asks for Erick
 
-- Do you agree ESR (Bernstein et al. 2021) is the right backbone for the
-  "AI-era ethics approval" framing in our CHI submission?
+- Which combination of ESR, Makridis et al. (2023), Connelly et al. (2025),
+  and the institution's own policy is appropriate for the study?
 - Does your institution's ethics committee already request a societal-impact
   statement we should mirror more closely in the export template?
 - Any additional steps from the paper (e.g. the interdisciplinary-panel

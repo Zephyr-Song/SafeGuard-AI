@@ -1,5 +1,11 @@
 # SafeBARS — Research Plan & User-Study Design (CHI 2027)
 
+> **Superseded planning draft.** Keep this file as a record of the earlier
+> ESR-centred direction, but do not treat its formative statements, expected
+> results, sample size, or “committee-ready” wording as established evidence.
+> The controlling, literature-checked plan is
+> `83_supervisor_feedback_ai_ethics_and_study_plan.md`.
+
 > Working research plan. Goal: take SafeBARS from a working prototype to a
 > CHI 2027 submission with a clear contribution, research questions, and a
 > defensible user study. Structure follows the canonical HCI arc:
@@ -52,17 +58,17 @@ committee-ready ethics application.
 - **Framework backbone already in the app** — Belmont Report (1979),
   Menlo Report (2012), NIST AI RMF (AI 100-1), Value Sensitive Design.
 
-## 3. Formative Study (what we already know / will formalize)
+## 3. Formative Study (hypotheses to validate)
 
-From building and piloting SafeBARS:
+The following are design hypotheses, not completed formative findings:
 
-- Researchers consistently **miss societal/community risks** when drafting
-  alone; they default to individual-consent language.
+- Researchers may miss **societal/community risks** when drafting alone and
+  may default to individual-consent language.
 - The six-question guided intake + conditional AI-governance follow-up
-  captures the substance IRBs ask for, but researchers still need prompting
-  to articulate *why a design choice is ethically justified*.
-- The biggest perceived value is **having a complete draft to react to**,
-  not a blank form.
+  is intended to reduce burden while retaining application-relevant material;
+  this must be checked against real institutional workflows.
+- A complete draft to react to may be more useful than a blank form, but this
+  remains an empirical question.
 
 For CHI, formalize this with a short interview study (n≈8–12 researchers)
 coding *what people struggle to anticipate* in ethics review, to motivate
@@ -84,9 +90,11 @@ DG1–DG4 below.
 
 ## 5. The Artifact
 
-SafeBARS: Flask + LLM multi-agent system. v1 "rehearsal" and v2 "encounter
+SafeBARS: Flask-based, agentic workflow with an optional bounded LLM critic.
+The v1 "rehearsal" and v2 "encounter
 workspace" (four stages: collect → map → trace → decide/hand off). Exports
-a committee-ready **ethics-application DOCX** that now embeds the ESR
+a generic **ethics-application DOCX** to transfer into an institution's current
+form; it now embeds the ESR
 societal-risk statement and references.
 
 ## 6. Research Questions
@@ -112,8 +120,9 @@ societal-risk statement and references.
   Task: produce an ethics-committee application for a provided scenario
   (one human-subjects, one AI-enabled).
 - **Measures.**
-  1. *Issue count* — distinct ethical issues identified, tagged by type
-     (individual vs. societal/community).
+  1. *Issue quality* — consequential, non-duplicative issues identified and
+     revised, tagged by type (individual vs. societal/community). Raw issue
+     count is not an ethics-quality outcome.
   2. *Expert-rated quality* — blinded panel scores completeness, ESR
      societal-risk coverage, and Belmont coverage on a rubric.
   3. *Perception* — SUS, USE questionnaire, and a short interview.
@@ -121,9 +130,8 @@ societal-risk statement and references.
   thematic analysis of interviews (mirroring the CHI'25 AI-bias study's
   coding pipeline) for the "influence on design" question. Pre-register the
   rubric and hypotheses.
-- **Expected.** SafeBARS group surfaces more societal/community risks and
-  scores higher on completeness; high perceived usefulness; qualitative
-  evidence that drafting changes design reasoning.
+- **No results in advance.** Report paired distributions, uncertainty, expert
+  ratings, and qualitative findings whether or not they favour SafeBARS.
 
 ## 8. Expected Contributions & Limitations
 

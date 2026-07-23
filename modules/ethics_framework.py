@@ -30,6 +30,18 @@ FRAMEWORKS = {
         "citation": "Tabassi, 2023",
         "url": "https://doi.org/10.6028/NIST.AI.100-1",
     },
+    "ai_irb_questions": {
+        "name": "AI human-subjects review questions",
+        "scope": "AI-specific questions added to an existing IRB or university ethics-review process",
+        "citation": "Makridis et al., 2023",
+        "url": "https://doi.org/10.3389/fcomp.2023.1235226",
+    },
+    "ai_rec_guidance": {
+        "name": "Research ethics review in the age of AI",
+        "scope": "Guidance for university research ethics committees and researchers, including risk and impact assessment",
+        "citation": "Connelly, Osborne, Black, and Terras, 2025",
+        "url": "https://doi.org/10.5281/zenodo.13739834",
+    },
     "vsd": {
         "name": "Value Sensitive Design",
         "scope": "Stakeholder, value, and tension analysis",
@@ -152,20 +164,29 @@ DIMENSIONS = [
     },
     {
         "id": "ai_govern",
-        "framework": "nist_ai_rmf",
-        "label": "AI governance",
-        "question": "Are AI roles, human oversight, accountability, policies, and decision authority explicit?",
-        "artifacts": ["consent", "safety", "follow_up"],
-        "keywords": ["oversight", "human review", "responsible", "accountable", "approve", "policy", "audit", "human decision", "override", "owner", "authority"],
+        "framework": "ai_irb_questions",
+        "label": "AI role and decision authority",
+        "question": "Are the AI purpose, recommendation or decision role, participant impact, human authority, and accountability explicit?",
+        "artifacts": ["project_context", "ai_governance", "consent", "activity", "safety", "follow_up"],
+        "keywords": ["purpose", "ai role", "recommend*", "decision", "participant impact", "oversight", "human review", "responsible", "accountable", "override", "owner", "authority", "autonomous"],
         "conditional": "ai",
     },
     {
         "id": "ai_map",
-        "framework": "nist_ai_rmf",
-        "label": "AI context mapping",
-        "question": "Are intended use, affected stakeholders, data provenance, limits, and foreseeable impacts mapped?",
-        "artifacts": ["recruitment", "consent", "activity", "follow_up"],
-        "keywords": ["purpose", "stakeholder", "training data", "provenance", "limitation", "limit", "impact", "context", "intended use", "affected", "provider", "model"],
+        "framework": "ai_irb_questions",
+        "label": "AI data, population, and disclosure",
+        "question": "Are data sources, intended population versus sample, bias controls, privacy and security, participant disclosure, and consent documented?",
+        "artifacts": ["project_context", "target_people", "ai_governance", "recruitment", "consent", "activity", "follow_up"],
+        "keywords": ["data source", "repository", "training data", "provenance", "population", "sample", "bias", "privacy", "security", "disclos*", "consent", "provider", "model"],
+        "conditional": "ai",
+    },
+    {
+        "id": "ai_review_pathway",
+        "framework": "ai_rec_guidance",
+        "label": "AI-era ethics-review pathway",
+        "question": "Are the institution or organisation, committee or pathway, jurisdiction, risk and impact assessment, required materials, and accountable owner identified?",
+        "artifacts": ["review_context", "project_context", "ai_governance", "consent", "follow_up"],
+        "keywords": ["institution", "university", "organisation", "organization", "school", "department", "committee", "ethics review", "review pathway", "jurisdiction", "risk assessment", "impact assessment", "application", "accountable owner"],
         "conditional": "ai",
     },
     {
@@ -173,7 +194,7 @@ DIMENSIONS = [
         "framework": "nist_ai_rmf",
         "label": "AI measurement",
         "question": "Are validity, reliability, bias, privacy, safety, and failure evaluation procedures defined?",
-        "artifacts": ["activity", "safety", "follow_up"],
+        "artifacts": ["ai_governance", "activity", "safety", "follow_up"],
         "keywords": ["evaluate", "evaluation", "test", "benchmark", "bias", "valid*", "reliab*", "privacy", "failure", "accuracy", "error", "performance", "quality"],
         "conditional": "ai",
     },
@@ -182,7 +203,7 @@ DIMENSIONS = [
         "framework": "nist_ai_rmf",
         "label": "AI risk management",
         "question": "Are mitigations, monitoring, incident response, fallback, and stopping rules defined?",
-        "artifacts": ["safety", "follow_up"],
+        "artifacts": ["ai_governance", "safety", "follow_up"],
         "keywords": ["mitigate", "mitigation", "monitor*", "incident", "fallback", "stop", "escalat*", "review", "update", "override", "appeal", "correct*", "failure"],
         "conditional": "ai",
     },
@@ -249,7 +270,12 @@ ICT_TERMS = [
 
 def _blob(project: Dict[str, Any], artifacts: Dict[str, str]) -> str:
     return " ".join(
-        [str(project.get("title", "")), str(project.get("context", "")), str(project.get("target_people", ""))]
+        [
+            str(project.get("title", "")),
+            str(project.get("review_context", "")),
+            str(project.get("context", "")),
+            str(project.get("target_people", "")),
+        ]
         + [str(value) for value in artifacts.values()]
     ).lower()
 
@@ -293,7 +319,12 @@ def build_framework_assessment(session: Dict[str, Any]) -> Dict[str, Any]:
     if uses_ict:
         active_framework_ids.insert(1, "menlo")
     if uses_ai:
-        active_framework_ids.insert(2 if uses_ict else 1, "nist_ai_rmf")
+        insert_at = 2 if uses_ict else 1
+        active_framework_ids[insert_at:insert_at] = [
+            "ai_irb_questions",
+            "ai_rec_guidance",
+            "nist_ai_rmf",
+        ]
 
     nodes: List[Dict[str, Any]] = []
     for definition in DIMENSIONS:

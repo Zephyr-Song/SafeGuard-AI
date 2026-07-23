@@ -23,6 +23,16 @@ class AdaptiveIntakeEngineTest(unittest.TestCase):
             self.assertIn("question", step)
             self.assertIn("min", step)
             self.assertIsInstance(step["min"], int)
+        self.assertNotIn("What are you studying", CORE_INTAKE_STEPS[0]["question"])
+        first_targets = {
+            section["target"] for section in CORE_INTAKE_STEPS[0]["sections"]
+        }
+        self.assertEqual(
+            first_targets, {"projectReviewContext", "projectContext"}
+        )
+        self.assertEqual(
+            CORE_INTAKE_STEPS[0]["fallbackTarget"], "projectContext"
+        )
 
     def test_no_conditional_when_no_ai(self):
         plan = build_intake_plan({
@@ -72,7 +82,8 @@ class AdaptiveIntakeEngineTest(unittest.TestCase):
     def test_ai_governance_step_is_well_formed(self):
         self.assertEqual(AI_GOVERNANCE_STEP["id"], "ai_governance")
         self.assertIn("question", AI_GOVERNANCE_STEP)
-        self.assertIn("appendTarget", AI_GOVERNANCE_STEP)
+        self.assertEqual(AI_GOVERNANCE_STEP["target"], "artifactAiGovernance")
+        self.assertIn("participant disclosure", AI_GOVERNANCE_STEP["hint"].lower())
 
 
 class AdaptiveIntakeApiTest(unittest.TestCase):

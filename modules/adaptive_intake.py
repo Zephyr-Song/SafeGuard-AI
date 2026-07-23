@@ -12,8 +12,8 @@ which matters for the CHI 2027 reproducibility contribution.
 The design is deliberately faithful to doc 80:
 
 * six core questions, always asked;
-* one conditional follow-up (AI governance) when AI use is declared or detected
-  in the project description.
+* one conditional, structured AI ethics-review supplement when AI use is
+  declared or detected in the project description.
 
 The engine is intentionally extensible: additional conditional follow-ups can be
 added by extending ``_CONDITIONAL_STEPS`` and the signal logic in
@@ -53,16 +53,43 @@ def detect_ai_use(text: str) -> bool:
 
 # --- Question schema --------------------------------------------------------
 # Each entry matches the field names the frontend already consumes
-# (id, question, hint, min, target, sections, appendTarget, detectAi), so the
+# (id, question, hint, min, target, sections, fallbackTarget, detectAi), so the
 # server schema drops straight into the existing intake UI.
 CORE_INTAKE_STEPS: List[Dict[str, Any]] = [
     {
         "id": "context",
-        "target": "projectContext",
-        "question": "What is the research area, and which school or university is sponsoring this work? Describe where and how the research will happen, and whether AI plays any role.",
-        "hint": "Include the research area, sponsoring institution, aim, setting, method, why human participation is needed, and either describe the AI role or write 'No AI'.",
+        "question": "Which research area and ethics-review context applies, and what research plan will be submitted?",
+        "hint": (
+            "Use two sections if possible:\n"
+            "Review context: research area; university or organisation; school or department; "
+            "ethics committee or review pathway; country or jurisdiction.\n"
+            "Project plan: aim, setting, method, why human participation is needed, and either "
+            "describe the AI role or write 'No AI'."
+        ),
         "min": 30,
         "detectAi": True,
+        "fallbackTarget": "projectContext",
+        "sections": [
+            {
+                "target": "projectReviewContext",
+                "labels": [
+                    "review context",
+                    "research area",
+                    "institution",
+                    "university",
+                    "organisation",
+                    "organization",
+                    "school",
+                    "department",
+                    "committee",
+                    "jurisdiction",
+                ],
+            },
+            {
+                "target": "projectContext",
+                "labels": ["project plan", "plan", "aim", "purpose", "method", "research"],
+            },
+        ],
     },
     {
         "id": "people_recruitment",
@@ -109,9 +136,13 @@ CORE_INTAKE_STEPS: List[Dict[str, Any]] = [
 
 AI_GOVERNANCE_STEP: Dict[str, Any] = {
     "id": "ai_governance",
-    "appendTarget": "projectContext",
-    "question": "Because this project uses AI, what needs human oversight and what happens when the AI is wrong?",
-    "hint": "Describe the model/provider, prompts or outputs, participant disclosure, human review and override, data/training use, monitoring, fallback, correction, and complaints.",
+    "target": "artifactAiGovernance",
+    "question": "Complete the AI ethics-review supplement: how is AI used, governed, disclosed, tested, and corrected?",
+    "hint": (
+        "Use short labelled lines: AI role & decision authority; data source & intended population; "
+        "participant disclosure & consent; performance & subgroup bias; privacy & security; "
+        "human oversight & monitoring; stopping/fallback; correction, complaints & accountable owner."
+    ),
     "min": 30,
 }
 
@@ -140,11 +171,12 @@ def build_intake_plan(project: Dict[str, Any]) -> Dict[str, Any]:
         ``rationale`` (human-readable reason for the conditional set).
     """
     title = str(project.get("title", "") or "")
+    review_context = str(project.get("review_context", "") or "")
     context = str(project.get("context", "") or "")
     people = str(project.get("target_people", "") or "")
     uses_ai = bool(project.get("uses_ai", False))
 
-    text_blob = f"{title}\n{context}\n{people}"
+    text_blob = f"{title}\n{review_context}\n{context}\n{people}"
     ai_detected = detect_ai_use(text_blob)
 
     conditional: List[Dict[str, Any]] = []
@@ -153,8 +185,8 @@ def build_intake_plan(project: Dict[str, Any]) -> Dict[str, Any]:
 
     if conditional:
         rationale = (
-            "AI governance follow-up included because AI use was declared or "
-            "detected in the project description."
+            "Structured AI ethics-review supplement included because AI use "
+            "was declared or detected in the project description."
         )
     else:
         rationale = "No AI signals; only the six core questions are required."
