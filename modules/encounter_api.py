@@ -8,6 +8,7 @@ from functools import wraps
 from flask import Blueprint, Response, current_app, g, jsonify, request
 
 from .encounter_engine import EncounterEngine
+from .technical_evidence import build_public_evidence
 from .ratelimit import rate_limit
 from .adaptive_intake import build_intake_plan
 from .encounter_report import (
@@ -57,6 +58,20 @@ def options():
         **encounter_engine.public_options(),
         "role_auth_required": current_app.config.get("SAFEBARS_REQUIRE_ROLE_AUTH", True),
     })
+
+
+@encounter_api.get("/evidence/technical")
+def technical_evidence():
+    """Return public, read-only technical spec-conformance evidence."""
+    try:
+        evidence = build_public_evidence()
+    except Exception as exc:
+        current_app.logger.exception("Could not compute technical evidence")
+        return jsonify({
+            "success": False,
+            "error": f"Could not compute technical evidence: {str(exc)[:300]}",
+        }), 500
+    return jsonify({"success": True, "evidence": evidence})
 
 
 @encounter_api.post("/adaptive-intake/plan")

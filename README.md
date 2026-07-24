@@ -285,6 +285,20 @@ cases are sized and counterbalanced to match the planned formative study, so the
 same material can support both engineering regression tests and study
 piloting.
 
+The main SafeBARS workspace now exposes the same run as an interactive
+**Evidence & Validation** view. Its current deterministic record contains 21/21
+passing cases, 126/126 executable assertions, 67 submitted passages, 159
+framework-dimension assessments, 79/79 evidence-linked non-missing outputs, and
+21/21 surfaced author-seeded omissions. The view includes a case-by-check matrix,
+domain/pathway composition, omission distribution, and evidence-lineage flow.
+Every CI run also publishes the raw JSON as a 90-day, commit-linked GitHub
+Actions artifact.
+
+These values are synthetic technical evidence only. Expert-rated quality,
+comparison with general LLM chat, task time, workload, trust calibration, and
+expert handoff efficiency remain explicitly marked **Pending** until the planned
+human study is conducted.
+
 ## Deployment boundary
 
 `render.yaml` configures a single-worker Render demonstration. The free plan uses

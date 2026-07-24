@@ -39,7 +39,18 @@ jobs:
       - name: Run offline technical evaluation
         env:
           SAFEBARS_REQUIRE_ROLE_AUTH: "0"
-        run: python tests/evaluation/run_technical_evaluation.py
+        run: |
+          mkdir -p artifacts
+          python tests/evaluation/run_technical_evaluation.py --json-out artifacts/safebars-technical-evaluation.json
+
+      - name: Publish commit-linked technical evidence
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: safebars-technical-evidence-${{ github.sha }}
+          path: artifacts/safebars-technical-evaluation.json
+          if-no-files-found: error
+          retention-days: 90
 
       - name: Import smoke test
         run: python -c "import app; print('app import OK')"

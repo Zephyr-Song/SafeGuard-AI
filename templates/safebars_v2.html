@@ -657,6 +657,174 @@
         .readiness-field.missing { border-left-color: var(--red); }
         .readiness-field strong { display: block; margin-bottom: 3px; }
 
+        .evidence-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: start;
+            padding: 16px;
+            border: 1px solid #b9d7ca;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #f2f8f5 0%, #f8fbfa 55%, #eef5f7 100%);
+        }
+        .evidence-eyebrow { color: var(--green); font-size: 10px; font-weight: 820; letter-spacing: .08em; text-transform: uppercase; }
+        .evidence-title { margin: 4px 0 5px; font-size: 19px; line-height: 1.2; }
+        .evidence-intro { max-width: 790px; margin: 0; color: #4c5d62; font-size: 11px; line-height: 1.55; }
+        .evidence-level {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 9px;
+            border: 1px solid #9bc8b0;
+            border-radius: 999px;
+            background: #fff;
+            color: var(--green);
+            font-size: 9px;
+            font-weight: 820;
+            white-space: nowrap;
+        }
+        .evidence-boundary {
+            margin-top: 9px;
+            padding: 9px 11px;
+            border-left: 3px solid #c38b2c;
+            background: var(--amber-soft);
+            color: #665022;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+        .evidence-stats {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .evidence-stat {
+            min-height: 86px;
+            padding: 11px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+        .evidence-stat-value { font-size: 23px; font-weight: 850; letter-spacing: -.03em; }
+        .evidence-stat-label { margin-top: 2px; color: var(--muted); font-size: 9px; font-weight: 760; text-transform: uppercase; }
+        .evidence-stat-note { margin-top: 6px; color: var(--muted); font-size: 9px; line-height: 1.35; }
+        .evidence-grid {
+            display: grid;
+            grid-template-columns: minmax(480px, 1.35fr) minmax(300px, .65fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .evidence-panel {
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+        }
+        .evidence-panel-title { font-size: 12px; font-weight: 800; }
+        .evidence-panel-copy { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.45; }
+        .evidence-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 8px; }
+        .evidence-filter {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--muted);
+            padding: 5px 8px;
+            font: inherit;
+            font-size: 9px;
+            font-weight: 750;
+            cursor: pointer;
+        }
+        .evidence-filter.active { border-color: var(--teal); background: var(--teal-soft); color: var(--teal); }
+        .evidence-matrix-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+        .evidence-matrix {
+            display: grid;
+            grid-template-columns: minmax(80px, 1fr) repeat(6, 38px);
+            min-width: 425px;
+            font-size: 8px;
+        }
+        .evidence-matrix > * { min-height: 29px; display: grid; place-items: center; border-right: 1px solid #edf0f1; border-bottom: 1px solid #edf0f1; }
+        .evidence-matrix-head { position: sticky; top: 0; z-index: 1; background: #f3f6f6; color: var(--muted); font-weight: 800; text-align: center; }
+        .evidence-matrix-case {
+            justify-items: start;
+            padding: 0 7px;
+            border: 0;
+            background: #fff;
+            color: var(--ink);
+            font: inherit;
+            font-weight: 760;
+            cursor: pointer;
+        }
+        .evidence-matrix-case:hover, .evidence-matrix-case.selected { background: var(--teal-soft); color: var(--teal); }
+        .evidence-check {
+            width: 14px;
+            height: 14px;
+            border: 0;
+            border-radius: 3px;
+            background: #dfe5e7;
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 9px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .evidence-check.pass { background: var(--green); }
+        .evidence-check.fail { background: var(--red); }
+        .evidence-case-detail { margin-top: 8px; min-height: 58px; padding: 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-subtle); font-size: 9px; line-height: 1.45; }
+        .evidence-case-detail strong { display: block; margin-bottom: 3px; font-size: 10px; }
+        .evidence-bars { display: grid; gap: 9px; margin-top: 11px; }
+        .evidence-bar-row { display: grid; grid-template-columns: 112px 1fr 28px; gap: 7px; align-items: center; font-size: 9px; }
+        .evidence-bar-track { height: 8px; overflow: hidden; border-radius: 999px; background: #edf0f1; }
+        .evidence-bar-fill { height: 100%; border-radius: inherit; background: var(--teal); }
+        .evidence-bar-fill.pathway { background: var(--blue); }
+        .evidence-bar-value { text-align: right; font-weight: 800; }
+        .evidence-subhead { margin-top: 13px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+        .evidence-omission-row { display: grid; grid-template-columns: 110px 1fr 42px; gap: 7px; align-items: center; margin-top: 7px; font-size: 9px; }
+        .evidence-omission-track { position: relative; height: 4px; border-radius: 3px; background: #e2e7e9; }
+        .evidence-omission-track span { position: absolute; top: 50%; left: 0; height: 4px; transform: translateY(-50%); border-radius: 3px; background: var(--green); }
+        .evidence-omission-track i { position: absolute; top: 50%; width: 10px; height: 10px; transform: translate(-50%, -50%); border: 2px solid #fff; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 1px var(--green); }
+        .evidence-lineage {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .evidence-lineage-step {
+            position: relative;
+            min-height: 92px;
+            padding: 11px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: #fff;
+        }
+        .evidence-lineage-step:not(:last-child)::after {
+            content: "→";
+            position: absolute;
+            top: 34px;
+            right: -17px;
+            color: #91a0a5;
+            font-size: 18px;
+            font-weight: 900;
+        }
+        .evidence-lineage-value { font-size: 20px; font-weight: 850; }
+        .evidence-lineage-label { margin-top: 2px; font-size: 9px; font-weight: 780; }
+        .evidence-lineage-note { margin-top: 5px; color: var(--muted); font-size: 8px; line-height: 1.4; }
+        .evidence-pending {
+            margin-top: 10px;
+            padding: 12px;
+            border: 1px dashed #c5a45f;
+            border-radius: 8px;
+            background: #fffaf0;
+        }
+        .evidence-pending-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; margin-top: 9px; }
+        .evidence-pending-item { padding: 9px; border: 1px solid #ead7ad; border-radius: 6px; background: #fff; font-size: 9px; line-height: 1.4; }
+        .evidence-pending-item strong { display: flex; align-items: center; justify-content: space-between; gap: 5px; margin-bottom: 4px; font-size: 9px; }
+        .evidence-pending-badge { color: #8b641c; font-size: 8px; text-transform: uppercase; }
+        .evidence-provenance { margin-top: 10px; color: var(--muted); font-size: 9px; line-height: 1.5; }
+        .evidence-provenance a { color: var(--blue); font-weight: 700; text-decoration: none; }
+
         .intake-dialog {
             width: min(760px, calc(100vw - 28px));
             max-height: min(820px, calc(100vh - 28px));
@@ -942,6 +1110,8 @@
             .task-card > div:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
             .issue-body { grid-template-columns: 1fr; }
             .issue-decision { border-left: 0; border-top: 1px solid var(--line); }
+            .evidence-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .evidence-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 780px) {
@@ -987,6 +1157,12 @@
             .tab:nth-child(2n) { border-right: 0; }
             .tab:nth-last-child(-n + 2) { border-bottom-color: transparent; }
             .tab.active { border-bottom-color: var(--green); }
+            .tab:last-child { grid-column: 1 / -1; border-right: 0; }
+            .evidence-hero { grid-template-columns: 1fr; }
+            .evidence-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .evidence-lineage { grid-template-columns: 1fr 1fr; }
+            .evidence-lineage-step:nth-child(2)::after { display: none; }
+            .evidence-pending-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -1171,6 +1347,7 @@
                 <button class="tab" data-tab="traces" title="Step-by-step rehearsals of selected difficult situations"><i data-lucide="git-branch" size="15"></i>Scenario tests <span class="count" id="traceCount">0</span></button>
                 <button class="tab" data-tab="issues" title="Protocol gaps that need a researcher decision"><i data-lucide="list-checks" size="15"></i>Decisions <span class="count" id="issueCount">0</span></button>
                 <button class="tab" data-tab="handoffs" title="Questions deferred to a qualified person"><i data-lucide="send" size="15"></i>Expert review <span class="count" id="handoffCount">0</span></button>
+                <button class="tab" data-tab="evidence" title="Inspectable technical validation and pending human-study evidence"><i data-lucide="chart-no-axes-combined" size="15"></i>Evidence <span class="count" id="evidenceCaseCount">—</span></button>
             </nav>
 
             <section class="tabview active" id="tab-map">
@@ -1280,6 +1457,54 @@
                 <div class="empty-state" id="handoffEmpty"><div><i data-lucide="send" size="34"></i><div class="empty-title">Expert review is not needed yet</div><div class="empty-copy" id="handoffEmptyCopy">Run the audit first. If a question requires human judgment, SafeBARS will create a review request here.</div></div></div>
                 <div class="handoff-list" id="handoffList" hidden></div>
             </section>
+
+            <section class="tabview" id="tab-evidence">
+                <div class="evidence-hero">
+                    <div>
+                        <div class="evidence-eyebrow">Inspectable prototype evidence</div>
+                        <h2 class="evidence-title">Evidence &amp; Validation</h2>
+                        <p class="evidence-intro">A public, case-level record of what the deterministic SafeBARS pipeline actually produced on author-seeded protocols. The matrix, aggregates, and lineage below are calculated from the same executable benchmark used in continuous testing.</p>
+                    </div>
+                    <span class="evidence-level"><i data-lucide="flask-conical" size="13"></i>Technical validation</span>
+                </div>
+                <div class="evidence-boundary" id="evidenceBoundary"><strong>Synthetic seeded technical validation — not a human study.</strong> Passing demonstrates specification conformance, not ethical validity, institutional compliance, user benefit, real-world effectiveness, or ethics approval.</div>
+                <div class="empty-state" id="evidenceLoading" style="min-height:250px;margin-top:10px"><div><i class="spinner" data-lucide="loader-circle" size="28"></i><div class="empty-title">Loading validation record</div><div class="empty-copy">SafeBARS is reading the deterministic case-level evidence.</div></div></div>
+                <div id="evidenceContent" hidden>
+                    <div class="evidence-stats" id="evidenceStats"></div>
+                    <div class="evidence-grid">
+                        <article class="evidence-panel">
+                            <div class="evidence-panel-title">Case × check matrix</div>
+                            <div class="evidence-panel-copy">Each cell is one executable assertion, not a self-reported score. Choose a domain and case to inspect what was tested.</div>
+                            <div class="evidence-toolbar" id="evidenceDomainFilters"></div>
+                            <div class="evidence-matrix-wrap"><div class="evidence-matrix" id="evidenceMatrix"></div></div>
+                            <div class="evidence-case-detail" id="evidenceCaseDetail">Select a case row to inspect its seeded omission and observed checks.</div>
+                        </article>
+                        <article class="evidence-panel">
+                            <div class="evidence-panel-title">Benchmark composition</div>
+                            <div class="evidence-panel-copy">Balanced domains and conditional framework pathways make the testbed inspectable; they do not represent real-world prevalence.</div>
+                            <div class="evidence-bars" id="evidenceCompositionBars"></div>
+                            <div class="evidence-subhead">Seeded omissions surfaced</div>
+                            <div id="evidenceOmissionChart"></div>
+                        </article>
+                    </div>
+                    <article class="evidence-panel" style="margin-top:10px">
+                        <div class="evidence-panel-title">Evidence lineage</div>
+                        <div class="evidence-panel-copy">This is an output-and-provenance flow. “Coverage” means submitted material was located; it is not an ethics score.</div>
+                        <div class="evidence-lineage" id="evidenceLineage"></div>
+                    </article>
+                    <section class="evidence-pending">
+                        <div class="evidence-panel-title">Human-study evidence is still pending</div>
+                        <div class="evidence-panel-copy">These measures require expert validation and a comparative study; SafeBARS will not fill them with developer/demo session counts.</div>
+                        <div class="evidence-pending-grid">
+                            <div class="evidence-pending-item"><strong>Expert-rated quality <span class="evidence-pending-badge">Pending</span></strong>Completeness, safeguard quality, grounding accuracy, and false reassurance.</div>
+                            <div class="evidence-pending-item"><strong>Comparative benefit <span class="evidence-pending-badge">Pending</span></strong>SafeBARS versus general LLM chat on matched protocol tasks.</div>
+                            <div class="evidence-pending-item"><strong>Researcher workload <span class="evidence-pending-badge">Pending</span></strong>Task time, SUS, workload, trust calibration, and revision effort.</div>
+                            <div class="evidence-pending-item"><strong>Expert triage <span class="evidence-pending-badge">Pending</span></strong>Handoff routing quality, review time, resolution rate, and disagreement handling.</div>
+                        </div>
+                    </section>
+                    <div class="evidence-provenance" id="evidenceProvenance"></div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -1365,6 +1590,9 @@
             intakeStep: 0,
             intakeTranscript: [],
             intakeComplete: false,
+            technicalEvidence: null,
+            evidenceDomainFilter: "all",
+            selectedEvidenceCaseId: null,
         };
 
         const artifactInputs = {
@@ -1922,6 +2150,179 @@
                     setTimeout(() => field.classList.remove("source-focus"), 1600);
                 });
             });
+        }
+
+        const evidenceCheckLabels = {
+            pathway: "Route",
+            frameworks: "Frameworks",
+            seeded_missing: "Seeded gap",
+            passage_refs: "Sources",
+            confidence: "Confidence",
+            deterministic: "Repeat run",
+        };
+
+        const evidenceDomainLabels = {
+            academic_hci: "Academic HCI",
+            qualitative_social: "Qualitative / social",
+            applied_ux_service: "Applied UX / service",
+        };
+
+        const evidencePathwayLabels = {
+            human_subjects: "Human-subjects baseline",
+            ict_research: "ICT / Menlo extension",
+            ai_research: "AI research extension",
+        };
+
+        function evidenceLabel(value = "") {
+            return evidenceDomainLabels[value] || evidencePathwayLabels[value] || String(value).replaceAll("_", " ").replace(/\b\w/g, letter => letter.toUpperCase());
+        }
+
+        function evidenceCheckPassed(caseItem, checkId) {
+            const value = caseItem?.checks?.[checkId];
+            if (typeof value === "boolean") return value;
+            if (Array.isArray(value)) return Boolean(value[0]);
+            if (value && typeof value === "object") return Boolean(value.passed ?? value.ok);
+            return caseItem?.passed === true && Number(caseItem?.checks_total || 0) === Number(caseItem?.checks_passed || -1);
+        }
+
+        function omissionBreakdown(aggregate) {
+            const caseCounts = {};
+            (state.technicalEvidence?.cases || []).forEach(caseItem => {
+                const id = caseItem.seeded_missing_dimension || "unspecified";
+                caseCounts[id] ||= {total: 0, detected: 0};
+                caseCounts[id].total += 1;
+                if (caseItem.seeded_missing_detected) caseCounts[id].detected += 1;
+            });
+            if (Object.keys(caseCounts).length) {
+                return Object.entries(caseCounts).map(([id, value]) => ({id, ...value}))
+                    .sort((a, b) => b.total - a.total || evidenceLabel(a.id).localeCompare(evidenceLabel(b.id)));
+            }
+            const seeded = aggregate?.seeded_omissions || {};
+            const raw = seeded.by_dimension || seeded.dimensions || seeded;
+            return Object.entries(raw)
+                .filter(([key, value]) => !["total", "detected", "passed", "surfaced"].includes(key) && (typeof value === "number" || (value && typeof value === "object")))
+                .map(([id, value]) => ({
+                    id,
+                    total: Number(typeof value === "number" ? value : (value.total ?? value.seeded ?? value.count ?? 0)),
+                    detected: Number(typeof value === "number" ? value : (value.detected ?? value.passed ?? value.surfaced ?? value.total ?? 0)),
+                }))
+                .filter(item => item.total > 0)
+                .sort((a, b) => b.total - a.total || evidenceLabel(a.id).localeCompare(evidenceLabel(b.id)));
+        }
+
+        function evidenceSeedTotals(aggregate) {
+            const seeded = aggregate?.seeded_omissions || {};
+            const breakdown = omissionBreakdown(aggregate);
+            return {
+                total: Number((typeof seeded === "number" ? seeded : seeded.total) ?? breakdown.reduce((sum, item) => sum + item.total, 0) ?? aggregate?.total_cases ?? 0),
+                detected: Number(aggregate?.detected_seeded_omissions ?? (typeof seeded === "number" ? undefined : (seeded.detected ?? seeded.passed ?? seeded.surfaced)) ?? breakdown.reduce((sum, item) => sum + item.detected, 0)),
+            };
+        }
+
+        function renderEvidenceBars(aggregate) {
+            const groups = [
+                ["Domains", aggregate.domain_counts || {}, ""],
+                ["Framework pathways", aggregate.pathway_counts || {}, "pathway"],
+            ];
+            $("evidenceCompositionBars").innerHTML = groups.map(([title, counts, className]) => {
+                const entries = Object.entries(counts).map(([id, value]) => [id, Number(typeof value === "object" ? (value.total ?? value.count ?? 0) : value)]);
+                const max = Math.max(1, ...entries.map(([, value]) => value));
+                return `<div><div class="evidence-subhead" style="margin-top:${title === "Domains" ? 0 : 13}px;padding-top:${title === "Domains" ? 0 : 10}px;border-top:${title === "Domains" ? 0 : "1px solid var(--line)"}">${escapeHtml(title)}</div>${entries.map(([id, value]) => `<div class="evidence-bar-row"><span>${escapeHtml(evidenceLabel(id))}</span><div class="evidence-bar-track"><div class="evidence-bar-fill ${className}" style="width:${Math.max(3, Number(value) / max * 100)}%"></div></div><span class="evidence-bar-value">${escapeHtml(value)}</span></div>`).join("")}</div>`;
+            }).join("");
+
+            const omissions = omissionBreakdown(aggregate);
+            const maxOmission = Math.max(1, ...omissions.map(item => item.total));
+            $("evidenceOmissionChart").innerHTML = omissions.map(item => {
+                const end = Math.max(5, item.total / maxOmission * 100);
+                return `<div class="evidence-omission-row" title="${item.detected} of ${item.total} author-seeded omissions surfaced"><span>${escapeHtml(evidenceLabel(item.id))}</span><div class="evidence-omission-track"><span style="width:${end}%"></span><i style="left:${end}%"></i></div><span class="evidence-bar-value">${item.detected}/${item.total}</span></div>`;
+            }).join("") || `<div class="evidence-panel-copy" style="margin-top:8px">No omission breakdown was returned.</div>`;
+        }
+
+        function renderEvidenceCaseDetail(caseId) {
+            const evidence = state.technicalEvidence;
+            const caseItem = evidence?.cases?.find(item => item.id === caseId);
+            if (!caseItem) return;
+            state.selectedEvidenceCaseId = caseId;
+            document.querySelectorAll("[data-evidence-case]").forEach(button => button.classList.toggle("selected", button.dataset.evidenceCase === caseId));
+            const seededStatus = caseItem.seeded_missing_detected ? "surfaced as missing" : "not surfaced";
+            $("evidenceCaseDetail").innerHTML = `<strong>${escapeHtml(caseItem.id)} · ${escapeHtml(caseItem.title || evidenceLabel(caseItem.domain))}</strong><span>${escapeHtml(evidenceLabel(caseItem.domain))} · ${escapeHtml(evidenceLabel(caseItem.pathway))} · ${caseItem.uses_ai ? "AI project" : "non-AI project"} · ${escapeHtml(caseItem.passage_count)} submitted passages.</span><div style="margin-top:4px">Author-seeded omission: <b>${escapeHtml(evidenceLabel(caseItem.seeded_missing_dimension))}</b> — ${escapeHtml(seededStatus)}. ${escapeHtml(caseItem.checks_passed)}/${escapeHtml(caseItem.checks_total)} executable checks passed.</div>`;
+        }
+
+        function renderEvidenceMatrix(aggregate, cases) {
+            const domainCounts = aggregate.domain_counts || {};
+            const filters = [["all", `All cases · ${aggregate.total_cases || cases.length}`], ...Object.entries(domainCounts).map(([id, count]) => [id, `${evidenceLabel(id)} · ${typeof count === "object" ? (count.total ?? count.count ?? 0) : count}`])];
+            $("evidenceDomainFilters").innerHTML = filters.map(([id, label]) => `<button type="button" class="evidence-filter ${state.evidenceDomainFilter === id ? "active" : ""}" data-evidence-domain="${escapeHtml(id)}">${escapeHtml(label)}</button>`).join("");
+            document.querySelectorAll("[data-evidence-domain]").forEach(button => button.onclick = () => {
+                state.evidenceDomainFilter = button.dataset.evidenceDomain;
+                renderTechnicalEvidence();
+            });
+
+            const visibleCases = cases.filter(item => state.evidenceDomainFilter === "all" || item.domain === state.evidenceDomainFilter);
+            let checkIds = Array.isArray(aggregate.check_types) ? aggregate.check_types.map(item => typeof item === "string" ? item : item.id) : Object.keys(aggregate.check_totals || {});
+            if (!checkIds.length) checkIds = Object.keys(cases[0]?.checks || {});
+            const header = `<div class="evidence-matrix-head" style="justify-items:start;padding-left:7px">Case</div>${checkIds.map(id => `<div class="evidence-matrix-head" title="${escapeHtml(evidenceCheckLabels[id] || evidenceLabel(id))}">${escapeHtml((evidenceCheckLabels[id] || id).slice(0, 5))}</div>`).join("")}`;
+            const rows = visibleCases.map(caseItem => {
+                const cells = checkIds.map(checkId => {
+                    const passed = evidenceCheckPassed(caseItem, checkId);
+                    return `<div><button type="button" class="evidence-check ${passed ? "pass" : "fail"}" data-evidence-check-case="${escapeHtml(caseItem.id)}" title="${escapeHtml(evidenceCheckLabels[checkId] || evidenceLabel(checkId))}: ${passed ? "passed" : "failed"}">${passed ? "✓" : "!"}</button></div>`;
+                }).join("");
+                return `<button type="button" class="evidence-matrix-case ${state.selectedEvidenceCaseId === caseItem.id ? "selected" : ""}" data-evidence-case="${escapeHtml(caseItem.id)}">${escapeHtml(caseItem.id)}</button>${cells}`;
+            }).join("");
+            $("evidenceMatrix").innerHTML = header + rows;
+            document.querySelectorAll("[data-evidence-case]").forEach(button => button.onclick = () => renderEvidenceCaseDetail(button.dataset.evidenceCase));
+            document.querySelectorAll("[data-evidence-check-case]").forEach(button => button.onclick = () => renderEvidenceCaseDetail(button.dataset.evidenceCheckCase));
+            if (!visibleCases.some(item => item.id === state.selectedEvidenceCaseId)) state.selectedEvidenceCaseId = visibleCases[0]?.id || null;
+            if (state.selectedEvidenceCaseId) renderEvidenceCaseDetail(state.selectedEvidenceCaseId);
+        }
+
+        function renderTechnicalEvidence() {
+            const evidence = state.technicalEvidence;
+            if (!evidence?.aggregate) return;
+            const aggregate = evidence.aggregate;
+            const cases = evidence.cases || [];
+            const seedTotals = evidenceSeedTotals(aggregate);
+            const nonMissingOutputs = Number(aggregate.coverage_counts?.documented || 0) + Number(aggregate.coverage_counts?.partial || 0);
+            const stats = [
+                [aggregate.passed_cases ?? 0, `${aggregate.total_cases ?? cases.length} seeded cases`, `${aggregate.domain_count || Object.keys(aggregate.domain_counts || {}).length} balanced research domains`],
+                [`${aggregate.assertions_passed ?? 0}/${aggregate.assertions_total ?? 0}`, "Executable assertions", `${aggregate.check_types?.length || Object.keys(aggregate.check_totals || {}).length} specification checks per case`],
+                [`${aggregate.linked_non_missing_outputs ?? 0}/${nonMissingOutputs}`, "Evidence-linked outputs", "Documented or partial outputs with a source passage"],
+                [`${seedTotals.detected}/${seedTotals.total}`, "Seeded omissions surfaced", "Author-injected gaps only; no precision claim"],
+                ["Pending", "Human-study evidence", "Expert and comparative validation not yet run"],
+            ];
+            $("evidenceStats").innerHTML = stats.map(([value, label, note]) => `<div class="evidence-stat"><div class="evidence-stat-value">${escapeHtml(value)}</div><div class="evidence-stat-label">${escapeHtml(label)}</div><div class="evidence-stat-note">${escapeHtml(note)}</div></div>`).join("");
+            $("evidenceCaseCount").textContent = aggregate.total_cases ?? cases.length;
+            renderEvidenceMatrix(aggregate, cases);
+            renderEvidenceBars(aggregate);
+            const lineage = [
+                [aggregate.total_passages ?? 0, "Submitted passages", "Fictional protocol excerpts supplied to the deterministic testbed."],
+                [aggregate.dimension_assessments ?? 0, "Framework assessments", `${aggregate.coverage_counts?.documented || 0} documented, ${aggregate.coverage_counts?.partial || 0} partial, ${aggregate.missing_outputs || aggregate.coverage_counts?.missing || 0} missing.`],
+                [aggregate.linked_non_missing_outputs ?? 0, "Evidence-linked non-missing outputs", "Every documented or partial output must point back to a passage."],
+                [`${seedTotals.detected}/${seedTotals.total}`, "Known omissions surfaced", "Detection on author-seeded gaps; real-world precision and specificity remain unknown."],
+            ];
+            $("evidenceLineage").innerHTML = lineage.map(([value, label, note]) => `<div class="evidence-lineage-step"><div class="evidence-lineage-value">${escapeHtml(value)}</div><div class="evidence-lineage-label">${escapeHtml(label)}</div><div class="evidence-lineage-note">${escapeHtml(note)}</div></div>`).join("");
+            const metadata = evidence.metadata || {};
+            const boundary = metadata.boundary_statement || metadata.boundary;
+            if (boundary) $("evidenceBoundary").innerHTML = `<strong>Synthetic seeded technical validation — not a human study.</strong> ${escapeHtml(boundary)}`;
+            const generatedAt = evidence.generated_at || metadata.generated_at;
+            const generated = generatedAt ? new Date(generatedAt).toLocaleString() : "generated on request";
+            const sourceCommit = metadata.commit_sha ? ` · source commit ${escapeHtml(String(metadata.commit_sha).slice(0, 12))}` : "";
+            const sourceMethod = evidence.source?.method ? ` · ${escapeHtml(evidence.source.method)}` : "";
+            $("evidenceProvenance").innerHTML = `Reproducibility: <a href="https://github.com/Zephyr-Song/SafeGuard-AI/blob/main/modules/technical_evidence.py" target="_blank" rel="noopener">evaluation runner</a> · <a href="https://github.com/Zephyr-Song/SafeGuard-AI/blob/main/modules/technical_evidence_cases.py" target="_blank" rel="noopener">seeded protocol cases</a> · ${escapeHtml(generated)}${sourceCommit}${sourceMethod}. Local developer/demo sessions are excluded.`;
+            $("evidenceLoading").hidden = true;
+            $("evidenceContent").hidden = false;
+            refreshIcons();
+        }
+
+        async function loadTechnicalEvidence() {
+            try {
+                const payload = await api("/api/safebars/v2/evidence/technical");
+                state.technicalEvidence = payload.evidence || payload;
+                renderTechnicalEvidence();
+            } catch (error) {
+                $("evidenceLoading").innerHTML = `<div><i data-lucide="triangle-alert" size="28"></i><div class="empty-title">Validation record unavailable</div><div class="empty-copy">${escapeHtml(error.message)} The protocol workspace remains usable.</div></div>`;
+                $("evidenceCaseCount").textContent = "!";
+                refreshIcons();
+            }
         }
 
         function renderAll() {
@@ -2645,6 +3046,7 @@
 
         async function initialize() {
             try {
+                const evidenceRequest = loadTechnicalEvidence();
                 state.options = await api("/api/safebars/v2/options");
                 const provider = state.options.active_provider;
                 $("useLlm").disabled = !state.options.llm_configured;
@@ -2656,6 +3058,7 @@
                     $("usageGuideDialog").showModal();
                     sessionStorage.setItem("safebars_usage_guide_seen", "1");
                 }
+                await evidenceRequest;
             } catch (error) { toast(error.message, true); }
             refreshIcons();
         }
