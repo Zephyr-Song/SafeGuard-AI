@@ -154,9 +154,31 @@
         .project-scroll-field {
             height: 72px;
             min-height: 72px;
-            overflow-y: auto;
+            overflow-x: hidden;
+            overflow-y: scroll;
             resize: vertical;
             scrollbar-gutter: stable;
+            scrollbar-width: auto;
+            scrollbar-color: #7d909e #edf1f4;
+        }
+        .project-scroll-field::-webkit-scrollbar { width: 13px; }
+        .project-scroll-field::-webkit-scrollbar-track {
+            border-left: 1px solid var(--line);
+            border-radius: 0 5px 5px 0;
+            background: #edf1f4;
+        }
+        .project-scroll-field::-webkit-scrollbar-thumb {
+            min-height: 24px;
+            border: 2px solid #edf1f4;
+            border-radius: 999px;
+            background: #7d909e;
+        }
+        .project-scroll-field::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+        .project-scroll-help {
+            margin: -3px 0 12px;
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.4;
         }
 
         .btn {
@@ -2146,20 +2168,21 @@
                 <div class="materials-body">
             <div class="field">
                 <label for="projectTitle">Project title</label>
-                <textarea id="projectTitle" class="project-scroll-field" rows="3" placeholder="Give this protocol a short working title"></textarea>
+                <textarea id="projectTitle" class="project-scroll-field" rows="3" aria-describedby="projectFieldScrollHelp" placeholder="Give this protocol a short working title"></textarea>
             </div>
             <div class="field">
                 <label for="projectReviewContext">Research area and ethics-review context</label>
-                <textarea id="projectReviewContext" class="project-scroll-field" rows="3" placeholder="Research area; university or organisation; school/department; committee or pathway; jurisdiction"></textarea>
+                <textarea id="projectReviewContext" class="project-scroll-field" rows="3" aria-describedby="projectFieldScrollHelp" placeholder="Research area; university or organisation; school/department; committee or pathway; jurisdiction"></textarea>
             </div>
             <div class="field">
                 <label for="projectContext">Project plan</label>
-                <textarea id="projectContext" class="project-scroll-field" rows="3" placeholder="Research aim, setting, method, and why human participation is needed"></textarea>
+                <textarea id="projectContext" class="project-scroll-field" rows="3" aria-describedby="projectFieldScrollHelp" placeholder="Research aim, setting, method, and why human participation is needed"></textarea>
             </div>
             <div class="field">
                 <label for="targetPeople">People and relationships</label>
-                <textarea id="targetPeople" class="project-scroll-field" rows="3" placeholder="Participants, helpers, partners, gatekeepers, services"></textarea>
+                <textarea id="targetPeople" class="project-scroll-field" rows="3" aria-describedby="projectFieldScrollHelp" placeholder="Participants, helpers, partners, gatekeepers, services"></textarea>
             </div>
+            <p class="project-scroll-help" id="projectFieldScrollHelp">For longer text, use the mouse wheel or drag the scrollbar on the right. Drag the lower-right corner only when you want a taller box.</p>
 
             <section class="artifact-editor" id="artifactGroup" aria-labelledby="artifactEditorHeading">
                 <div class="artifact-editor-head">

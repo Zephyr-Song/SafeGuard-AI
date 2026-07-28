@@ -408,9 +408,19 @@ class EncounterApiTest(unittest.TestCase):
         )
         self.assertIn(b"height: 72px", workspace.data)
         self.assertIn(b"min-height: 72px", workspace.data)
-        self.assertIn(b"overflow-y: auto", workspace.data)
+        self.assertIn(b"overflow-y: scroll", workspace.data)
         self.assertIn(b"resize: vertical", workspace.data)
         self.assertIn(b"scrollbar-gutter: stable", workspace.data)
+        self.assertIn(b"scrollbar-color:", workspace.data)
+        self.assertIn(b".project-scroll-field::-webkit-scrollbar-thumb", workspace.data)
+        self.assertIn(
+            b'use the mouse wheel or drag the scrollbar on the right',
+            workspace.data,
+        )
+        self.assertEqual(
+            workspace.data.count(b'aria-describedby="projectFieldScrollHelp"'),
+            4,
+        )
         self.assertNotIn(b"max-height: 72px", workspace.data)
         self.assertNotIn(b"What are you studying", workspace.data)
         self.assertIn(b"Intake completed", workspace.data)
