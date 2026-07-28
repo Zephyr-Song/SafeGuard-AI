@@ -1,0 +1,92 @@
+{
+  "study_id": "SB-CHI27",
+  "seed": 20260727,
+  "schedule_file": "study_assignment_schedule.csv",
+  "sequence_definitions": [
+    {
+      "sequence_id": "S1",
+      "task1_case": "A1_NON_AI",
+      "task1_condition": "safebars_full",
+      "task2_case": "B1_AI",
+      "task2_condition": "general_chat"
+    },
+    {
+      "sequence_id": "S2",
+      "task1_case": "A1_NON_AI",
+      "task1_condition": "general_chat",
+      "task2_case": "B2_AI",
+      "task2_condition": "safebars_full"
+    },
+    {
+      "sequence_id": "S3",
+      "task1_case": "A2_NON_AI",
+      "task1_condition": "safebars_full",
+      "task2_case": "B2_AI",
+      "task2_condition": "general_chat"
+    },
+    {
+      "sequence_id": "S4",
+      "task1_case": "A2_NON_AI",
+      "task1_condition": "general_chat",
+      "task2_case": "B1_AI",
+      "task2_condition": "safebars_full"
+    },
+    {
+      "sequence_id": "S5",
+      "task1_case": "B1_AI",
+      "task1_condition": "safebars_full",
+      "task2_case": "A1_NON_AI",
+      "task2_condition": "general_chat"
+    },
+    {
+      "sequence_id": "S6",
+      "task1_case": "B1_AI",
+      "task1_condition": "general_chat",
+      "task2_case": "A2_NON_AI",
+      "task2_condition": "safebars_full"
+    },
+    {
+      "sequence_id": "S7",
+      "task1_case": "B2_AI",
+      "task1_condition": "safebars_full",
+      "task2_case": "A2_NON_AI",
+      "task2_condition": "general_chat"
+    },
+    {
+      "sequence_id": "S8",
+      "task1_case": "B2_AI",
+      "task1_condition": "general_chat",
+      "task2_case": "A1_NON_AI",
+      "task2_condition": "safebars_full"
+    }
+  ],
+  "balance": {
+    "participant_count": 24,
+    "task_count": 48,
+    "sequence_counts": {
+      "S1": 3,
+      "S2": 3,
+      "S3": 3,
+      "S4": 3,
+      "S5": 3,
+      "S6": 3,
+      "S7": 3,
+      "S8": 3
+    },
+    "case_condition_counts": {
+      "A1_NON_AI|general_chat": 6,
+      "A1_NON_AI|safebars_full": 6,
+      "A2_NON_AI|general_chat": 6,
+      "A2_NON_AI|safebars_full": 6,
+      "B1_AI|general_chat": 6,
+      "B1_AI|safebars_full": 6,
+      "B2_AI|general_chat": 6,
+      "B2_AI|safebars_full": 6
+    },
+    "first_condition_counts": {
+      "general_chat": 12,
+      "safebars_full": 12
+    }
+  },
+  "boundary": "Pseudonymous assignment schedule only; no recruitment identity or study outcome is stored."
+}

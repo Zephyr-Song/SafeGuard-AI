@@ -19,6 +19,7 @@ evidence, an approval, or a substitute for community or reviewer judgment.
 - [System architecture](#system-architecture)
 - [Three parties](#three-parties)
 - [Key features](#key-features)
+- [Instrumented study mode](#instrumented-study-mode)
 - [API summary](#api-summary)
 - [Export types](#export-types)
 - [Run locally](#run-locally)
@@ -42,9 +43,10 @@ before real fieldwork begins.
 
 ## Research context
 
-SafeBARS is developed as a research prototype for the CHI 2027 submission
-*“SafeBARS: A Three-Way Collaborative Platform for AI-Assisted Research Ethics
-Review”*. The design contributions are:
+SafeBARS is being developed as a research prototype for a planned CHI 2027
+submission, with the working title *“SafeBARS: Inspectable AI Scaffolding and
+Expert Handoffs for Preparing Sensitive Research Protocols.”* The candidate
+design contributions are:
 
 1. **Encounter stress-testing** — treating a protocol as inspectable encounter
    maps that can be traced for breakdowns.
@@ -57,8 +59,10 @@ Review”*. The design contributions are:
 4. **Human-in-the-loop handoff** — unresolved situated questions are routed to
    real experts with provenance and version history.
 
-The project knowledge base (design rationale, related work, study protocol) is
-maintained separately in Notion.
+The canonical research questions, EvalLM-aligned study contract, protocol,
+execution plan, and manuscript outline are indexed in
+[`research/chi2027/CURRENT_CANONICAL_PLAN.md`](research/chi2027/CURRENT_CANONICAL_PLAN.md).
+Older research files remain an audit trail and must not override that index.
 
 ## System architecture
 
@@ -139,6 +143,28 @@ maintained separately in Notion.
 - JSON, Word, PDF, ethics-application, research-design, per-case
   expert-summary, and expert-caseload exports.
 
+## Instrumented study mode
+
+`/safebars/study` is the frozen participant-facing shell for the planned
+within-subject comparison. A server-validated manifest fixes the pseudonymous
+participant code, case, condition, and task order before work starts.
+
+- `safebars_full` exposes the inspectable SafeBARS workflow.
+- `general_chat` exposes only a minimal chat baseline and cannot call SafeBARS
+  maps, agents, audits, issue decisions, or handoffs.
+- Both conditions require the same configured provider, model, temperature,
+  per-call response limit, source materials, task instruction, and 35-minute
+  moderator-controlled task budget.
+- Both conditions end in the same final-artifact form and exactly two decision
+  rationales; the server blocks task completion until all three are saved.
+- Model-call receipts capture timestamps, latency, status, token usage, and a
+  response hash. The pseudonymous study export reports counts and lengths
+  rather than protocol, chat, or final-answer text.
+
+This route is instrumentation, not participant evidence. Do not use it for
+formal recruitment until institutional ethics review, persistent storage,
+access control, backup, retention, and deletion procedures are in place.
+
 ## API summary
 
 All v2 endpoints live under `/api/safebars/v2/` and require a per-session role
@@ -156,6 +182,12 @@ token (`X-SafeBARS-Access` header).
 | PATCH | `/sessions/<id>/tradeoffs` | researcher | Save trade-off positions |
 | POST | `/sessions/<id>/access/rotate-expert` | researcher | Rotate expert token |
 | POST | `/sessions/<id>/handoffs/<hid>/review` | expert | Advise / redirect / resolve |
+| GET | `/sessions/<id>/study` | researcher | Read the immutable study manifest and task state |
+| POST | `/sessions/<id>/study/chat` | researcher | Add one baseline-chat turn |
+| POST | `/sessions/<id>/study/submission` | researcher | Save the common final artifact and rationales |
+| POST | `/sessions/<id>/study/task/start` | researcher | Start server-side task timing |
+| POST | `/sessions/<id>/study/task/complete` | researcher | Complete a fully submitted task |
+| GET | `/sessions/<id>/study/export` | researcher | Pseudonymous analysis-ready study record |
 | GET | `/sessions/<id>/export*` | researcher | JSON / DOCX / PDF exports |
 
 Legacy rehearsal endpoints (`/api/safebars/*`) back the v1 interface.
@@ -222,6 +254,7 @@ Open <http://127.0.0.1:5000/safebars>.
 Important routes:
 
 - `/safebars` — researcher workspace;
+- `/safebars/study` — instrumented two-condition participant-study shell;
 - `/safebars/expert` — browser-local expert caseload;
 - `/safebars/expert/<session_id>` — one invited expert review;
 - `/safebars/brief` — supervisor-facing concept brief;
@@ -259,12 +292,14 @@ pytest tests/ -v
 python tests/evaluation/run_technical_evaluation.py
 ```
 
-The suite runs offline (the engine falls back to deterministic responses when no
-LLM provider is configured) and covers the audit engine, ethics-framework
-routing, application profiles, report exports, role authorization, expert
-invitation rotation, revision linkage, and protocol versioning. A GitHub Actions
-workflow runs both the suite and the technical evaluation on every push and pull
-request.
+The suite runs offline (the ordinary workspace falls back to deterministic
+responses when no LLM provider is configured) and covers the audit engine,
+ethics-framework routing, application profiles, report exports, role
+authorization, expert invitation rotation, revision linkage, protocol
+versioning, research-contract invariants, counterbalancing, and study-mode
+condition isolation. Formal study sessions intentionally fail closed when no
+LLM provider is configured. A GitHub Actions workflow runs the suite and
+technical evaluation on every push and pull request.
 
 ### Technical evaluation harness
 
@@ -281,9 +316,8 @@ runner asserts, for every case, that:
 - repeated runs are identical (no silent model variance on this offline path).
 
 This is a *spec-conformance* check, not an ethics-reasoning validation. The seed
-cases are sized and counterbalanced to match the planned formative study, so the
-same material can support both engineering regression tests and study
-piloting.
+cases are authored engineering fixtures and are separate from the matched,
+counterbalanced cases used in the planned human study.
 
 The main SafeBARS workspace now exposes the same run as an interactive
 **Evidence & Validation** view. Its current deterministic record contains 21/21
@@ -324,9 +358,9 @@ command to `render.yaml`). Build with `docker build -t safebars .` and run with
 Docker on Render, set `env: docker` and `dockerfile: Dockerfile` in `render.yaml`
 and redeploy; runtime behaviour is otherwise unchanged.
 
-See [DEPLOY_RENDER.md](DEPLOY_RENDER.md) for deployment steps and
-[research/chi2027/](research/chi2027/) for the current research and
-implementation boundary.
+See [DEPLOY_RENDER.md](DEPLOY_RENDER.md) for deployment steps and the
+[canonical research-plan index](research/chi2027/CURRENT_CANONICAL_PLAN.md) for
+the current research and implementation boundary.
 
 ## Framework sources
 
@@ -349,10 +383,10 @@ approving authority.
 
 ```bibtex
 @misc{song2026safebars,
-  title        = {SafeBARS: A Three-Way Collaborative Platform for AI-Assisted Research Ethics Review},
+  title        = {SafeBARS: Inspectable AI Scaffolding and Expert Handoffs for Preparing Sensitive Research Protocols},
   author       = {Song, Jincheng},
   year         = {2026},
-  note         = {CHI 2027 submission (under review). SafeBARS is an agentic ethics-preparation workspace for sensitive human-facing research.},
+  note         = {Working research prototype and planned CHI 2027 manuscript; not under review at the time of this release.},
   howpublished = {\url{https://github.com/Zephyr-Song/SafeGuard-AI}}
 }
 ```

@@ -1,0 +1,127 @@
+run_id,case_id,domain,pathway,check_id,check_label,observed_value_json,passed
+technical-3297298c775d,HCI-01,academic_hci,human_subjects,pathway,Correct pathway routing,"""human_subjects""",True
+technical-3297298c775d,HCI-01,academic_hci,human_subjects,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""vsd""]",True
+technical-3297298c775d,HCI-01,academic_hci,human_subjects,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,HCI-01,academic_hci,human_subjects,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,HCI-01,academic_hci,human_subjects,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,HCI-01,academic_hci,human_subjects,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,HCI-02,academic_hci,ict_research,pathway,Correct pathway routing,"""ict_research""",True
+technical-3297298c775d,HCI-02,academic_hci,ict_research,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""menlo"", ""vsd""]",True
+technical-3297298c775d,HCI-02,academic_hci,ict_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,HCI-02,academic_hci,ict_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,HCI-02,academic_hci,ict_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,HCI-02,academic_hci,ict_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,HCI-03,academic_hci,ai_research,pathway,Correct pathway routing,"""ai_research""",True
+technical-3297298c775d,HCI-03,academic_hci,ai_research,frameworks,Correct framework activation,"[""ai_irb_questions"", ""ai_rec_guidance"", ""belmont"", ""esr"", ""menlo"", ""nist_ai_rmf"", ""vsd""]",True
+technical-3297298c775d,HCI-03,academic_hci,ai_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,HCI-03,academic_hci,ai_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,HCI-03,academic_hci,ai_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,HCI-03,academic_hci,ai_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,HCI-04,academic_hci,human_subjects,pathway,Correct pathway routing,"""human_subjects""",True
+technical-3297298c775d,HCI-04,academic_hci,human_subjects,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""vsd""]",True
+technical-3297298c775d,HCI-04,academic_hci,human_subjects,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,HCI-04,academic_hci,human_subjects,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,HCI-04,academic_hci,human_subjects,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,HCI-04,academic_hci,human_subjects,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,HCI-05,academic_hci,ai_research,pathway,Correct pathway routing,"""ai_research""",True
+technical-3297298c775d,HCI-05,academic_hci,ai_research,frameworks,Correct framework activation,"[""ai_irb_questions"", ""ai_rec_guidance"", ""belmont"", ""esr"", ""menlo"", ""nist_ai_rmf"", ""vsd""]",True
+technical-3297298c775d,HCI-05,academic_hci,ai_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,HCI-05,academic_hci,ai_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,HCI-05,academic_hci,ai_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,HCI-05,academic_hci,ai_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,HCI-06,academic_hci,ict_research,pathway,Correct pathway routing,"""ict_research""",True
+technical-3297298c775d,HCI-06,academic_hci,ict_research,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""menlo"", ""vsd""]",True
+technical-3297298c775d,HCI-06,academic_hci,ict_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,HCI-06,academic_hci,ict_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,HCI-06,academic_hci,ict_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,HCI-06,academic_hci,ict_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,HCI-07,academic_hci,ai_research,pathway,Correct pathway routing,"""ai_research""",True
+technical-3297298c775d,HCI-07,academic_hci,ai_research,frameworks,Correct framework activation,"[""ai_irb_questions"", ""ai_rec_guidance"", ""belmont"", ""esr"", ""menlo"", ""nist_ai_rmf"", ""vsd""]",True
+technical-3297298c775d,HCI-07,academic_hci,ai_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,HCI-07,academic_hci,ai_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,HCI-07,academic_hci,ai_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,HCI-07,academic_hci,ai_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,QS-01,qualitative_social,human_subjects,pathway,Correct pathway routing,"""human_subjects""",True
+technical-3297298c775d,QS-01,qualitative_social,human_subjects,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""vsd""]",True
+technical-3297298c775d,QS-01,qualitative_social,human_subjects,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,QS-01,qualitative_social,human_subjects,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,QS-01,qualitative_social,human_subjects,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,QS-01,qualitative_social,human_subjects,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,QS-02,qualitative_social,ict_research,pathway,Correct pathway routing,"""ict_research""",True
+technical-3297298c775d,QS-02,qualitative_social,ict_research,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""menlo"", ""vsd""]",True
+technical-3297298c775d,QS-02,qualitative_social,ict_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,QS-02,qualitative_social,ict_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,QS-02,qualitative_social,ict_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,QS-02,qualitative_social,ict_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,QS-03,qualitative_social,ai_research,pathway,Correct pathway routing,"""ai_research""",True
+technical-3297298c775d,QS-03,qualitative_social,ai_research,frameworks,Correct framework activation,"[""ai_irb_questions"", ""ai_rec_guidance"", ""belmont"", ""esr"", ""menlo"", ""nist_ai_rmf"", ""vsd""]",True
+technical-3297298c775d,QS-03,qualitative_social,ai_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,QS-03,qualitative_social,ai_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,QS-03,qualitative_social,ai_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,QS-03,qualitative_social,ai_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,QS-04,qualitative_social,human_subjects,pathway,Correct pathway routing,"""human_subjects""",True
+technical-3297298c775d,QS-04,qualitative_social,human_subjects,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""vsd""]",True
+technical-3297298c775d,QS-04,qualitative_social,human_subjects,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,QS-04,qualitative_social,human_subjects,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,QS-04,qualitative_social,human_subjects,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,QS-04,qualitative_social,human_subjects,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,QS-05,qualitative_social,ict_research,pathway,Correct pathway routing,"""ict_research""",True
+technical-3297298c775d,QS-05,qualitative_social,ict_research,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""menlo"", ""vsd""]",True
+technical-3297298c775d,QS-05,qualitative_social,ict_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,QS-05,qualitative_social,ict_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,QS-05,qualitative_social,ict_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,QS-05,qualitative_social,ict_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,QS-06,qualitative_social,ai_research,pathway,Correct pathway routing,"""ai_research""",True
+technical-3297298c775d,QS-06,qualitative_social,ai_research,frameworks,Correct framework activation,"[""ai_irb_questions"", ""ai_rec_guidance"", ""belmont"", ""esr"", ""menlo"", ""nist_ai_rmf"", ""vsd""]",True
+technical-3297298c775d,QS-06,qualitative_social,ai_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,QS-06,qualitative_social,ai_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,QS-06,qualitative_social,ai_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,QS-06,qualitative_social,ai_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,QS-07,qualitative_social,human_subjects,pathway,Correct pathway routing,"""human_subjects""",True
+technical-3297298c775d,QS-07,qualitative_social,human_subjects,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""vsd""]",True
+technical-3297298c775d,QS-07,qualitative_social,human_subjects,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,QS-07,qualitative_social,human_subjects,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,QS-07,qualitative_social,human_subjects,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,QS-07,qualitative_social,human_subjects,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,UX-01,applied_ux_service,ict_research,pathway,Correct pathway routing,"""ict_research""",True
+technical-3297298c775d,UX-01,applied_ux_service,ict_research,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""menlo"", ""vsd""]",True
+technical-3297298c775d,UX-01,applied_ux_service,ict_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,UX-01,applied_ux_service,ict_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,UX-01,applied_ux_service,ict_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,UX-01,applied_ux_service,ict_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,UX-02,applied_ux_service,human_subjects,pathway,Correct pathway routing,"""human_subjects""",True
+technical-3297298c775d,UX-02,applied_ux_service,human_subjects,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""vsd""]",True
+technical-3297298c775d,UX-02,applied_ux_service,human_subjects,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,UX-02,applied_ux_service,human_subjects,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,UX-02,applied_ux_service,human_subjects,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,UX-02,applied_ux_service,human_subjects,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,UX-03,applied_ux_service,ai_research,pathway,Correct pathway routing,"""ai_research""",True
+technical-3297298c775d,UX-03,applied_ux_service,ai_research,frameworks,Correct framework activation,"[""ai_irb_questions"", ""ai_rec_guidance"", ""belmont"", ""esr"", ""menlo"", ""nist_ai_rmf"", ""vsd""]",True
+technical-3297298c775d,UX-03,applied_ux_service,ai_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,UX-03,applied_ux_service,ai_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,UX-03,applied_ux_service,ai_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,UX-03,applied_ux_service,ai_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,UX-04,applied_ux_service,ict_research,pathway,Correct pathway routing,"""ict_research""",True
+technical-3297298c775d,UX-04,applied_ux_service,ict_research,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""menlo"", ""vsd""]",True
+technical-3297298c775d,UX-04,applied_ux_service,ict_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,UX-04,applied_ux_service,ict_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,UX-04,applied_ux_service,ict_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,UX-04,applied_ux_service,ict_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,UX-05,applied_ux_service,ai_research,pathway,Correct pathway routing,"""ai_research""",True
+technical-3297298c775d,UX-05,applied_ux_service,ai_research,frameworks,Correct framework activation,"[""ai_irb_questions"", ""ai_rec_guidance"", ""belmont"", ""esr"", ""menlo"", ""nist_ai_rmf"", ""vsd""]",True
+technical-3297298c775d,UX-05,applied_ux_service,ai_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,UX-05,applied_ux_service,ai_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,UX-05,applied_ux_service,ai_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,UX-05,applied_ux_service,ai_research,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,UX-06,applied_ux_service,human_subjects,pathway,Correct pathway routing,"""human_subjects""",True
+technical-3297298c775d,UX-06,applied_ux_service,human_subjects,frameworks,Correct framework activation,"[""belmont"", ""esr"", ""vsd""]",True
+technical-3297298c775d,UX-06,applied_ux_service,human_subjects,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,UX-06,applied_ux_service,human_subjects,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,UX-06,applied_ux_service,human_subjects,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,UX-06,applied_ux_service,human_subjects,deterministic,Repeated run is deterministic,"""ok""",True
+technical-3297298c775d,UX-07,applied_ux_service,ai_research,pathway,Correct pathway routing,"""ai_research""",True
+technical-3297298c775d,UX-07,applied_ux_service,ai_research,frameworks,Correct framework activation,"[""ai_irb_questions"", ""ai_rec_guidance"", ""belmont"", ""esr"", ""menlo"", ""nist_ai_rmf"", ""vsd""]",True
+technical-3297298c775d,UX-07,applied_ux_service,ai_research,seeded_missing,Seeded omission detected,"""missing""",True
+technical-3297298c775d,UX-07,applied_ux_service,ai_research,passage_refs,Non-missing outputs link to evidence,"""ok""",True
+technical-3297298c775d,UX-07,applied_ux_service,ai_research,confidence,Confidence reported,"""high""",True
+technical-3297298c775d,UX-07,applied_ux_service,ai_research,deterministic,Repeated run is deterministic,"""ok""",True

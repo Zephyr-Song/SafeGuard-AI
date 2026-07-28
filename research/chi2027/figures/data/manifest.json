@@ -1,0 +1,114 @@
+{
+  "run_id": "technical-3297298c775d",
+  "commit_sha": "3297298c775d44aa4f13886b4947e1a9e4eb5a54",
+  "generated_at_utc": "2026-07-27T04:03:46Z",
+  "figure_package_version": "1.0",
+  "boundary": "Synthetic seeded technical validation; not a human study. Coverage is not an ethics score or institutional approval.",
+  "source_modules": [
+    "modules/technical_evidence.py",
+    "modules/technical_evidence_cases.py",
+    "modules/framework_selector.py"
+  ],
+  "counts": {
+    "total_cases": 21,
+    "passed_cases": 21,
+    "failed_cases": 0,
+    "domain_count": 3,
+    "domain_counts": {
+      "academic_hci": {
+        "total": 7,
+        "passed": 7
+      },
+      "qualitative_social": {
+        "total": 7,
+        "passed": 7
+      },
+      "applied_ux_service": {
+        "total": 7,
+        "passed": 7
+      }
+    },
+    "pathway_counts": {
+      "ai_research": 8,
+      "human_subjects": 7,
+      "ict_research": 6
+    },
+    "project_type_counts": {
+      "ai": 8,
+      "non_ai": 13
+    },
+    "total_passages": 67,
+    "dimension_assessments": 159,
+    "coverage_counts": {
+      "documented": 4,
+      "partial": 75,
+      "missing": 80
+    },
+    "linked_non_missing_outputs": 79,
+    "missing_outputs": 80,
+    "seeded_omissions": 21,
+    "detected_seeded_omissions": 21,
+    "check_type_count": 6,
+    "check_types": [
+      {
+        "id": "pathway",
+        "label": "Correct pathway routing"
+      },
+      {
+        "id": "frameworks",
+        "label": "Correct framework activation"
+      },
+      {
+        "id": "seeded_missing",
+        "label": "Seeded omission detected"
+      },
+      {
+        "id": "passage_refs",
+        "label": "Non-missing outputs link to evidence"
+      },
+      {
+        "id": "confidence",
+        "label": "Confidence reported"
+      },
+      {
+        "id": "deterministic",
+        "label": "Repeated run is deterministic"
+      }
+    ],
+    "assertions_total": 126,
+    "assertions_passed": 126,
+    "assertions_failed": 0,
+    "check_totals": {
+      "pathway": {
+        "passed": 21,
+        "total": 21
+      },
+      "frameworks": {
+        "passed": 21,
+        "total": 21
+      },
+      "seeded_missing": {
+        "passed": 21,
+        "total": 21
+      },
+      "passage_refs": {
+        "passed": 21,
+        "total": 21
+      },
+      "confidence": {
+        "passed": 21,
+        "total": 21
+      },
+      "deterministic": {
+        "passed": 21,
+        "total": 21
+      }
+    }
+  },
+  "figures": [
+    "fig01_submitted_evidence_coverage",
+    "fig02_passage_grounded_evidence",
+    "fig03_seeded_corpus_composition",
+    "figA1_specification_conformance"
+  ]
+}

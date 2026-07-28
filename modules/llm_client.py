@@ -168,6 +168,8 @@ class LLMClient:
                 "error": f"Provider '{provider_id}' is not configured.",
                 "status_code": None,
                 "error_type": "not_configured",
+                "model": None,
+                "usage": {},
             }
 
         headers = {
@@ -194,14 +196,19 @@ class LLMClient:
                     "error": self._short_error_body(response.text),
                     "status_code": response.status_code,
                     "error_type": "http_error",
+                    "model": provider.model,
+                    "usage": {},
                 }
-            text = response.json()["choices"][0]["message"]["content"]
+            response_payload = response.json()
+            text = response_payload["choices"][0]["message"]["content"]
             return {
                 "ok": True,
                 "text": text,
                 "error": "",
                 "status_code": response.status_code,
                 "error_type": "",
+                "model": response_payload.get("model") or provider.model,
+                "usage": response_payload.get("usage") or {},
             }
         except requests.Timeout:
             return {
@@ -210,6 +217,8 @@ class LLMClient:
                 "error": f"Request timed out while contacting {provider.base_url}.",
                 "status_code": None,
                 "error_type": "timeout",
+                "model": provider.model,
+                "usage": {},
             }
         except RequestException as exc:
             return {
@@ -218,6 +227,8 @@ class LLMClient:
                 "error": str(exc)[:500],
                 "status_code": None,
                 "error_type": "connection_error",
+                "model": provider.model,
+                "usage": {},
             }
         except Exception as exc:
             return {
@@ -226,6 +237,8 @@ class LLMClient:
                 "error": str(exc)[:500],
                 "status_code": None,
                 "error_type": "parse_or_unknown_error",
+                "model": provider.model,
+                "usage": {},
             }
 
     def _short_error_body(self, text: str) -> str:

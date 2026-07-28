@@ -1,0 +1,11 @@
+run_id,dimension_id,seeded_n,detected_n,dimension_label,detection_rate
+technical-3297298c775d,ai_govern,2,2,AI role and decision authority,1.0
+technical-3297298c775d,ai_manage,2,2,AI risk management,1.0
+technical-3297298c775d,ai_map,2,2,"AI data, population, and disclosure",1.0
+technical-3297298c775d,ai_measure,1,1,AI measurement,1.0
+technical-3297298c775d,beneficence,2,2,Beneficence,1.0
+technical-3297298c775d,justice,2,2,Justice,1.0
+technical-3297298c775d,law_public_interest,2,2,Law and public interest,1.0
+technical-3297298c775d,respect,3,3,Respect for persons,1.0
+technical-3297298c775d,societal_review,3,3,Societal risks and mitigation,1.0
+technical-3297298c775d,value_tensions,2,2,Stakeholders and value tensions,1.0
