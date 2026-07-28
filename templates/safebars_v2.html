@@ -151,6 +151,13 @@
 
         textarea { min-height: 84px; resize: vertical; }
         .textarea-short { min-height: 64px; }
+        .project-scroll-field {
+            height: 72px;
+            min-height: 72px;
+            overflow-y: auto;
+            resize: vertical;
+            scrollbar-gutter: stable;
+        }
 
         .btn {
             min-height: 36px;
@@ -2139,19 +2146,19 @@
                 <div class="materials-body">
             <div class="field">
                 <label for="projectTitle">Project title</label>
-                <textarea id="projectTitle" class="textarea-short" placeholder="Give this protocol a short working title"></textarea>
+                <textarea id="projectTitle" class="project-scroll-field" rows="3" placeholder="Give this protocol a short working title"></textarea>
             </div>
             <div class="field">
                 <label for="projectReviewContext">Research area and ethics-review context</label>
-                <textarea id="projectReviewContext" class="textarea-short" placeholder="Research area; university or organisation; school/department; committee or pathway; jurisdiction"></textarea>
+                <textarea id="projectReviewContext" class="project-scroll-field" rows="3" placeholder="Research area; university or organisation; school/department; committee or pathway; jurisdiction"></textarea>
             </div>
             <div class="field">
                 <label for="projectContext">Project plan</label>
-                <textarea id="projectContext" class="textarea-short" placeholder="Research aim, setting, method, and why human participation is needed"></textarea>
+                <textarea id="projectContext" class="project-scroll-field" rows="3" placeholder="Research aim, setting, method, and why human participation is needed"></textarea>
             </div>
             <div class="field">
                 <label for="targetPeople">People and relationships</label>
-                <textarea id="targetPeople" class="textarea-short" placeholder="Participants, helpers, partners, gatekeepers, services"></textarea>
+                <textarea id="targetPeople" class="project-scroll-field" rows="3" placeholder="Participants, helpers, partners, gatekeepers, services"></textarea>
             </div>
 
             <section class="artifact-editor" id="artifactGroup" aria-labelledby="artifactEditorHeading">
