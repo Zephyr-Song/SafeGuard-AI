@@ -390,6 +390,25 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Keep your record", workspace.data)
         self.assertIn(b"Six short questions", workspace.data)
         self.assertIn(b"Research area and ethics-review context", workspace.data)
+        self.assertIn(
+            b'<textarea id="projectTitle" class="textarea-short"',
+            workspace.data,
+        )
+        self.assertIn(
+            b'<textarea id="projectReviewContext" class="textarea-short"',
+            workspace.data,
+        )
+        self.assertIn(
+            b'<textarea id="projectContext" class="textarea-short"',
+            workspace.data,
+        )
+        self.assertIn(
+            b'<textarea id="targetPeople" class="textarea-short"',
+            workspace.data,
+        )
+        self.assertIn(b"resize: vertical", workspace.data)
+        self.assertNotIn(b"max-height: 72px", workspace.data)
+        self.assertNotIn(b"project-scroll-field", workspace.data)
         self.assertNotIn(b"What are you studying", workspace.data)
         self.assertIn(b"Intake completed", workspace.data)
         self.assertIn(b"Done \xc2\xb7 review populated fields", workspace.data)

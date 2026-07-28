@@ -2139,7 +2139,7 @@
                 <div class="materials-body">
             <div class="field">
                 <label for="projectTitle">Project title</label>
-                <input id="projectTitle" type="text" placeholder="Give this protocol a short working title">
+                <textarea id="projectTitle" class="textarea-short" placeholder="Give this protocol a short working title"></textarea>
             </div>
             <div class="field">
                 <label for="projectReviewContext">Research area and ethics-review context</label>
@@ -2789,7 +2789,7 @@
             Object.entries(artifactInputs).forEach(([key, id]) => artifacts[key] = $(id).value.trim());
             const payload = {
                 project: {
-                    title: $("projectTitle").value.trim(),
+                    title: $("projectTitle").value.trim().replace(/\s+/g, " "),
                     review_context: $("projectReviewContext").value.trim(),
                     context: $("projectContext").value.trim(),
                     target_people: $("targetPeople").value.trim(),
