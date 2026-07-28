@@ -391,24 +391,27 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Six short questions", workspace.data)
         self.assertIn(b"Research area and ethics-review context", workspace.data)
         self.assertIn(
-            b'<textarea id="projectTitle" class="textarea-short"',
+            b'<textarea id="projectTitle" class="project-scroll-field" rows="3"',
             workspace.data,
         )
         self.assertIn(
-            b'<textarea id="projectReviewContext" class="textarea-short"',
+            b'<textarea id="projectReviewContext" class="project-scroll-field" rows="3"',
             workspace.data,
         )
         self.assertIn(
-            b'<textarea id="projectContext" class="textarea-short"',
+            b'<textarea id="projectContext" class="project-scroll-field" rows="3"',
             workspace.data,
         )
         self.assertIn(
-            b'<textarea id="targetPeople" class="textarea-short"',
+            b'<textarea id="targetPeople" class="project-scroll-field" rows="3"',
             workspace.data,
         )
+        self.assertIn(b"height: 72px", workspace.data)
+        self.assertIn(b"min-height: 72px", workspace.data)
+        self.assertIn(b"overflow-y: auto", workspace.data)
         self.assertIn(b"resize: vertical", workspace.data)
+        self.assertIn(b"scrollbar-gutter: stable", workspace.data)
         self.assertNotIn(b"max-height: 72px", workspace.data)
-        self.assertNotIn(b"project-scroll-field", workspace.data)
         self.assertNotIn(b"What are you studying", workspace.data)
         self.assertIn(b"Intake completed", workspace.data)
         self.assertIn(b"Done \xc2\xb7 review populated fields", workspace.data)
