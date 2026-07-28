@@ -1,0 +1,22 @@
+run_id,case_id,title,domain,uses_ai,observed_pathway,expected_pathway,passage_n,dimension_n,framework_n,documented_n,partial_n,missing_n,linked_nonmissing_n,seeded_omission_dimension,seeded_omission_detected,checks_passed_n,checks_total_n,case_passed
+technical-3297298c775d,HCI-01,Co-design workshop on ambient notifications,academic_hci,False,human_subjects,human_subjects,3,5,3,1,3,1,4,respect,True,6,6,True
+technical-3297298c775d,HCI-02,Online diary study of focus modes,academic_hci,False,ict_research,ict_research,3,6,4,0,4,2,4,law_public_interest,True,6,6,True
+technical-3297298c775d,HCI-03,Recommender interface study with an LLM assistant,academic_hci,True,ai_research,ai_research,4,11,7,1,4,6,5,ai_manage,True,6,6,True
+technical-3297298c775d,HCI-04,Gesture control lab experiment,academic_hci,False,human_subjects,human_subjects,3,5,3,0,3,2,3,justice,True,6,6,True
+technical-3297298c775d,HCI-05,Voice assistant accessibility study,academic_hci,True,ai_research,ai_research,4,11,7,0,4,7,4,ai_map,True,6,6,True
+technical-3297298c775d,HCI-06,Social VR onboarding study,academic_hci,False,ict_research,ict_research,3,6,4,2,1,3,3,value_tensions,True,6,6,True
+technical-3297298c775d,HCI-07,AI tutor usability test,academic_hci,True,ai_research,ai_research,3,11,7,0,5,6,5,societal_review,True,6,6,True
+technical-3297298c775d,QS-01,Interviews on chronic illness management,qualitative_social,False,human_subjects,human_subjects,3,5,3,0,3,2,3,beneficence,True,6,6,True
+technical-3297298c775d,QS-02,Digital storytelling with refugees,qualitative_social,False,ict_research,ict_research,3,6,4,0,5,1,5,respect,True,6,6,True
+technical-3297298c775d,QS-03,AI-assisted coding of interview transcripts,qualitative_social,True,ai_research,ai_research,4,11,7,0,5,6,5,ai_measure,True,6,6,True
+technical-3297298c775d,QS-04,Focus groups on neighbourhood trust,qualitative_social,False,human_subjects,human_subjects,3,5,3,0,3,2,3,societal_review,True,6,6,True
+technical-3297298c775d,QS-05,Remote ethnography of gig workers,qualitative_social,False,ict_research,ict_research,3,6,4,0,3,3,3,law_public_interest,True,6,6,True
+technical-3297298c775d,QS-06,AI companion for loneliness study,qualitative_social,True,ai_research,ai_research,3,11,7,0,4,7,4,ai_govern,True,6,6,True
+technical-3297298c775d,QS-07,Photo elicitation with caregivers,qualitative_social,False,human_subjects,human_subjects,3,5,3,0,3,2,3,justice,True,6,6,True
+technical-3297298c775d,UX-01,Online public-service portal usability test,applied_ux_service,False,ict_research,ict_research,3,6,4,0,4,2,4,respect,True,6,6,True
+technical-3297298c775d,UX-02,Mobile banking onboarding study,applied_ux_service,False,human_subjects,human_subjects,3,5,3,0,2,3,2,beneficence,True,6,6,True
+technical-3297298c775d,UX-03,AI triage assistant field test,applied_ux_service,True,ai_research,ai_research,4,11,7,0,6,5,6,ai_manage,True,6,6,True
+technical-3297298c775d,UX-04,Online benefits application walkthrough,applied_ux_service,False,ict_research,ict_research,3,6,4,0,3,3,3,value_tensions,True,6,6,True
+technical-3297298c775d,UX-05,AI career-coaching pilot,applied_ux_service,True,ai_research,ai_research,3,11,7,0,3,8,3,ai_map,True,6,6,True
+technical-3297298c775d,UX-06,In-person service desk observation,applied_ux_service,False,human_subjects,human_subjects,3,5,3,0,3,2,3,societal_review,True,6,6,True
+technical-3297298c775d,UX-07,AI translation helper for newcomers,applied_ux_service,True,ai_research,ai_research,3,11,7,0,4,7,4,ai_govern,True,6,6,True

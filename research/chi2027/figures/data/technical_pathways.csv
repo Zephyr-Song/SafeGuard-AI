@@ -1,0 +1,4 @@
+run_id,pathway,documented,missing,partial,case_n,dimensions_per_case,frameworks_per_case,assessment_n
+technical-3297298c775d,ai_research,1,52,35,8,11,7,88
+technical-3297298c775d,human_subjects,1,14,20,7,5,3,35
+technical-3297298c775d,ict_research,2,14,20,6,6,4,36

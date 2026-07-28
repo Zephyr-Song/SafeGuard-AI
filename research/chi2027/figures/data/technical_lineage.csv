@@ -1,0 +1,7 @@
+run_id,stage_order,stage,count,unit,note
+technical-3297298c775d,1,fictional_seeded_cases,21,cases,Author-designed technical protocols
+technical-3297298c775d,2,submitted_passages,67,passages,One passage can support multiple assessments
+technical-3297298c775d,3,framework_assessments,159,dimension assessments,Pathway-dependent review dimensions
+technical-3297298c775d,4,evidence_linked_nonmissing,79,assessments,"Documented or partial, each with a passage reference"
+technical-3297298c775d,5,missing_submitted_evidence,80,assessments,"Absence of submitted evidence, not proof of non-compliance"
+technical-3297298c775d,6,planted_omissions_detected,21,known planted omissions,Only these 21 missing dimensions are independent seeded positives

@@ -133,7 +133,7 @@
             font-weight: 650;
         }
 
-        input[type="text"], textarea, select {
+        input[type="text"], input[type="number"], textarea, select {
             width: 100%;
             border: 1px solid var(--line-strong);
             border-radius: 6px;
@@ -144,7 +144,7 @@
             transition: border-color 120ms, box-shadow 120ms;
         }
 
-        input[type="text"]:focus, textarea:focus, select:focus {
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
             border-color: var(--teal);
             box-shadow: 0 0 0 3px rgba(23, 111, 115, 0.11);
         }
@@ -290,6 +290,153 @@
             background: var(--amber-soft);
             color: #5e481f;
             font-size: 12px;
+        }
+
+        .study-setup {
+            margin: 0 0 14px;
+            padding: 12px;
+            border: 1px solid #a9c8c9;
+            border-radius: 7px;
+            background: #f0f8f8;
+        }
+        .study-setup h3 { margin: 0; font-size: 13px; }
+        .study-setup-copy { margin: 4px 0 10px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+        .study-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .study-fields .field { margin: 0; }
+        .study-consent { display: flex; align-items: flex-start; gap: 7px; margin: 10px 0; font-size: 11px; line-height: 1.4; }
+        .study-consent input { margin-top: 2px; }
+        .study-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+        .study-status { margin: 8px 0 0; padding-top: 8px; border-top: 1px solid #c9dddd; color: var(--muted); font-size: 11px; }
+        .study-status strong { color: var(--ink); }
+
+        .baseline-panel {
+            min-width: 0;
+            padding: 18px 20px 44px;
+        }
+        .baseline-card,
+        .study-submission-panel {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+        .baseline-card {
+            width: min(900px, 100%);
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        .baseline-header,
+        .study-submission-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--line);
+        }
+        .baseline-header h2,
+        .study-submission-header h2 {
+            margin: 0;
+            font-size: 16px;
+        }
+        .baseline-header p,
+        .study-submission-header p {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .study-chat-messages {
+            min-height: 310px;
+            max-height: 55vh;
+            padding: 16px 18px;
+            overflow: auto;
+            background: #fbfcfb;
+        }
+        .study-chat-empty {
+            display: grid;
+            min-height: 275px;
+            place-items: center;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+        }
+        .study-chat-message {
+            width: min(82%, 720px);
+            margin: 0 0 12px;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .study-chat-message.user {
+            margin-left: auto;
+            border-color: #a9c8c9;
+            background: #f0f8f8;
+        }
+        .study-chat-message.assistant { background: #fff; }
+        .study-chat-message.error {
+            border-color: #dfb7ae;
+            background: #fff4f1;
+            color: #7b2f22;
+        }
+        .study-chat-meta {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 10px;
+        }
+        .study-chat-compose {
+            padding: 14px 18px 16px;
+            border-top: 1px solid var(--line);
+        }
+        .study-chat-compose textarea {
+            min-height: 94px;
+            resize: vertical;
+        }
+        .study-chat-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 9px;
+        }
+        .study-chat-status {
+            color: var(--muted);
+            font-size: 11px;
+        }
+        .study-submission-shell {
+            width: min(1800px, 100%);
+            margin: 0 auto;
+            padding: 0 20px 48px;
+        }
+        .study-submission-panel {
+            margin-left: min(340px, 20vw);
+        }
+        .study-submission-body {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+            gap: 14px;
+            padding: 16px 18px;
+        }
+        .study-submission-rationales {
+            display: grid;
+            gap: 10px;
+        }
+        .study-submission-panel textarea {
+            min-height: 105px;
+            resize: vertical;
+        }
+        #studyFinalArtifact { min-height: 230px; }
+        .study-submission-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 18px;
+            border-top: 1px solid var(--line);
+        }
+        .study-submission-status {
+            color: var(--muted);
+            font-size: 11px;
         }
 
         .workflow-bar {
@@ -1121,7 +1268,10 @@
             .header-actions .btn span { display: none; }
             .workspace { display: block; }
             .intake-panel { border-right: 0; border-bottom: 1px solid var(--line); }
-            .main-panel { padding: 14px 12px 36px; }
+            .main-panel, .baseline-panel { padding: 14px 12px 36px; }
+            .study-submission-shell { padding: 0 12px 36px; }
+            .study-submission-panel { margin-left: 0; }
+            .study-submission-body { grid-template-columns: 1fr; }
             .workflow-bar { grid-template-columns: 1fr; }
             .workflow-step { border-right: 0; border-bottom: 1px solid var(--line); }
             .workflow-step:last-child { border-bottom: 0; }
@@ -1164,28 +1314,668 @@
             .evidence-lineage-step:nth-child(2)::after { display: none; }
             .evidence-pending-grid { grid-template-columns: 1fr 1fr; }
         }
+
+        /* 2026 interface refresh: clearer hierarchy, progressive disclosure, and mobile-first controls. */
+        :root {
+            --canvas: #edf3f6;
+            --surface: #ffffff;
+            --surface-subtle: #f5f8fa;
+            --ink: #132238;
+            --muted: #607084;
+            --line: #cfdae4;
+            --line-strong: #aebdca;
+            --green: #147d6f;
+            --green-soft: #e7f5f1;
+            --teal: #0f7880;
+            --teal-soft: #e6f5f5;
+            --amber: #8b6415;
+            --amber-soft: #fff5d8;
+            --red: #a83d39;
+            --red-soft: #fdecea;
+            --blue: #2f6ca3;
+            --blue-soft: #e8f2fb;
+            --navy: #0b2239;
+            --navy-light: #123451;
+            --highlight: #f3cb55;
+            --highlight-strong: #eabf35;
+            --shadow: 0 1px 2px rgba(12, 34, 57, 0.06), 0 8px 24px rgba(12, 34, 57, 0.05);
+            --shadow-lift: 0 12px 34px rgba(12, 34, 57, 0.12);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            background:
+                radial-gradient(circle at 82% 4%, rgba(15, 120, 128, 0.08), transparent 27rem),
+                var(--canvas);
+        }
+
+        a { color: var(--blue); }
+        button, a, summary, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+        button:focus-visible,
+        a:focus-visible,
+        summary:focus-visible,
+        input:focus-visible,
+        textarea:focus-visible,
+        select:focus-visible,
+        [role="tab"]:focus-visible,
+        [tabindex="0"]:focus-visible {
+            outline: 3px solid rgba(243, 203, 85, 0.72);
+            outline-offset: 2px;
+        }
+
+        .app-header {
+            min-height: 67px;
+            padding: 9px clamp(15px, 2.4vw, 34px);
+            border-bottom: 3px solid var(--highlight);
+            background: rgba(11, 34, 57, 0.98);
+            color: #fff;
+            box-shadow: 0 4px 18px rgba(11, 34, 57, 0.14);
+            backdrop-filter: blur(14px);
+        }
+        .brand-wrap { gap: 12px; }
+        .brand-mark {
+            width: 38px;
+            height: 38px;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 9px;
+            color: #fff;
+            background: linear-gradient(145deg, #15928d, #0f6573);
+            box-shadow: inset 0 1px rgba(255,255,255,.18);
+        }
+        .brand-title-row { display: flex; align-items: center; gap: 8px; }
+        .brand-title { font-size: 17px; letter-spacing: -0.01em; }
+        .brand-subtitle { color: #b9c9d6; }
+        .prototype-badge {
+            padding: 2px 6px;
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 4px;
+            color: #d7e3eb;
+            background: rgba(255,255,255,.08);
+            font-size: 9px;
+            font-weight: 760;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+        .header-actions { gap: 7px; }
+        .app-header .btn {
+            min-height: 38px;
+            border-color: rgba(255,255,255,.22);
+            color: #edf5fa;
+            background: rgba(255,255,255,.055);
+        }
+        .app-header .btn:hover {
+            border-color: rgba(255,255,255,.42);
+            color: #fff;
+            background: rgba(255,255,255,.12);
+        }
+        .app-header .btn:disabled { color: #9bb0c0; }
+        .app-header .btn-help {
+            border-color: var(--highlight);
+            color: var(--navy);
+            background: var(--highlight);
+        }
+        .app-header .btn-help:hover {
+            border-color: #f9dc84;
+            color: var(--navy);
+            background: #f9dc84;
+            transform: translateY(-1px);
+        }
+        .export-menu,
+        .more-menu { color: var(--ink); }
+        .export-menu { width: min(380px, calc(100vw - 24px)); padding: 6px; border-radius: 10px; box-shadow: var(--shadow-lift); }
+        .export-option { min-height: 48px; border-radius: 7px; }
+        .export-option-title { font-size: 13px; }
+        .export-option-note { font-size: 11px; line-height: 1.35; }
+
+        .more-control { position: relative; }
+        .more-control > summary { list-style: none; }
+        .more-control > summary::-webkit-details-marker { display: none; }
+        .more-control[open] > summary { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.13); }
+        .more-menu {
+            position: absolute;
+            top: calc(100% + 7px);
+            right: 0;
+            z-index: 50;
+            width: 280px;
+            padding: 6px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--surface);
+            box-shadow: var(--shadow-lift);
+        }
+        .more-option {
+            width: 100%;
+            min-height: 52px;
+            display: grid;
+            grid-template-columns: 24px minmax(0, 1fr);
+            align-items: center;
+            gap: 9px;
+            padding: 8px 10px;
+            border: 0;
+            border-radius: 7px;
+            color: var(--ink);
+            background: transparent;
+            text-align: left;
+            text-decoration: none;
+        }
+        .more-option:hover { background: var(--surface-subtle); }
+        .more-option > span { display: block; min-width: 0; }
+        .more-option strong { display: block; font-size: 12px; }
+        .more-option small { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
+        .more-option:disabled { opacity: .46; cursor: not-allowed; }
+
+        .workspace {
+            width: min(1660px, 100%);
+            grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
+            min-height: calc(100vh - 67px);
+        }
+        .intake-panel {
+            position: sticky;
+            top: 67px;
+            align-self: start;
+            height: calc(100vh - 67px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding: 22px 20px 34px;
+            border-right-color: #c4d2dc;
+            box-shadow: 8px 0 28px rgba(11,34,57,.035);
+        }
+        .main-panel { padding: 24px clamp(18px, 2.6vw, 38px) 64px; }
+        .panel-eyebrow,
+        .hero-eyebrow,
+        .empty-eyebrow {
+            color: var(--teal);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+        }
+        .intake-title { margin-top: 4px; font-size: 19px; letter-spacing: -0.015em; }
+        .field label { color: #34465a; font-weight: 700; }
+        input[type="text"], input[type="number"], textarea, select {
+            min-height: 42px;
+            border-radius: 7px;
+            padding: 10px 11px;
+            background: #fcfdfe;
+        }
+        input[type="text"]:hover, input[type="number"]:hover, textarea:hover, select:hover { border-color: #8fa4b5; }
+        textarea { line-height: 1.48; }
+
+        .btn {
+            min-height: 40px;
+            border-radius: 7px;
+            transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+        }
+        .btn:not(:disabled):hover { transform: translateY(-1px); }
+        .btn-primary { background: var(--navy); border-color: var(--navy); }
+        .btn-primary:hover { background: #143c5c; border-color: #143c5c; }
+        .btn-teal { background: var(--teal); border-color: var(--teal); }
+        .btn-teal:hover { background: #0b6167; border-color: #0b6167; }
+        .btn-quiet { min-height: 38px; }
+
+        .material-progress {
+            margin: 12px 0 10px;
+            padding: 10px 11px;
+            border: 1px solid #c7d8e2;
+            border-radius: 8px;
+            background: #f6fafb;
+        }
+        .material-progress-copy {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 7px;
+            color: #40536a;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .material-progress-track {
+            height: 6px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #dfe9ee;
+        }
+        .material-progress-track span {
+            display: block;
+            width: 0;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--teal), #32a89e);
+            transition: width 220ms ease;
+        }
+        .materials-details {
+            margin-bottom: 13px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: var(--surface);
+        }
+        .materials-details > summary {
+            min-height: 44px;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 9px 11px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 760;
+        }
+        .materials-details > summary::-webkit-details-marker { display: none; }
+        .materials-details > summary > span:first-child { display: inline-flex; align-items: center; gap: 7px; }
+        .materials-summary-note { color: var(--muted); font-size: 10px; font-weight: 600; }
+        .materials-body { padding: 4px 11px 2px; border-top: 1px solid var(--line); }
+        .artifact-group { margin-bottom: 4px; }
+        details.artifact summary { min-height: 45px; }
+        .switch-row {
+            min-height: 43px;
+            margin: 8px 0;
+            padding: 7px 0;
+            border-bottom: 1px solid #e6edf2;
+        }
+        .boundary-note { border-radius: 0 7px 7px 0; }
+
+        .workspace-hero {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr);
+            gap: clamp(22px, 3vw, 44px);
+            align-items: center;
+            overflow: hidden;
+            margin-bottom: 16px;
+            padding: clamp(24px, 3.2vw, 42px);
+            border: 1px solid #173f5e;
+            border-radius: 14px;
+            color: #fff;
+            background:
+                radial-gradient(circle at 90% 0%, rgba(36, 173, 165, .28), transparent 45%),
+                linear-gradient(135deg, var(--navy) 0%, #0e3150 62%, #0d3f55 100%);
+            box-shadow: 0 16px 38px rgba(11,34,57,.16);
+        }
+        .workspace-hero::after {
+            content: "";
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            right: -100px;
+            bottom: -130px;
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 50%;
+            box-shadow: 0 0 0 28px rgba(255,255,255,.025), 0 0 0 58px rgba(255,255,255,.02);
+            pointer-events: none;
+        }
+        .hero-copy, .hero-route { position: relative; z-index: 1; }
+        .hero-eyebrow { display: flex; align-items: center; gap: 7px; color: #9fe0d9; }
+        .hero-live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--highlight); box-shadow: 0 0 0 4px rgba(243,203,85,.14); }
+        .workspace-hero h2 {
+            max-width: 760px;
+            margin: 10px 0 10px;
+            font-size: clamp(27px, 3vw, 42px);
+            line-height: 1.08;
+            letter-spacing: -.035em;
+        }
+        .workspace-hero p {
+            max-width: 720px;
+            margin: 0;
+            color: #c8d8e4;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .hero-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
+        .btn-hero-primary {
+            border-color: var(--highlight);
+            color: var(--navy);
+            background: var(--highlight);
+            box-shadow: 0 5px 0 #be9425;
+        }
+        .btn-hero-primary:hover { border-color: #f9dc84; background: #f9dc84; box-shadow: 0 3px 0 #be9425; transform: translateY(2px); }
+        .btn-hero-secondary { border-color: rgba(255,255,255,.3); color: #fff; background: rgba(255,255,255,.07); }
+        .btn-hero-secondary:hover { border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.13); }
+        .hero-boundary { display: flex; align-items: flex-start; gap: 7px; margin-top: 20px; color: #a9c2d3; font-size: 10px; line-height: 1.45; }
+        .hero-boundary svg { flex: 0 0 auto; color: #8fd8cf; }
+        .hero-route { display: grid; gap: 7px; }
+        .route-card {
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,.17);
+            border-radius: 9px;
+            background: rgba(255,255,255,.075);
+            backdrop-filter: blur(8px);
+        }
+        .route-icon {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 8px;
+            color: #fff;
+            background: rgba(255,255,255,.09);
+        }
+        .route-step { display: block; color: #8fd8cf; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .route-card strong { display: block; margin-top: 2px; font-size: 12px; }
+        .route-card small { display: block; margin-top: 2px; color: #b7cad7; font-size: 9px; line-height: 1.35; }
+        .route-connector { height: 12px; display: grid; place-items: center; color: #79bcb8; }
+        .workspace-hero.has-session {
+            grid-template-columns: minmax(0, 1.2fr) minmax(420px, .8fr);
+            padding: 20px 24px;
+        }
+        .workspace-hero.has-session h2 { margin: 6px 0; font-size: clamp(22px, 2vw, 28px); }
+        .workspace-hero.has-session p { font-size: 12px; }
+        .workspace-hero.has-session .hero-actions { display: none; }
+        .workspace-hero.has-session .hero-boundary { margin-top: 10px; }
+        .workspace-hero.has-session .hero-route { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+        .workspace-hero.has-session .route-card { grid-template-columns: 30px minmax(0, 1fr); padding: 8px; }
+        .workspace-hero.has-session .route-icon { width: 30px; height: 30px; }
+        .workspace-hero.has-session .route-connector { display: none; }
+        .workspace-hero.has-session .route-card small { display: none; }
+
+        .workflow-bar {
+            border-radius: 10px;
+            border-color: #c7d5df;
+            box-shadow: var(--shadow);
+        }
+        .workflow-step { min-height: 64px; padding: 11px 13px; }
+        .workflow-index { width: 29px; height: 29px; background: #e8eef2; }
+        .workflow-step.active { background: #fbfdfa; }
+        .workflow-step.active .workflow-index { color: var(--navy); background: var(--highlight); }
+        .workflow-label { color: #283c51; font-size: 12px; }
+
+        .run-inspector {
+            margin-top: 12px;
+            border: 1px solid #c8d5df;
+            border-radius: 9px;
+            background: rgba(255,255,255,.7);
+        }
+        .run-inspector > summary {
+            min-height: 48px;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 9px 12px;
+            cursor: pointer;
+        }
+        .run-inspector > summary::-webkit-details-marker { display: none; }
+        .run-inspector-title { display: inline-flex; align-items: center; gap: 9px; }
+        .run-inspector-title > span { display: grid; }
+        .run-inspector-title strong { color: #2d4155; font-size: 11px; }
+        .run-inspector-title small { margin-top: 1px; color: var(--muted); font-size: 9px; }
+        .run-inspector-action { display: inline-flex; align-items: center; gap: 4px; color: var(--teal); font-size: 10px; font-weight: 750; }
+        .run-inspector[open] .run-inspector-action svg { transform: rotate(180deg); }
+        .run-inspector-body { padding: 0 10px 10px; border-top: 1px solid var(--line); }
+        .agent-strip { margin-top: 10px; }
+        .agent-item { border-radius: 8px; background: #f8fafb; }
+        .audit-plan-panel { box-shadow: none; }
+
+        .tabbar {
+            position: sticky;
+            top: 67px;
+            z-index: 12;
+            margin-top: 18px;
+            padding: 8px 4px 0;
+            border: 1px solid var(--line);
+            border-bottom: 0;
+            border-radius: 10px 10px 0 0;
+            background: rgba(237,243,246,.94);
+            backdrop-filter: blur(12px);
+        }
+        .tab {
+            min-height: 43px;
+            border-radius: 7px 7px 0 0;
+            color: #52657a;
+        }
+        .tab.active { color: var(--navy); border-bottom-color: var(--highlight-strong); background: #fff; }
+        .tab.active .count { color: #fff; background: var(--teal); }
+        .tabview { padding-top: 14px; }
+        .empty-state {
+            min-height: 410px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            color: var(--muted);
+            background:
+                linear-gradient(rgba(255,255,255,.93), rgba(255,255,255,.93)),
+                radial-gradient(circle at center, var(--teal-soft), transparent 50%);
+            box-shadow: var(--shadow);
+        }
+        .empty-state > div { max-width: 540px; }
+        .empty-icon {
+            width: 58px;
+            height: 58px;
+            display: grid;
+            place-items: center;
+            margin: 0 auto 14px;
+            border: 1px solid #b9d5d4;
+            border-radius: 12px;
+            color: var(--teal);
+            background: var(--teal-soft);
+        }
+        .empty-state .empty-icon svg { margin: 0; color: inherit; }
+        .empty-eyebrow { margin-bottom: 5px; }
+        .empty-title { color: var(--ink); font-size: 19px; letter-spacing: -.015em; }
+        .empty-copy { max-width: 520px; margin: 5px auto 0; font-size: 12px; line-height: 1.55; }
+        .empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; }
+
+        #mapContent:not([hidden]) { display: flex; flex-direction: column; }
+        #mapContent > .panel-heading { order: 1; margin: 5px 0 10px; }
+        #mapContent > .map-grid { order: 2; }
+        #mapContent > .scenario-section { order: 3; }
+        #mapContent > .journey-panel { order: 4; }
+        #mapContent > .framework-section { order: 5; }
+        #mapContent > .readiness-panel { order: 6; }
+        #mapContent > .framework-section,
+        #mapContent > .readiness-panel,
+        #mapContent > .journey-panel,
+        #mapContent > .scenario-section {
+            margin-top: 16px;
+            padding: 16px;
+            border: 1px solid var(--line);
+            border-radius: 11px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+        #mapContent > .framework-section { margin-bottom: 0; }
+        .map-grid, .scenario-grid { gap: 10px; }
+        .stage-card, .scenario-card, .issue-item, .handoff-item, .trace-list, .trace-detail { border-radius: 9px; }
+        .framework-layout { border-radius: 9px; }
+        .journey-viewport { border-radius: 8px; }
+
+        .guide-dialog,
+        .intake-dialog {
+            border-radius: 13px;
+            box-shadow: 0 24px 80px rgba(5,22,38,.28);
+        }
+        .guide-dialog::backdrop,
+        .intake-dialog::backdrop { background: rgba(5,22,38,.6); backdrop-filter: blur(3px); }
+        .intake-header { background: #fff; }
+        .guide-body { background: #f5f8fa; }
+        .guide-intro { border-radius: 0 8px 8px 0; }
+        .guide-role { border-radius: 10px; }
+        .guide-step-number { color: var(--navy); background: var(--highlight); }
+        .guide-actions {
+            position: sticky;
+            bottom: -16px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+            margin: 14px -16px -16px;
+            padding: 12px 16px;
+            border-top: 1px solid var(--line);
+            background: rgba(255,255,255,.96);
+            backdrop-filter: blur(10px);
+        }
+
+        .loading-overlay { background: rgba(11,34,57,.55); backdrop-filter: blur(4px); }
+        .loading-box { border-radius: 11px; box-shadow: var(--shadow-lift); }
+        .toast { border-radius: 9px; box-shadow: var(--shadow-lift); }
+
+        @media (max-width: 1180px) {
+            .workspace { grid-template-columns: minmax(290px, 320px) minmax(0, 1fr); }
+            .workspace-hero { grid-template-columns: 1fr; }
+            .hero-route { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+            .route-connector { display: none; }
+            .route-card { grid-template-columns: 34px minmax(0, 1fr); padding: 10px; }
+            .route-icon { width: 34px; height: 34px; }
+            .workspace-hero.has-session { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 860px) {
+            .header-actions .btn span { display: inline; }
+            .workspace { display: block; }
+            .intake-panel {
+                position: static;
+                width: 100%;
+                height: auto;
+                max-height: none;
+                overflow: visible;
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+                box-shadow: none;
+            }
+            .main-panel, .baseline-panel { padding: 18px 14px 46px; }
+            .workspace-hero { padding: 26px 22px; }
+            .workspace-hero h2 { font-size: clamp(28px, 7vw, 38px); }
+            .hero-route { grid-template-columns: 1fr; }
+            .route-connector { display: grid; }
+            .workspace-hero.has-session .hero-route { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .workflow-bar {
+                grid-template-columns: none;
+                grid-auto-flow: column;
+                grid-auto-columns: minmax(190px, 1fr);
+                overflow-x: auto;
+                scroll-snap-type: x proximity;
+            }
+            .workflow-step {
+                border-right: 1px solid var(--line);
+                border-bottom: 0;
+                scroll-snap-align: start;
+            }
+            .workflow-step:last-child { border-right: 0; }
+            .tabbar {
+                position: static;
+                display: flex;
+                gap: 3px;
+                overflow-x: auto;
+                border: 0;
+                border-bottom: 1px solid var(--line);
+                border-radius: 0;
+                padding: 7px 0 0;
+                scrollbar-width: thin;
+            }
+            .tab {
+                width: auto;
+                min-width: max-content;
+                border: 0;
+                border-bottom: 3px solid transparent;
+                padding: 9px 10px;
+            }
+            .tab:nth-child(2n),
+            .tab:nth-last-child(-n + 2) { border-bottom-color: transparent; }
+            .tab.active { border-bottom-color: var(--highlight-strong); }
+            .tab:last-child { grid-column: auto; }
+            .readiness-summary, .readiness-fields { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 620px) {
+            .app-header {
+                position: sticky;
+                top: 0;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 9px 10px 8px;
+            }
+            .brand-wrap { width: 100%; }
+            .brand-subtitle { font-size: 10px; }
+            .header-actions {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 5px;
+            }
+            .header-actions > .btn,
+            .header-actions > .export-control,
+            .header-actions > .more-control { width: 100%; min-width: 0; }
+            .header-actions .btn,
+            .header-actions summary.btn {
+                width: 100%;
+                min-width: 0;
+                min-height: 44px;
+                padding: 6px;
+                gap: 4px;
+                font-size: 10px;
+                white-space: normal;
+                line-height: 1.15;
+            }
+            .header-actions .btn svg { flex: 0 0 auto; }
+            .header-actions #expertWorkspaceButton span {
+                max-width: 90px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .more-menu, .export-menu { position: fixed; top: 118px; right: 10px; left: 10px; width: auto; }
+            .intake-panel { padding: 18px 14px 28px; }
+            .materials-details:not([open]) { background: #f8fafb; }
+            .main-panel { padding-inline: 10px; }
+            .workspace-hero { border-radius: 11px; padding: 23px 17px; }
+            .workspace-hero h2 { font-size: 29px; }
+            .workspace-hero p { font-size: 12px; }
+            .hero-actions { display: grid; }
+            .hero-actions .btn { width: 100%; min-height: 46px; }
+            .workflow-step { min-height: 60px; }
+            .workspace-hero.has-session .hero-route { display: none; }
+            .run-inspector > summary { align-items: flex-start; }
+            .run-inspector-action { padding-top: 2px; }
+            .run-inspector-title small { max-width: 180px; }
+            .empty-state { min-height: 350px; padding: 24px 15px; }
+            .empty-actions { display: grid; }
+            .empty-actions .btn { width: 100%; min-height: 44px; }
+            #mapContent > .framework-section,
+            #mapContent > .readiness-panel,
+            #mapContent > .journey-panel,
+            #mapContent > .scenario-section { padding: 12px; border-radius: 9px; }
+            .guide-body { padding: 12px; }
+            .guide-actions { margin: 14px -12px -12px; padding: 10px 12px; }
+            .guide-actions .btn { width: 100%; min-height: 44px; }
+            .guide-roles, .guide-glossary-grid, .evidence-pending-grid, .evidence-stats, .evidence-lineage { grid-template-columns: 1fr; }
+            .study-fields { grid-template-columns: 1fr; }
+            .study-submission-footer { align-items: stretch; flex-direction: column; }
+            .study-submission-footer .btn { width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
     </style>
 </head>
 <body data-study-mode="{{ 'true' if study_mode else 'false' }}">
     <header class="app-header">
         <div class="brand-wrap">
-            <div class="brand-mark"><i data-lucide="route" size="19"></i></div>
+            <div class="brand-mark"><i data-lucide="{% if study_mode %}clipboard-list{% else %}route{% endif %}" size="19"></i></div>
             <div>
-                <h1 class="brand-title">SafeBARS</h1>
-                <p class="brand-subtitle">Encounter stress-testing workspace{% if study_mode %} · Study mode{% endif %}</p>
+                <div class="brand-title-row">
+                    <h1 class="brand-title">{% if study_mode %}Research planning study{% else %}SafeBARS{% endif %}</h1>
+                    {% if not study_mode %}<span class="prototype-badge">Research prototype</span>{% endif %}
+                </div>
+                <p class="brand-subtitle">{% if study_mode %}Assigned protocol workspace{% else %}Encounter stress-testing workspace{% endif %}</p>
             </div>
         </div>
         <div class="header-actions">
-            <button class="btn btn-quiet" id="usageGuideButton" title="Open SafeBARS instructions">
+            <button class="btn btn-help" id="usageGuideButton" title="Open SafeBARS instructions">
                 <i data-lucide="circle-help" size="16"></i><span>How to use</span>
             </button>
-            <button class="btn btn-quiet" id="sampleButton" title="Load sample protocol">
-                <i data-lucide="file-input" size="16"></i><span>Load sample</span>
-            </button>
-            <button class="btn btn-quiet" id="newVersionButton" title="Create a new protocol version while preserving this review record" disabled>
-                <i data-lucide="git-branch-plus" size="16"></i><span>New version</span>
-            </button>
-            <div class="export-control">
+            <div class="export-control" id="exportControl">
                 <button class="btn btn-quiet" id="exportButton" title="Export session" aria-haspopup="menu" aria-expanded="false" disabled>
                     <i data-lucide="download" size="16"></i><span>Export</span><i data-lucide="chevron-down" size="14"></i>
                 </button>
@@ -1206,14 +1996,38 @@
                     <button class="export-option" type="button" data-export-format="research-design" role="menuitem">
                         <i data-lucide="notebook-tabs" size="17"></i><span class="export-option-copy"><span class="export-option-title">Research design (.docx)</span><span class="export-option-note">Methods, participant journey, safeguards, data plan, trade-offs, and next actions</span></span>
                     </button>
+                    {% if study_mode %}
+                    <button class="export-option" type="button" data-export-format="study" role="menuitem">
+                        <i data-lucide="timer" size="17"></i><span class="export-option-copy"><span class="export-option-title">Study record (.json)</span><span class="export-option-note">Pseudonymous manifest, task events, timing, and outcome counts</span></span>
+                    </button>
+                    {% endif %}
                 </div>
             </div>
             <button class="btn btn-quiet" id="expertWorkspaceButton" title="Open the current protocol's expert review">
-                <i data-lucide="user-check" size="16"></i><span id="expertWorkspaceLabel">Expert workspace</span>
+                <i data-lucide="user-check" size="16"></i><span id="expertWorkspaceLabel">Expert review for this case</span>
             </button>
-            <a class="btn btn-quiet" href="/safebars/v1" title="Open the earlier research rehearsal workspace">
-                <i data-lucide="history" size="16"></i><span>Research rehearsal</span>
-            </a>
+            {% if not study_mode %}
+            <details class="more-control" id="moreControl">
+                <summary class="btn btn-quiet" title="More workspace actions"><i data-lucide="ellipsis" size="17"></i><span>More</span></summary>
+                <div class="more-menu">
+                    <button class="more-option" id="sampleButton" type="button" title="Load sample protocol">
+                        <i data-lucide="file-input" size="17"></i><span><strong>Load sample</strong><small>Explore a complete example</small></span>
+                    </button>
+                    <button class="more-option" id="newVersionButton" type="button" title="Create a new protocol version while preserving this review record" disabled>
+                        <i data-lucide="git-branch-plus" size="17"></i><span><strong>New version</strong><small>Preserve this review record</small></span>
+                    </button>
+                    <a class="more-option" href="/safebars/expert" title="Open the ethics expert caseload">
+                        <i data-lucide="inbox" size="17"></i><span><strong>Expert workspace caseload</strong><small>Browse assigned review requests</small></span>
+                    </a>
+                    <a class="more-option" href="/safebars/v1" title="Open the earlier research rehearsal workspace">
+                        <i data-lucide="history" size="17"></i><span><strong>Research rehearsal</strong><small>Open the earlier workspace</small></span>
+                    </a>
+                </div>
+            </details>
+            {% else %}
+            <button id="sampleButton" hidden type="button"></button>
+            <button id="newVersionButton" hidden type="button" disabled></button>
+            {% endif %}
         </div>
     </header>
 
@@ -1221,19 +2035,50 @@
         <aside class="intake-panel">
             <div class="panel-heading">
                 <div>
-                    <h2 class="section-heading">Protocol materials</h2>
+                    <div class="panel-eyebrow">Step 1 · Protocol foundation</div>
+                    <h2 class="section-heading intake-title">Add what you already know</h2>
                     <p class="section-kicker">Case ID <span id="sessionLabel" title="Random case identifier used to reconnect this browser to the saved record; it is not an ethics approval number.">not created</span></p>
                 </div>
             </div>
 
+            {% if study_mode %}
+            <section class="study-setup" id="studySetupPanel">
+                <h3>Study session setup</h3>
+                <p class="study-setup-copy">Enter assigned codes only. Do not enter a name, email address, institution, or other direct identifier. These fields are validated by the server and become read-only when the case is created.</p>
+                <div class="study-fields">
+                    <div class="field"><label for="studyId">Study ID</label><input id="studyId" type="text" placeholder="SB-PILOT"></div>
+                    <div class="field"><label for="studyParticipantId">Participant code</label><input id="studyParticipantId" type="text" placeholder="P001" autocomplete="off"></div>
+                    <div class="field"><label for="studyCondition">Assigned workspace</label><select id="studyCondition"><option value="safebars_full">Workspace A</option><option value="general_chat">Workspace B</option></select></div>
+                    <div class="field"><label for="studyCaseId">Case ID</label><input id="studyCaseId" type="text" placeholder="CASE-A"></div>
+                    <div class="field"><label for="studyOrder">Task order</label><input id="studyOrder" type="number" min="1" max="100" value="1"></div>
+                </div>
+                <label class="study-consent"><input id="studyConsentConfirmed" type="checkbox"><span>I confirm that study consent has been recorded using the approved procedure. This checkbox does not store a signature or real name.</span></label>
+                <div class="study-actions">
+                    <button class="btn btn-teal" id="startStudyTaskButton" type="button" disabled><i data-lucide="play" size="14"></i>Start task</button>
+                    <button class="btn btn-primary" id="completeStudyTaskButton" type="button" disabled><i data-lucide="check-circle" size="14"></i>Complete task</button>
+                    <button class="btn" id="downloadStudyRecordButton" type="button" disabled><i data-lucide="download" size="14"></i>Study record</button>
+                    <button class="btn btn-quiet" id="jumpToStudySubmissionButton" type="button" disabled><i data-lucide="arrow-down-to-line" size="14"></i>Final submission <span id="studySubmissionCount">0/3</span></button>
+                </div>
+                <div class="study-status" id="studyStatus"><strong>Not configured.</strong> Complete the assigned codes and protocol materials, then build the encounter map.</div>
+            </section>
+            {% endif %}
+
             <button class="btn btn-teal full" id="guidedIntakeButton">
                 <i data-lucide="messages-square" size="16"></i><span id="guidedIntakeLabel">Start quick intake</span>
             </button>
-            <p class="section-kicker" style="margin:7px 0 12px">Six short questions organise the protocol; AI projects receive one structured ethics-review supplement.</p>
+            <p class="section-kicker" id="guidedIntakeCopy" style="margin:7px 0 12px">Six short questions scaffold your review context, plan, participants, procedure, safeguards, and data. AI-related projects can then add a separate governance section.</p>
 
+            <div class="material-progress" aria-live="polite">
+                <div class="material-progress-copy"><span id="materialProgressText">No source material added yet</span><span id="materialProgressPercent">0%</span></div>
+                <div class="material-progress-track" aria-hidden="true"><span id="materialProgressBar"></span></div>
+            </div>
+
+            <details class="materials-details" id="materialsDetails" open>
+                <summary><span><i data-lucide="files" size="15"></i>Source materials</span><span class="materials-summary-note" id="materialFieldCount">0 of 10 fields</span></summary>
+                <div class="materials-body">
             <div class="field">
                 <label for="projectTitle">Project title</label>
-                <input id="projectTitle" type="text" value="Sensitive fieldwork plan">
+                <input id="projectTitle" type="text" placeholder="Give this protocol a short working title">
             </div>
             <div class="field">
                 <label for="projectReviewContext">Research area and ethics-review context</label>
@@ -1281,6 +2126,8 @@
                     </div>
                 </details>
             </div>
+                </div>
+            </details>
 
             <div class="switch-row">
                 <span>Project researches or uses AI</span>
@@ -1305,7 +2152,36 @@
             </div>
         </aside>
 
-        <main class="main-panel">
+        <main class="main-panel" id="mainPanel">
+            <section class="workspace-hero" id="workspaceHero" aria-labelledby="workspaceHeroTitle">
+                <div class="hero-copy">
+                    <div class="hero-eyebrow"><span class="hero-live-dot"></span>{% if study_mode %}Assigned research task{% else %}Pre-submission ethics workspace{% endif %}</div>
+                    <h2 id="workspaceHeroTitle">{% if study_mode %}Build an inspectable response from the assigned materials.{% else %}Prepare a research plan that humans can inspect.{% endif %}</h2>
+                    <p>{% if study_mode %}Follow the task instructions, save the common final submission, and complete the task when all required fields are recorded.{% else %}SafeBARS turns protocol materials into a participant journey, bounded scenario tests, and focused questions for a qualified ethics expert—before the plan reaches a committee.{% endif %}</p>
+                    <div class="hero-actions">
+                        <button class="btn btn-hero-primary" id="heroIntakeButton" type="button"><i data-lucide="sparkles" size="17"></i>Start guided setup</button>
+                        {% if not study_mode %}<button class="btn btn-hero-secondary" id="heroSampleButton" type="button"><i data-lucide="play-circle" size="17"></i>Explore the sample</button>{% endif %}
+                    </div>
+                    <div class="hero-boundary"><i data-lucide="shield-check" size="15"></i><span>Outputs support an application draft and research design. They are not institutional ethics approval.</span></div>
+                </div>
+                <div class="hero-route" aria-label="SafeBARS three-party workflow">
+                    <article class="route-card route-researcher">
+                        <span class="route-icon"><i data-lucide="notebook-pen" size="19"></i></span>
+                        <div><span class="route-step">01 · Researcher</span><strong>Supplies context</strong><small>Plans, people, consent, procedures</small></div>
+                    </article>
+                    <span class="route-connector" aria-hidden="true"><i data-lucide="arrow-down" size="16"></i></span>
+                    <article class="route-card route-system">
+                        <span class="route-icon"><i data-lucide="scan-search" size="19"></i></span>
+                        <div><span class="route-step">02 · SafeBARS</span><strong>Stress-tests encounters</strong><small>Maps, traces, provenance, trade-offs</small></div>
+                    </article>
+                    <span class="route-connector" aria-hidden="true"><i data-lucide="arrow-down" size="16"></i></span>
+                    <article class="route-card route-expert">
+                        <span class="route-icon"><i data-lucide="user-round-check" size="19"></i></span>
+                        <div><span class="route-step">03 · Ethics expert</span><strong>Resolves boundaries</strong><small>Only questions requiring human judgment</small></div>
+                    </article>
+                </div>
+            </section>
+
             <div class="workflow-bar">
                 <div class="workflow-step active" id="workflowIntake">
                     <div class="workflow-index">1</div>
@@ -1325,37 +2201,50 @@
                 </div>
             </div>
 
-            <div class="agent-strip" id="agentStrip">
-                <div class="agent-item"><div class="agent-name"><span>Encounter Orchestrator</span><span class="status-dot"></span></div><div class="agent-detail">Waiting for protocol materials.</div></div>
-                <div class="agent-item"><div class="agent-name"><span>Breakdown Scenario Agent</span><span class="status-dot"></span></div><div class="agent-detail">No scenario queue.</div></div>
-                <div class="agent-item"><div class="agent-name"><span>Relationship and Power Agent</span><span class="status-dot"></span></div><div class="agent-detail">No relationship check.</div></div>
-                <div class="agent-item"><div class="agent-name"><span>Boundary and Handoff Agent</span><span class="status-dot"></span></div><div class="agent-detail">No boundary review.</div></div>
-            </div>
-
-            <details class="audit-plan-panel" open>
+            <details class="run-inspector">
                 <summary>
-                    <span>Inspectable audit plan</span>
-                    <span class="audit-plan-copy">Material-routed tasks, tools, dependencies, and stop conditions</span>
+                    <span class="run-inspector-title"><i data-lucide="bot" size="16"></i><span><strong>How this run is produced</strong><small>Agent roles, bounded tools, provenance, and stopping rules</small></span></span>
+                    <span class="run-inspector-action">Inspect details <i data-lucide="chevron-down" size="15"></i></span>
                 </summary>
-                <div class="task-plan" id="taskPlan">
-                    <div class="task-meta">Build an encounter map to let the Orchestrator propose a bounded task plan.</div>
+                <div class="run-inspector-body">
+                    <div class="agent-strip" id="agentStrip">
+                        <div class="agent-item"><div class="agent-name"><span>Encounter Orchestrator</span><span class="status-dot"></span></div><div class="agent-detail">Waiting for protocol materials.</div></div>
+                        <div class="agent-item"><div class="agent-name"><span>Breakdown Scenario Agent</span><span class="status-dot"></span></div><div class="agent-detail">No scenario queue.</div></div>
+                        <div class="agent-item"><div class="agent-name"><span>Relationship and Power Agent</span><span class="status-dot"></span></div><div class="agent-detail">No relationship check.</div></div>
+                        <div class="agent-item"><div class="agent-name"><span>Boundary and Handoff Agent</span><span class="status-dot"></span></div><div class="agent-detail">No boundary review.</div></div>
+                    </div>
+
+                    <details class="audit-plan-panel">
+                        <summary>
+                            <span>Inspectable audit plan</span>
+                            <span class="audit-plan-copy">Material-routed tasks, tools, dependencies, and stop conditions</span>
+                        </summary>
+                        <div class="task-plan" id="taskPlan">
+                            <div class="task-meta">Build an encounter map to let the Orchestrator propose a bounded task plan.</div>
+                        </div>
+                    </details>
                 </div>
             </details>
 
-            <nav class="tabbar" aria-label="Workspace views">
-                <button class="tab active" data-tab="map"><i data-lucide="map" size="15"></i>Encounter map <span class="count" id="mapCount">0</span></button>
-                <button class="tab" data-tab="traces" title="Step-by-step rehearsals of selected difficult situations"><i data-lucide="git-branch" size="15"></i>Scenario tests <span class="count" id="traceCount">0</span></button>
-                <button class="tab" data-tab="issues" title="Protocol gaps that need a researcher decision"><i data-lucide="list-checks" size="15"></i>Decisions <span class="count" id="issueCount">0</span></button>
-                <button class="tab" data-tab="handoffs" title="Questions deferred to a qualified person"><i data-lucide="send" size="15"></i>Expert review <span class="count" id="handoffCount">0</span></button>
-                <button class="tab" data-tab="evidence" title="Inspectable technical validation and pending human-study evidence"><i data-lucide="chart-no-axes-combined" size="15"></i>Evidence <span class="count" id="evidenceCaseCount">—</span></button>
+            <nav class="tabbar" aria-label="Workspace views" role="tablist">
+                <button class="tab active" id="tabButtonMap" data-tab="map" role="tab" aria-selected="true" aria-controls="tab-map"><i data-lucide="map" size="15"></i>Encounter map <span class="count" id="mapCount">0</span></button>
+                <button class="tab" id="tabButtonTraces" data-tab="traces" role="tab" aria-selected="false" aria-controls="tab-traces" tabindex="-1" title="Step-by-step rehearsals of selected difficult situations"><i data-lucide="git-branch" size="15"></i>Scenario tests <span class="count" id="traceCount">0</span></button>
+                <button class="tab" id="tabButtonIssues" data-tab="issues" role="tab" aria-selected="false" aria-controls="tab-issues" tabindex="-1" title="Protocol gaps that need a researcher decision"><i data-lucide="list-checks" size="15"></i>Decisions <span class="count" id="issueCount">0</span></button>
+                <button class="tab" id="tabButtonHandoffs" data-tab="handoffs" role="tab" aria-selected="false" aria-controls="tab-handoffs" tabindex="-1" title="Questions deferred to a qualified person"><i data-lucide="send" size="15"></i>Expert review <span class="count" id="handoffCount">0</span></button>
+                <button class="tab" id="tabButtonEvidence" data-tab="evidence" role="tab" aria-selected="false" aria-controls="tab-evidence" tabindex="-1" title="Inspectable technical validation and pending human-study evidence"{% if study_mode %} hidden{% endif %}><i data-lucide="chart-no-axes-combined" size="15"></i>Evidence <span class="count" id="evidenceCaseCount">—</span></button>
             </nav>
 
-            <section class="tabview active" id="tab-map">
+            <section class="tabview active" id="tab-map" role="tabpanel" aria-labelledby="tabButtonMap" tabindex="0">
                 <div class="empty-state" id="mapEmpty">
                     <div>
-                        <i data-lucide="waypoints" size="34"></i>
-                        <div class="empty-title">No encounter map yet</div>
-                        <div class="empty-copy">Add protocol materials or load the sample, then build the map.</div>
+                        <span class="empty-icon"><i data-lucide="waypoints" size="28"></i></span>
+                        <div class="empty-eyebrow">Your first output</div>
+                        <div class="empty-title">Build the participant encounter map</div>
+                        <div class="empty-copy">Use the guided setup or add existing protocol materials. SafeBARS will show the journey before it asks you to run any scenario tests.</div>
+                        <div class="empty-actions">
+                            <button class="btn btn-primary" id="emptyGuidedIntakeButton" type="button"><i data-lucide="messages-square" size="15"></i>Start guided setup</button>
+                            {% if not study_mode %}<button class="btn" id="emptySampleButton" type="button"><i data-lucide="file-input" size="15"></i>Load sample</button>{% endif %}
+                        </div>
                     </div>
                 </div>
                 <div id="mapContent" hidden>
@@ -1434,7 +2323,7 @@
                 </div>
             </section>
 
-            <section class="tabview" id="tab-traces">
+            <section class="tabview" id="tab-traces" role="tabpanel" aria-labelledby="tabButtonTraces" tabindex="0">
                 <div class="empty-state" id="traceEmpty"><div><i data-lucide="git-branch" size="34"></i><div class="empty-title">No scenario results yet</div><div class="empty-copy">Select difficult situations in the encounter map, then choose “Run selected traces”.</div></div></div>
                 <div class="trace-layout" id="traceContent" hidden>
                     <div class="trace-list" id="traceList"></div>
@@ -1442,7 +2331,7 @@
                 </div>
             </section>
 
-            <section class="tabview" id="tab-issues">
+            <section class="tabview" id="tab-issues" role="tabpanel" aria-labelledby="tabButtonIssues" tabindex="0">
                 <div class="empty-state" id="issueEmpty"><div><i data-lucide="list-checks" size="34"></i><div class="empty-title">No researcher decisions yet</div><div class="empty-copy">After a scenario test finds a protocol gap or ambiguity, it will appear here with a proposed change.</div></div></div>
                 <div id="issueContent" hidden>
                     <div class="filterbar">
@@ -1453,12 +2342,12 @@
                 </div>
             </section>
 
-            <section class="tabview" id="tab-handoffs">
+            <section class="tabview" id="tab-handoffs" role="tabpanel" aria-labelledby="tabButtonHandoffs" tabindex="0">
                 <div class="empty-state" id="handoffEmpty"><div><i data-lucide="send" size="34"></i><div class="empty-title">Expert review is not needed yet</div><div class="empty-copy" id="handoffEmptyCopy">Run the audit first. If a question requires human judgment, SafeBARS will create a review request here.</div></div></div>
                 <div class="handoff-list" id="handoffList" hidden></div>
             </section>
 
-            <section class="tabview" id="tab-evidence">
+            <section class="tabview" id="tab-evidence" role="tabpanel" aria-labelledby="tabButtonEvidence" tabindex="0">
                 <div class="evidence-hero">
                     <div>
                         <div class="evidence-eyebrow">Inspectable prototype evidence</div>
@@ -1506,11 +2395,64 @@
                 </div>
             </section>
         </main>
+
+        {% if study_mode %}
+        <main class="baseline-panel" id="baselinePanel" hidden>
+            <section class="baseline-card">
+                <div class="baseline-header">
+                    <h2>Assigned research workspace</h2>
+                    <p>Use the available workspace to complete the task from the supplied source materials. The provider, model, and task settings are fixed by the study protocol.</p>
+                </div>
+                <div class="study-chat-messages" id="studyChatMessages">
+                    <div class="study-chat-empty">Create the study workspace from the shared source materials to begin.</div>
+                </div>
+                <div class="study-chat-compose">
+                    <label for="studyChatInput">Message</label>
+                    <textarea id="studyChatInput" maxlength="2000" placeholder="Ask for help with the assigned research-planning task."></textarea>
+                    <div class="study-chat-actions">
+                        <span class="study-chat-status" id="studyChatStatus">0 of 12 turns used.</span>
+                        <button class="btn btn-primary" id="sendStudyChatButton" type="button" disabled><i data-lucide="send" size="15"></i>Send</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+        {% endif %}
     </div>
 
-    <dialog class="intake-dialog" id="intakeDialog">
+    {% if study_mode %}
+    <section class="study-submission-shell" id="studySubmissionPanel" hidden>
+        <div class="study-submission-panel">
+            <div class="study-submission-header">
+                <h2>Common final task submission</h2>
+                <p>This is the identical outcome form for both assigned conditions. Submit one final artifact and exactly two decision rationales. The task cannot be completed until all three fields are saved.</p>
+            </div>
+            <div class="study-submission-body">
+                <div class="field">
+                    <label for="studyFinalArtifact">Final artifact</label>
+                    <textarea id="studyFinalArtifact" maxlength="20000" placeholder="Paste the final response requested in the task instructions."></textarea>
+                </div>
+                <div class="study-submission-rationales">
+                    <div class="field">
+                        <label for="studyRationale1">Decision rationale 1 · revision</label>
+                        <textarea id="studyRationale1" maxlength="4000" placeholder="Identify or quote the exact source passage, then explain one consequential revision and why you made it."></textarea>
+                    </div>
+                    <div class="field">
+                        <label for="studyRationale2">Decision rationale 2 · contestation or handoff</label>
+                        <textarea id="studyRationale2" maxlength="4000" placeholder="Identify or quote the exact source passage, then explain what you rejected, substantially changed, or deferred and why."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="study-submission-footer">
+                <span class="study-submission-status" id="studySubmissionStatus">Create and start the assigned task first.</span>
+                <button class="btn btn-teal" id="saveStudySubmissionButton" type="button" disabled><i data-lucide="save" size="15"></i>Save final submission</button>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <dialog class="intake-dialog" id="intakeDialog" aria-labelledby="intakeDialogTitle">
         <div class="intake-header">
-            <div><h2 class="section-heading">Quick guided protocol intake</h2><div class="intake-progress" id="intakeProgress">Step 1</div></div>
+            <div><h2 class="section-heading" id="intakeDialogTitle">Quick guided protocol intake</h2><div class="intake-progress" id="intakeProgress">Step 1</div></div>
             <button class="btn btn-quiet btn-icon" id="closeIntakeButton" type="button" title="Close guided intake" aria-label="Close guided intake"><span class="dialog-close-symbol" aria-hidden="true">&times;</span></button>
         </div>
         <div class="intake-messages" id="intakeMessages"></div>
@@ -1528,9 +2470,9 @@
         </div>
     </dialog>
 
-    <dialog class="guide-dialog" id="usageGuideDialog">
+    <dialog class="guide-dialog" id="usageGuideDialog" aria-labelledby="usageGuideTitle">
         <div class="intake-header">
-            <div><h2 class="section-heading">How to use SafeBARS</h2><div class="intake-progress">Researcher workflow, expert review, and record continuity</div></div>
+            <div><h2 class="section-heading" id="usageGuideTitle">How to use SafeBARS</h2><div class="intake-progress">Researcher workflow, expert review, and record continuity</div></div>
             <button class="btn btn-quiet btn-icon" id="closeUsageGuideButton" type="button" title="Close instructions" aria-label="Close instructions"><span class="dialog-close-symbol" aria-hidden="true">&times;</span></button>
         </div>
         <div class="guide-body">
@@ -1566,13 +2508,20 @@
                 </div>
             </section>
             <div class="guide-warning"><strong>Keep your record:</strong> use the in-page “Open expert review” button and “Researcher workspace” return link in the same browser tab. The current prototype stores access credentials in that tab. Closing the tab, clearing browser storage, or opening the generic expert caseload directly may remove the local route back to the case. Export important records before ending a session.</div>
+            <div class="guide-actions">
+                <button class="btn btn-primary" id="guideStartIntakeButton" type="button"><i data-lucide="sparkles" size="16"></i>Start guided setup</button>
+                {% if not study_mode %}<button class="btn" id="guideLoadSampleButton" type="button"><i data-lucide="file-input" size="16"></i>Explore the sample</button>{% endif %}
+                <button class="btn btn-quiet" id="guideDoneButton" type="button">Return to workspace</button>
+            </div>
         </div>
     </dialog>
 
-    <div class="toast" id="toast"><i data-lucide="info" size="17"></i><div class="toast-copy" id="toastCopy"></div></div>
-    <div class="loading-overlay" id="loadingOverlay"><div class="loading-box"><i class="spinner" data-lucide="loader-circle" size="26"></i><div class="empty-title" id="loadingTitle">Working</div><div class="empty-copy" id="loadingCopy">SafeBARS is updating the shared audit state.</div></div></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="info" size="17"></i><div class="toast-copy" id="toastCopy"></div></div>
+    <div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite" aria-hidden="true"><div class="loading-box"><i class="spinner" data-lucide="loader-circle" size="26"></i><div class="empty-title" id="loadingTitle">Working</div><div class="empty-copy" id="loadingCopy">SafeBARS is updating the shared audit state.</div></div></div>
 
     <script>
+        const STUDY_MODE = document.body.dataset.studyMode === "true";
+        const currentSessionStorageKey = STUDY_MODE ? "safebars_current_study_session" : "safebars_current_session";
         const state = {
             options: null,
             session: null,
@@ -1593,6 +2542,8 @@
             technicalEvidence: null,
             evidenceDomainFilter: "all",
             selectedEvidenceCaseId: null,
+            studyManifest: null,
+            studySubmissionDirty: false,
         };
 
         const artifactInputs = {
@@ -1639,6 +2590,36 @@
         const $ = (id) => document.getElementById(id);
         const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
 
+        function studyConditionValue() {
+            if (!STUDY_MODE) return "";
+            return state.session?.study_manifest?.condition || $("studyCondition").value;
+        }
+
+        function isGeneralChatCondition() {
+            return STUDY_MODE && studyConditionValue() === "general_chat";
+        }
+
+        function renderStudyCondition() {
+            if (!STUDY_MODE) return;
+            const generalChat = isGeneralChatCondition();
+            $("mainPanel").hidden = generalChat;
+            $("baselinePanel").hidden = !generalChat;
+            $("usageGuideButton").hidden = generalChat;
+            $("expertWorkspaceButton").hidden = generalChat;
+            $("exportControl").hidden = generalChat;
+            $("guidedIntakeButton").hidden = generalChat;
+            $("guidedIntakeCopy").hidden = generalChat;
+            $("useLlm").checked = true;
+            $("useLlm").disabled = true;
+            const provider = state.options?.active_provider;
+            $("llmLabel").textContent = provider
+                ? `Study model fixed · ${provider.label} · ${provider.model}`
+                : "Study model required · no provider configured";
+            $("buildMapButton").innerHTML = generalChat
+                ? `<i data-lucide="message-square" size="17"></i>Create study workspace`
+                : `<i data-lucide="network" size="17"></i>Build encounter map`;
+        }
+
         async function api(url, options = {}) {
             const {accessToken, ...fetchOptions} = options;
             const token = accessToken || state.access?.researcher_token;
@@ -1658,6 +2639,8 @@
             $("loadingTitle").textContent = title;
             $("loadingCopy").textContent = copy;
             $("loadingOverlay").classList.toggle("show", show);
+            $("loadingOverlay").setAttribute("aria-hidden", String(!show));
+            document.body.setAttribute("aria-busy", String(show));
         }
 
         let toastTimer;
@@ -1670,8 +2653,43 @@
         }
 
         function switchTab(name) {
-            document.querySelectorAll(".tab").forEach(button => button.classList.toggle("active", button.dataset.tab === name));
-            document.querySelectorAll(".tabview").forEach(view => view.classList.toggle("active", view.id === `tab-${name}`));
+            document.querySelectorAll(".tab").forEach(button => {
+                const active = button.dataset.tab === name;
+                button.classList.toggle("active", active);
+                button.setAttribute("aria-selected", String(active));
+                button.tabIndex = active ? 0 : -1;
+            });
+            document.querySelectorAll(".tabview").forEach(view => {
+                const active = view.id === `tab-${name}`;
+                view.classList.toggle("active", active);
+                view.setAttribute("aria-hidden", String(!active));
+            });
+        }
+
+        function updateMaterialProgress() {
+            const fieldIds = [
+                "projectTitle",
+                "projectReviewContext",
+                "projectContext",
+                "targetPeople",
+                "artifactRecruitment",
+                "artifactConsent",
+                "artifactInterview",
+                "artifactActivity",
+                "artifactSafety",
+                "artifactFollowUp",
+            ];
+            if ($("usesAi").checked) fieldIds.push("artifactAiGovernance");
+            const filled = fieldIds.filter(id => ($(id)?.value || "").trim()).length;
+            const total = fieldIds.length;
+            const percent = Math.round((filled / total) * 100);
+            $("materialProgressBar").style.width = `${percent}%`;
+            $("materialProgressPercent").textContent = `${percent}%`;
+            $("materialFieldCount").textContent = `${filled} of ${total} fields`;
+            $("materialProgressText").textContent = filled
+                ? `${filled} source field${filled === 1 ? "" : "s"} ready for review`
+                : "No source material added yet";
+            $("workspaceHero").classList.toggle("has-session", !!state.session);
         }
 
         function updateAiSupplementVisibility() {
@@ -1684,7 +2702,7 @@
         function collectPayload() {
             const artifacts = {};
             Object.entries(artifactInputs).forEach(([key, id]) => artifacts[key] = $(id).value.trim());
-            return {
+            const payload = {
                 project: {
                     title: $("projectTitle").value.trim(),
                     review_context: $("projectReviewContext").value.trim(),
@@ -1697,11 +2715,22 @@
                 use_llm: $("useLlm").checked,
                 intake_transcript: state.intakeTranscript,
             };
+            if (STUDY_MODE) {
+                payload.study_manifest = {
+                    study_id: $("studyId").value.trim(),
+                    participant_id: $("studyParticipantId").value.trim(),
+                    condition: $("studyCondition").value.trim(),
+                    case_id: $("studyCaseId").value.trim(),
+                    order: Number($("studyOrder").value),
+                    consent_confirmed: $("studyConsentConfirmed").checked,
+                };
+            }
+            return payload;
         }
 
         function persistCurrentSession() {
             if (!state.session || !state.access) return;
-            sessionStorage.setItem("safebars_current_session", state.session.id);
+            sessionStorage.setItem(currentSessionStorageKey, state.session.id);
             sessionStorage.setItem(`safebars_access_${state.session.id}`, JSON.stringify(state.access));
         }
 
@@ -1718,10 +2747,12 @@
             Object.entries(artifactInputs).forEach(([key, id]) => $(id).value = state.session.artifacts?.[key] || "");
             state.intakeTranscript = state.session.intake_transcript || [];
             state.intakeComplete = state.intakeTranscript.some(item => /intake (?:is )?complete|quick intake complete/i.test(item.text || ""));
+            state.studyManifest = state.session.study_manifest || null;
+            if (STUDY_MODE && state.studyManifest) populateStudyFields(state.studyManifest);
         }
 
         async function restoreCurrentSession() {
-            const sessionId = sessionStorage.getItem("safebars_current_session");
+            const sessionId = sessionStorage.getItem(currentSessionStorageKey);
             if (!sessionId) return false;
             try {
                 const access = JSON.parse(sessionStorage.getItem(`safebars_access_${sessionId}`) || "null");
@@ -1729,6 +2760,9 @@
                 state.access = access;
                 const result = await api(`/api/safebars/v2/sessions/${sessionId}`);
                 state.session = result.session;
+                if (STUDY_MODE && !state.session.study_manifest) {
+                    throw new Error("The restored record is not an instrumented study session.");
+                }
                 state.analysisDirty = false;
                 state.selectedTraceId = state.session.traces?.[0]?.id || null;
                 populateInputsFromSession();
@@ -1737,11 +2771,218 @@
                 toast(`Restored protocol version ${state.session.lineage?.version_number || 1}.`);
                 return true;
             } catch {
-                sessionStorage.removeItem("safebars_current_session");
+                sessionStorage.removeItem(currentSessionStorageKey);
                 sessionStorage.removeItem(`safebars_access_${sessionId}`);
                 state.access = null;
                 return false;
             }
+        }
+
+        function populateStudyFields(manifest) {
+            if (!STUDY_MODE || !manifest) return;
+            $("studyId").value = manifest.study_id || "";
+            $("studyParticipantId").value = manifest.participant_id || "";
+            $("studyCondition").value = manifest.condition || "";
+            $("studyCaseId").value = manifest.case_id || "";
+            $("studyOrder").value = manifest.order || 1;
+            $("studyConsentConfirmed").checked = !!manifest.consent_confirmed;
+        }
+
+        function savedStudySubmissionComplete() {
+            const submission = state.session?.study_submission || {};
+            const rationales = submission.decision_rationales || [];
+            return (submission.final_artifact || "").trim().length >= 40
+                && rationales.length === 2
+                && rationales.every(item => (item || "").trim().length >= 10);
+        }
+
+        function renderStudySubmission() {
+            if (!STUDY_MODE) return;
+            const panel = $("studySubmissionPanel");
+            panel.hidden = !state.session;
+            $("jumpToStudySubmissionButton").disabled = !state.session;
+            $("studySubmissionCount").textContent = "0/3";
+            if (!state.session) return;
+            const submission = state.session.study_submission || {};
+            if (!state.studySubmissionDirty) {
+                $("studyFinalArtifact").value = submission.final_artifact || "";
+                $("studyRationale1").value = submission.decision_rationales?.[0] || "";
+                $("studyRationale2").value = submission.decision_rationales?.[1] || "";
+            }
+            const completedFields = [
+                ($("studyFinalArtifact").value || "").trim().length >= 40,
+                ($("studyRationale1").value || "").trim().length >= 10,
+                ($("studyRationale2").value || "").trim().length >= 10,
+            ].filter(Boolean).length;
+            $("studySubmissionCount").textContent = `${completedFields}/3`;
+            const status = state.session.study_manifest?.task_status || "configured";
+            const editable = status === "in_progress";
+            ["studyFinalArtifact", "studyRationale1", "studyRationale2"]
+                .forEach(id => $(id).disabled = !editable);
+            $("saveStudySubmissionButton").disabled = !editable;
+            if (status === "completed") {
+                $("studySubmissionStatus").textContent = `Task completed · final submission revision ${submission.revision_number || 1} is frozen.`;
+            } else if (savedStudySubmissionComplete()) {
+                $("studySubmissionStatus").textContent = `Saved revision ${submission.revision_number} at ${submission.saved_at}. Edit and save again if needed.`;
+            } else {
+                $("studySubmissionStatus").textContent = "Required before completion: final artifact (40+ characters) and two rationales (10+ characters each).";
+            }
+        }
+
+        function renderStudyChat() {
+            if (!STUDY_MODE) return;
+            const messages = $("studyChatMessages");
+            const turns = state.session?.study_chat || [];
+            messages.replaceChildren();
+            if (!state.session) {
+                const empty = document.createElement("div");
+                empty.className = "study-chat-empty";
+                empty.textContent = "Create the study workspace from the shared source materials to begin.";
+                messages.appendChild(empty);
+            } else if (!turns.length) {
+                const empty = document.createElement("div");
+                empty.className = "study-chat-empty";
+                empty.textContent = "The measured chat is ready. Ask your first task-related question.";
+                messages.appendChild(empty);
+            } else {
+                turns.forEach(turn => {
+                    const user = document.createElement("div");
+                    user.className = "study-chat-message user";
+                    user.textContent = turn.user_text || "";
+                    const userMeta = document.createElement("div");
+                    userMeta.className = "study-chat-meta";
+                    userMeta.textContent = `Turn ${turn.turn_index} · researcher`;
+                    user.appendChild(userMeta);
+                    messages.appendChild(user);
+
+                    const assistant = document.createElement("div");
+                    assistant.className = `study-chat-message ${turn.ok ? "assistant" : "error"}`;
+                    assistant.textContent = turn.ok
+                        ? (turn.assistant_text || "(Empty model response)")
+                        : `Model call failed: ${turn.error || turn.error_type || "unknown error"}`;
+                    const assistantMeta = document.createElement("div");
+                    assistantMeta.className = "study-chat-meta";
+                    assistantMeta.textContent = `${Number(turn.latency_ms || 0).toFixed(0)} ms`;
+                    assistant.appendChild(assistantMeta);
+                    messages.appendChild(assistant);
+                });
+                messages.scrollTop = messages.scrollHeight;
+            }
+            const status = state.session?.study_manifest?.task_status;
+            const active = isGeneralChatCondition() && status === "in_progress" && turns.length < 12;
+            $("studyChatInput").disabled = !active;
+            $("sendStudyChatButton").disabled = !active;
+            $("studyChatStatus").textContent = status === "completed"
+                ? `Task complete · ${turns.length} of 12 turns used.`
+                : `${turns.length} of 12 turns used${state.session ? "." : " · create the workspace first."}`;
+        }
+
+        async function sendStudyChat() {
+            if (!STUDY_MODE || !state.session || !isGeneralChatCondition()) return;
+            const message = $("studyChatInput").value.trim();
+            if (!message) return toast("Enter a message before sending.", true);
+            $("sendStudyChatButton").disabled = true;
+            $("studyChatStatus").textContent = "Waiting for the fixed study model…";
+            try {
+                const result = await api(`/api/safebars/v2/sessions/${state.session.id}/study/chat`, {
+                    method: "POST",
+                    body: JSON.stringify({message}),
+                });
+                state.session = result.session;
+                $("studyChatInput").value = "";
+                renderAll();
+                if (!result.turn?.ok) toast(result.turn?.error || "The model call failed and was recorded.", true);
+            } catch (error) {
+                toast(error.message, true);
+                renderStudyChat();
+            }
+        }
+
+        async function saveStudySubmission(silent = false) {
+            if (!STUDY_MODE || !state.session) return false;
+            const payload = {
+                final_artifact: $("studyFinalArtifact").value.trim(),
+                decision_rationales: [
+                    $("studyRationale1").value.trim(),
+                    $("studyRationale2").value.trim(),
+                ],
+            };
+            try {
+                const result = await api(`/api/safebars/v2/sessions/${state.session.id}/study/submission`, {
+                    method: "POST",
+                    body: JSON.stringify(payload),
+                });
+                state.session = result.session;
+                state.studySubmissionDirty = false;
+                renderAll();
+                if (!silent) toast(`Final submission revision ${result.submission.revision_number} saved.`);
+                return true;
+            } catch (error) {
+                $("studySubmissionPanel").scrollIntoView({behavior: "smooth", block: "start"});
+                toast(error.message, true);
+                return false;
+            }
+        }
+
+        function renderStudyInstrumentation() {
+            if (!STUDY_MODE) return;
+            const manifest = state.session?.study_manifest || state.studyManifest;
+            const locked = !!manifest;
+            renderStudyCondition();
+            ["studyId", "studyParticipantId", "studyCondition", "studyCaseId", "studyOrder", "studyConsentConfirmed"]
+                .forEach(id => $(id).disabled = locked);
+            if (locked) {
+                ["projectTitle", "projectReviewContext", "projectContext", "targetPeople", ...Object.values(artifactInputs), "usesAi", "useLlm", "guidedIntakeButton", "buildMapButton"]
+                    .forEach(id => { if ($(id)) $(id).disabled = true; });
+            }
+            const status = manifest?.task_status || "not_configured";
+            $("startStudyTaskButton").disabled = !state.session || status !== "configured";
+            $("completeStudyTaskButton").disabled =
+                status !== "in_progress" || !savedStudySubmissionComplete();
+            $("downloadStudyRecordButton").disabled = !state.session;
+            renderStudyChat();
+            renderStudySubmission();
+            if (!manifest) {
+                const action = isGeneralChatCondition() ? "create the study workspace" : "build the encounter map";
+                $("studyStatus").innerHTML = `<strong>Not configured.</strong> Complete the assigned codes and shared source materials, then ${action}. A configured study model is required.`;
+                return;
+            }
+            const timing = status === "completed"
+                ? ` · ${Number(manifest.elapsed_seconds || 0).toFixed(1)} seconds`
+                : (manifest.task_started_at ? ` · started ${escapeHtml(manifest.task_started_at)}` : "");
+            const workspaceLabel = manifest.condition === "general_chat" ? "Workspace B" : "Workspace A";
+            $("studyStatus").innerHTML = `<strong>${escapeHtml(status.replaceAll("_", " "))}</strong> · ${escapeHtml(manifest.participant_id)} · ${workspaceLabel} · ${escapeHtml(manifest.case_id)} · order ${escapeHtml(manifest.order)}${timing}. Assigned fields and model configuration are locked.`;
+        }
+
+        async function startStudyTask(silent = false) {
+            if (!STUDY_MODE || !state.session) return;
+            try {
+                const result = await api(`/api/safebars/v2/sessions/${state.session.id}/study/task/start`, {method: "POST", body: "{}"});
+                state.session = result.session;
+                state.studyManifest = result.manifest;
+                persistCurrentSession();
+                renderStudyInstrumentation();
+                if (!silent) toast("Study task started. Server timing is now active.");
+            } catch (error) {
+                renderStudyInstrumentation();
+                if (!silent) toast(error.message, true);
+                throw error;
+            }
+        }
+
+        async function completeStudyTask() {
+            if (!STUDY_MODE || !state.session || !confirm("Complete this assigned study task? Researcher-side changes will be frozen.")) return;
+            try {
+                if (state.studySubmissionDirty || !savedStudySubmissionComplete()) {
+                    const saved = await saveStudySubmission(true);
+                    if (!saved) return;
+                }
+                const result = await api(`/api/safebars/v2/sessions/${state.session.id}/study/task/complete`, {method: "POST", body: "{}"});
+                state.session = result.session;
+                state.studyManifest = result.manifest;
+                renderAll();
+                toast(`Study task complete · ${Number(result.manifest.elapsed_seconds || 0).toFixed(1)} seconds. Download the study record.`);
+            } catch (error) { toast(error.message, true); }
         }
 
         function selectedScenarioIds() {
@@ -1772,6 +3013,8 @@
             updateAiSupplementVisibility();
             Object.entries(artifactInputs).forEach(([key, id]) => $(id).value = sample.artifacts[key] || "");
             document.querySelectorAll("details.artifact").forEach((details, index) => details.open = index < 3);
+            $("materialsDetails").open = true;
+            updateMaterialProgress();
             markAnalysisDirty();
             toast("Sample protocol loaded.");
         }
@@ -1917,6 +3160,7 @@
                 $(step.appendTarget).value = `${existing}${existing ? "\n\n" : ""}AI governance details: ${answer}`;
             } else if (step.target) $(step.target).value = answer;
             markAnalysisDirty();
+            updateMaterialProgress();
         }
 
         function submitIntakeAnswer() {
@@ -1947,17 +3191,32 @@
         }
 
         async function buildMap() {
-            setLoading(true, "Building encounter map", "The Orchestrator is indexing passages and mapping stages.");
+            const generalChat = isGeneralChatCondition();
+            setLoading(
+                true,
+                generalChat ? "Creating study workspace" : "Building encounter map",
+                generalChat
+                    ? "The shared source materials and fixed study model are being locked."
+                    : "The Orchestrator is indexing passages and mapping stages.",
+            );
             try {
                 const result = await api("/api/safebars/v2/sessions", {method: "POST", body: JSON.stringify(collectPayload())});
                 state.session = result.session;
                 state.access = result.access;
                 state.analysisDirty = false;
+                state.studySubmissionDirty = false;
                 persistCurrentSession();
+                if (STUDY_MODE) await startStudyTask(true);
                 state.selectedTraceId = null;
                 renderAll();
-                switchTab("map");
-                toast("Encounter map created. Confirm scope before running traces.");
+                if (!generalChat) switchTab("map");
+                toast(
+                    generalChat
+                        ? "General chat workspace created. Server timing is active."
+                        : (STUDY_MODE
+                            ? "Encounter map created and study task started. Server timing is active."
+                            : "Encounter map created. Confirm scope before running traces."),
+                );
             } catch (error) { toast(error.message, true); }
             finally { setLoading(false); }
         }
@@ -2326,21 +3585,26 @@
         }
 
         function renderAll() {
-            renderCounts();
-            renderWorkflow();
-            renderAgents();
-            renderAuditPlan();
-            renderFrameworkAssessment();
-            renderApplicationReadiness();
-            renderMap();
-            renderTraces();
-            renderIssues();
-            renderHandoffs();
-            bindSourceNavigation();
-            updateAnalysisFreshness();
+            renderStudyCondition();
+            if (!isGeneralChatCondition()) {
+                renderCounts();
+                renderWorkflow();
+                renderAgents();
+                renderAuditPlan();
+                renderFrameworkAssessment();
+                renderApplicationReadiness();
+                renderMap();
+                renderTraces();
+                renderIssues();
+                renderHandoffs();
+                bindSourceNavigation();
+                updateAnalysisFreshness();
+            }
             $("exportButton").disabled = !state.session;
             $("newVersionButton").disabled = !state.session;
             $("sessionLabel").textContent = state.session ? state.session.id.replace("encounter_", "") : "not created";
+            renderStudyInstrumentation();
+            updateMaterialProgress();
             refreshIcons();
         }
 
@@ -2929,10 +4193,10 @@
             const label = $("expertWorkspaceLabel");
             const button = $("expertWorkspaceButton");
             if (!state.session) {
-                label.textContent = "Expert workspace";
+                label.textContent = "Expert review for this case";
                 button.title = "Build the encounter map and run the audit before expert review";
             } else if (!count) {
-                label.textContent = "Expert review";
+                label.textContent = "Expert review for this case";
                 button.title = state.session.status === "audited"
                     ? "This audit does not currently require expert review"
                     : "Run the audit before opening expert review";
@@ -3005,9 +4269,11 @@
             if (!state.session) return;
             const suffix = format === "json"
                 ? "/export"
+                : (format === "study"
+                    ? "/study/export"
                 : (format === "application"
                     ? "/export.application.docx"
-                    : (format === "research-design" ? "/export.research-design.docx" : `/export.${format}`));
+                    : (format === "research-design" ? "/export.research-design.docx" : `/export.${format}`)));
             toggleExportMenu(false);
             try {
                 const response = await fetch(`/api/safebars/v2/sessions/${state.session.id}${suffix}`, {headers: {"X-SafeBARS-Access": state.access?.researcher_token || ""}});
@@ -3017,7 +4283,7 @@
                 }
                 const blob = await response.blob();
                 const disposition = response.headers.get("Content-Disposition") || "";
-                const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || `safebars-export.${["application", "research-design"].includes(format) ? "docx" : format}`;
+                const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || `safebars-export.${["application", "research-design"].includes(format) ? "docx" : (format === "study" ? "json" : format)}`;
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
                 link.download = filename;
@@ -3049,26 +4315,65 @@
                 const evidenceRequest = loadTechnicalEvidence();
                 state.options = await api("/api/safebars/v2/options");
                 const provider = state.options.active_provider;
-                $("useLlm").disabled = !state.options.llm_configured;
-                $("useLlm").checked = false;
-                $("llmLabel").textContent = provider ? `Optional LLM critic · ${provider.label} · off by default` : "Optional LLM critic · unavailable";
-                const restored = await restoreCurrentSession();
-                if (!restored) renderScenarioOptions();
-                if (!sessionStorage.getItem("safebars_usage_guide_seen")) {
-                    $("usageGuideDialog").showModal();
-                    sessionStorage.setItem("safebars_usage_guide_seen", "1");
+                if (STUDY_MODE) {
+                    $("useLlm").disabled = true;
+                    $("useLlm").checked = true;
+                    renderStudyCondition();
+                } else {
+                    $("useLlm").disabled = !state.options.llm_configured;
+                    $("useLlm").checked = false;
+                    $("llmLabel").textContent = provider ? `Optional LLM critic · ${provider.label} · off by default` : "Optional LLM critic · unavailable";
                 }
+                const restored = await restoreCurrentSession();
+                if (!restored) {
+                    renderScenarioOptions();
+                    renderStudyInstrumentation();
+                }
+                if (window.matchMedia("(max-width: 860px)").matches && !state.session) $("materialsDetails").open = false;
+                updateMaterialProgress();
                 await evidenceRequest;
             } catch (error) { toast(error.message, true); }
             refreshIcons();
         }
 
         document.querySelectorAll(".tab").forEach(button => button.addEventListener("click", () => switchTab(button.dataset.tab)));
-        $("usageGuideButton").addEventListener("click", () => $("usageGuideDialog").showModal());
+        document.querySelector(".tabbar").addEventListener("keydown", event => {
+            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+            const tabs = [...document.querySelectorAll(".tab:not([hidden])")];
+            const current = tabs.indexOf(document.activeElement);
+            if (current < 0) return;
+            event.preventDefault();
+            const next = event.key === "Home"
+                ? 0
+                : event.key === "End"
+                    ? tabs.length - 1
+                    : (current + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+            switchTab(tabs[next].dataset.tab);
+            tabs[next].focus();
+        });
+        $("usageGuideButton").addEventListener("click", () => {
+            sessionStorage.setItem("safebars_usage_guide_seen", "1");
+            $("usageGuideDialog").showModal();
+        });
         $("closeUsageGuideButton").addEventListener("click", () => $("usageGuideDialog").close());
         $("sampleButton").addEventListener("click", loadSample);
         $("newVersionButton").addEventListener("click", createProtocolVersion);
         $("guidedIntakeButton").addEventListener("click", openGuidedIntake);
+        $("heroIntakeButton").addEventListener("click", openGuidedIntake);
+        $("emptyGuidedIntakeButton").addEventListener("click", openGuidedIntake);
+        $("guideStartIntakeButton").addEventListener("click", () => {
+            $("usageGuideDialog").close();
+            openGuidedIntake();
+        });
+        $("guideDoneButton").addEventListener("click", () => $("usageGuideDialog").close());
+        if (!STUDY_MODE) {
+            $("heroSampleButton").addEventListener("click", loadSample);
+            $("emptySampleButton").addEventListener("click", loadSample);
+            $("guideLoadSampleButton").addEventListener("click", () => {
+                loadSample();
+                $("usageGuideDialog").close();
+            });
+        }
         $("expertWorkspaceButton").addEventListener("click", openCurrentExpertWorkspace);
         $("closeIntakeButton").addEventListener("click", () => $("intakeDialog").close());
         $("restartIntakeButton").addEventListener("click", restartIntake);
@@ -3084,11 +4389,39 @@
         document.querySelectorAll("[data-export-format]").forEach(button => button.addEventListener("click", () => exportSession(button.dataset.exportFormat)));
         document.addEventListener("click", event => {
             if (!event.target.closest(".export-control")) toggleExportMenu(false);
+            if (!event.target.closest(".more-control") && $("moreControl")) $("moreControl").open = false;
         });
         document.addEventListener("keydown", event => {
             if (event.key === "Escape") toggleExportMenu(false);
         });
         $("buildMapButton").addEventListener("click", buildMap);
+        if (STUDY_MODE) {
+            $("studyCondition").addEventListener("change", () => {
+                renderStudyInstrumentation();
+                refreshIcons();
+            });
+            $("startStudyTaskButton").addEventListener("click", () => startStudyTask(false));
+            $("completeStudyTaskButton").addEventListener("click", completeStudyTask);
+            $("downloadStudyRecordButton").addEventListener("click", () => exportSession("study"));
+            $("jumpToStudySubmissionButton").addEventListener("click", () => $("studySubmissionPanel").scrollIntoView({behavior: "smooth", block: "start"}));
+            $("sendStudyChatButton").addEventListener("click", sendStudyChat);
+            $("studyChatInput").addEventListener("keydown", event => {
+                if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) sendStudyChat();
+            });
+            $("saveStudySubmissionButton").addEventListener("click", () => saveStudySubmission(false));
+            ["studyFinalArtifact", "studyRationale1", "studyRationale2"].forEach(id => {
+                $(id).addEventListener("input", () => {
+                    state.studySubmissionDirty = true;
+                    $("studySubmissionStatus").textContent = "Unsaved changes · save before completing the task.";
+                    const completedFields = [
+                        ($("studyFinalArtifact").value || "").trim().length >= 40,
+                        ($("studyRationale1").value || "").trim().length >= 10,
+                        ($("studyRationale2").value || "").trim().length >= 10,
+                    ].filter(Boolean).length;
+                    $("studySubmissionCount").textContent = `${completedFields}/3`;
+                });
+            });
+        }
         $("applicationProfile").addEventListener("change", updateApplicationProfile);
         $("saveTradeoffsButton").addEventListener("click", saveTradeoffDeliberations);
         $("saveMapButton").addEventListener("click", () => saveMap(false));
@@ -3096,10 +4429,14 @@
         $("runAuditButton").addEventListener("click", runAudit);
         $("severityFilter").addEventListener("change", renderIssues);
         $("decisionFilter").addEventListener("change", renderIssues);
-        ["projectTitle", "projectReviewContext", "projectContext", "targetPeople", ...Object.values(artifactInputs)].forEach(id => $(id).addEventListener("input", markAnalysisDirty));
+        ["projectTitle", "projectReviewContext", "projectContext", "targetPeople", ...Object.values(artifactInputs)].forEach(id => $(id).addEventListener("input", () => {
+            markAnalysisDirty();
+            updateMaterialProgress();
+        }));
         $("usesAi").addEventListener("change", () => {
             updateAiSupplementVisibility();
             markAnalysisDirty();
+            updateMaterialProgress();
         });
         updateAiSupplementVisibility();
         initialize();

@@ -1,0 +1,102 @@
+run_id,case_id,pathway,framework_id,framework_name,expected,activated
+technical-3297298c775d,HCI-01,human_subjects,belmont,Belmont Report,True,True
+technical-3297298c775d,HCI-01,human_subjects,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,HCI-01,human_subjects,esr,Ethics and Society Review,True,True
+technical-3297298c775d,HCI-02,ict_research,belmont,Belmont Report,True,True
+technical-3297298c775d,HCI-02,ict_research,menlo,Menlo Report,True,True
+technical-3297298c775d,HCI-02,ict_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,HCI-02,ict_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,HCI-03,ai_research,belmont,Belmont Report,True,True
+technical-3297298c775d,HCI-03,ai_research,menlo,Menlo Report,True,True
+technical-3297298c775d,HCI-03,ai_research,ai_irb_questions,AI human-subjects review questions,True,True
+technical-3297298c775d,HCI-03,ai_research,ai_rec_guidance,Research ethics review in the age of AI,True,True
+technical-3297298c775d,HCI-03,ai_research,nist_ai_rmf,NIST AI Risk Management Framework 1.0,True,True
+technical-3297298c775d,HCI-03,ai_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,HCI-03,ai_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,HCI-04,human_subjects,belmont,Belmont Report,True,True
+technical-3297298c775d,HCI-04,human_subjects,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,HCI-04,human_subjects,esr,Ethics and Society Review,True,True
+technical-3297298c775d,HCI-05,ai_research,belmont,Belmont Report,True,True
+technical-3297298c775d,HCI-05,ai_research,menlo,Menlo Report,True,True
+technical-3297298c775d,HCI-05,ai_research,ai_irb_questions,AI human-subjects review questions,True,True
+technical-3297298c775d,HCI-05,ai_research,ai_rec_guidance,Research ethics review in the age of AI,True,True
+technical-3297298c775d,HCI-05,ai_research,nist_ai_rmf,NIST AI Risk Management Framework 1.0,True,True
+technical-3297298c775d,HCI-05,ai_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,HCI-05,ai_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,HCI-06,ict_research,belmont,Belmont Report,True,True
+technical-3297298c775d,HCI-06,ict_research,menlo,Menlo Report,True,True
+technical-3297298c775d,HCI-06,ict_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,HCI-06,ict_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,HCI-07,ai_research,belmont,Belmont Report,True,True
+technical-3297298c775d,HCI-07,ai_research,menlo,Menlo Report,True,True
+technical-3297298c775d,HCI-07,ai_research,ai_irb_questions,AI human-subjects review questions,True,True
+technical-3297298c775d,HCI-07,ai_research,ai_rec_guidance,Research ethics review in the age of AI,True,True
+technical-3297298c775d,HCI-07,ai_research,nist_ai_rmf,NIST AI Risk Management Framework 1.0,True,True
+technical-3297298c775d,HCI-07,ai_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,HCI-07,ai_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,QS-01,human_subjects,belmont,Belmont Report,True,True
+technical-3297298c775d,QS-01,human_subjects,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,QS-01,human_subjects,esr,Ethics and Society Review,True,True
+technical-3297298c775d,QS-02,ict_research,belmont,Belmont Report,True,True
+technical-3297298c775d,QS-02,ict_research,menlo,Menlo Report,True,True
+technical-3297298c775d,QS-02,ict_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,QS-02,ict_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,QS-03,ai_research,belmont,Belmont Report,True,True
+technical-3297298c775d,QS-03,ai_research,menlo,Menlo Report,True,True
+technical-3297298c775d,QS-03,ai_research,ai_irb_questions,AI human-subjects review questions,True,True
+technical-3297298c775d,QS-03,ai_research,ai_rec_guidance,Research ethics review in the age of AI,True,True
+technical-3297298c775d,QS-03,ai_research,nist_ai_rmf,NIST AI Risk Management Framework 1.0,True,True
+technical-3297298c775d,QS-03,ai_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,QS-03,ai_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,QS-04,human_subjects,belmont,Belmont Report,True,True
+technical-3297298c775d,QS-04,human_subjects,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,QS-04,human_subjects,esr,Ethics and Society Review,True,True
+technical-3297298c775d,QS-05,ict_research,belmont,Belmont Report,True,True
+technical-3297298c775d,QS-05,ict_research,menlo,Menlo Report,True,True
+technical-3297298c775d,QS-05,ict_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,QS-05,ict_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,QS-06,ai_research,belmont,Belmont Report,True,True
+technical-3297298c775d,QS-06,ai_research,menlo,Menlo Report,True,True
+technical-3297298c775d,QS-06,ai_research,ai_irb_questions,AI human-subjects review questions,True,True
+technical-3297298c775d,QS-06,ai_research,ai_rec_guidance,Research ethics review in the age of AI,True,True
+technical-3297298c775d,QS-06,ai_research,nist_ai_rmf,NIST AI Risk Management Framework 1.0,True,True
+technical-3297298c775d,QS-06,ai_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,QS-06,ai_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,QS-07,human_subjects,belmont,Belmont Report,True,True
+technical-3297298c775d,QS-07,human_subjects,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,QS-07,human_subjects,esr,Ethics and Society Review,True,True
+technical-3297298c775d,UX-01,ict_research,belmont,Belmont Report,True,True
+technical-3297298c775d,UX-01,ict_research,menlo,Menlo Report,True,True
+technical-3297298c775d,UX-01,ict_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,UX-01,ict_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,UX-02,human_subjects,belmont,Belmont Report,True,True
+technical-3297298c775d,UX-02,human_subjects,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,UX-02,human_subjects,esr,Ethics and Society Review,True,True
+technical-3297298c775d,UX-03,ai_research,belmont,Belmont Report,True,True
+technical-3297298c775d,UX-03,ai_research,menlo,Menlo Report,True,True
+technical-3297298c775d,UX-03,ai_research,ai_irb_questions,AI human-subjects review questions,True,True
+technical-3297298c775d,UX-03,ai_research,ai_rec_guidance,Research ethics review in the age of AI,True,True
+technical-3297298c775d,UX-03,ai_research,nist_ai_rmf,NIST AI Risk Management Framework 1.0,True,True
+technical-3297298c775d,UX-03,ai_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,UX-03,ai_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,UX-04,ict_research,belmont,Belmont Report,True,True
+technical-3297298c775d,UX-04,ict_research,menlo,Menlo Report,True,True
+technical-3297298c775d,UX-04,ict_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,UX-04,ict_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,UX-05,ai_research,belmont,Belmont Report,True,True
+technical-3297298c775d,UX-05,ai_research,menlo,Menlo Report,True,True
+technical-3297298c775d,UX-05,ai_research,ai_irb_questions,AI human-subjects review questions,True,True
+technical-3297298c775d,UX-05,ai_research,ai_rec_guidance,Research ethics review in the age of AI,True,True
+technical-3297298c775d,UX-05,ai_research,nist_ai_rmf,NIST AI Risk Management Framework 1.0,True,True
+technical-3297298c775d,UX-05,ai_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,UX-05,ai_research,esr,Ethics and Society Review,True,True
+technical-3297298c775d,UX-06,human_subjects,belmont,Belmont Report,True,True
+technical-3297298c775d,UX-06,human_subjects,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,UX-06,human_subjects,esr,Ethics and Society Review,True,True
+technical-3297298c775d,UX-07,ai_research,belmont,Belmont Report,True,True
+technical-3297298c775d,UX-07,ai_research,menlo,Menlo Report,True,True
+technical-3297298c775d,UX-07,ai_research,ai_irb_questions,AI human-subjects review questions,True,True
+technical-3297298c775d,UX-07,ai_research,ai_rec_guidance,Research ethics review in the age of AI,True,True
+technical-3297298c775d,UX-07,ai_research,nist_ai_rmf,NIST AI Risk Management Framework 1.0,True,True
+technical-3297298c775d,UX-07,ai_research,vsd,Value Sensitive Design,True,True
+technical-3297298c775d,UX-07,ai_research,esr,Ethics and Society Review,True,True

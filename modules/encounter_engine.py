@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from contextlib import closing
 from datetime import datetime, timezone
 import hashlib
@@ -12,6 +13,7 @@ import re
 import secrets
 import sqlite3
 import threading
+import time
 from typing import Any, Dict, Iterable, List, Optional
 import uuid
 
@@ -33,6 +35,37 @@ from .scenarios import (
 )
 from .encounter_store import EncounterStore
 from .ethics_application import APPLICATION_PROFILES, build_application_readiness
+
+STUDY_MANIFEST_SCHEMA_VERSION = "1.0"
+STUDY_PROMPT_VERSION = "bounded-protocol-critic-v1"
+STUDY_LLM_TEMPERATURE = 0.15
+STUDY_LLM_MAX_TOKENS = 700
+STUDY_LLM_TIMEOUT_SECONDS = 25
+STUDY_CHAT_MAX_TURNS = 12
+STUDY_CHAT_MAX_INPUT_CHARS = 2000
+STUDY_CHAT_MAX_OUTPUT_CHARS = 6000
+STUDY_FINAL_ARTIFACT_MAX_CHARS = 20000
+STUDY_RATIONALE_MAX_CHARS = 4000
+STUDY_CONDITIONS = {"safebars_full", "general_chat"}
+_STUDY_CODE_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{1,63}$")
+_LLM_CRITIC_SYSTEM_PROMPT = (
+    "You are a bounded SafeBARS protocol critic. Inspect only the submitted passages. "
+    "Do not speak as a participant and do not claim what any population thinks, feels, or will do. "
+    "Do not provide ethics approval or compliance verdicts. Return valid JSON only."
+)
+_LLM_CRITIC_USER_INSTRUCTION = (
+    "Find at most two concrete relational or procedural gaps not already obvious from a generic checklist. "
+    "Each gap must cite existing passage IDs. Return a JSON array with keys: title, category, severity "
+    "(high/medium/low), source_passage_ids, observation, suggestion, handoff_owner. "
+    "If no passage-grounded gap is justified, return []."
+)
+_GENERAL_CHAT_SYSTEM_PROMPT = (
+    "You are a general-purpose research planning assistant. Help the user improve the "
+    "submitted research plan in response to their requests. Do not claim ethics approval "
+    "or invent institutional requirements. Use ordinary conversational responses without "
+    "a hidden multi-agent workflow."
+)
+
 
 class EncounterEngine:
     """Runs a bounded, inspectable encounter-audit workflow over research artifacts."""
@@ -93,8 +126,38 @@ class EncounterEngine:
         )
         return decided or reviewed
 
+    @staticmethod
+    def _require_active_study_task(session: Dict[str, Any]) -> None:
+        manifest = session.get("study_manifest")
+        if not manifest:
+            return
+        status = manifest.get("task_status", "configured")
+        if status == "configured":
+            raise ValueError("Start the instrumented study task before changing the case.")
+        if status == "completed":
+            raise ValueError("This instrumented study task is complete and researcher changes are frozen.")
+
+    @staticmethod
+    def _require_safebars_condition(session: Dict[str, Any]) -> None:
+        manifest = session.get("study_manifest")
+        if manifest and manifest.get("condition") != "safebars_full":
+            raise ValueError(
+                "The general_chat condition cannot use SafeBARS maps, agents, audits, "
+                "decisions, or handoff tools."
+            )
+
     def create_session(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         project = payload.get("project", {})
+        raw_study_manifest = payload.get("study_manifest")
+        requested_condition = (
+            str(raw_study_manifest.get("condition", "")).strip()
+            if isinstance(raw_study_manifest, dict)
+            else ""
+        )
+        # Formal study conditions must use the same configured provider and fixed
+        # decoding settings. The participant-facing toggle is therefore ignored
+        # for instrumented sessions.
+        use_llm = True if raw_study_manifest is not None else bool(payload.get("use_llm", False))
         artifacts = {
             key: str(payload.get("artifacts", {}).get(key, "")).strip()
             for key in ARTIFACT_LABELS
@@ -106,7 +169,7 @@ class EncounterEngine:
         created_at = utc_now()
         session = {
             "id": session_id,
-            "version": "2.2",
+            "version": "2.3",
             "status": "mapped",
             "project": {
                 "title": str(project.get("title", "Untitled fieldwork plan")).strip(),
@@ -133,17 +196,43 @@ class EncounterEngine:
             "handoffs": [],
             "agent_activity": [],
             "audit_plan": [],
-            "use_llm": bool(payload.get("use_llm", False)),
+            "use_llm": use_llm,
             "created_at": created_at,
             "updated_at": created_at,
         }
-        session["encounter_map"] = self._build_encounter_map(session)
-        session["framework_assessment"] = build_framework_assessment(session)
-        session["application_readiness"] = build_application_readiness(session)
-        session["audit_plan"] = self._build_audit_plan(
-            session, session.get("selected_scenarios") or None
+        study_manifest = self._build_study_manifest(
+            raw_study_manifest,
+            use_llm=session["use_llm"],
+            created_at=created_at,
         )
-        self._activity(session, "Encounter Orchestrator", "completed", "Built an editable encounter map from submitted artifacts.")
+        if study_manifest:
+            session["study_manifest"] = study_manifest
+            session["study_chat"] = []
+            session["study_submission"] = {
+                "final_artifact": "",
+                "decision_rationales": ["", ""],
+                "saved_at": "",
+                "revision_number": 0,
+            }
+            session["study_submission_history"] = []
+            session["study_llm_calls"] = []
+        if study_manifest and study_manifest["condition"] == "general_chat":
+            # The baseline stores the common source material but does not create
+            # or expose any SafeBARS analysis output.
+            session["status"] = "study_chat_ready"
+        else:
+            session["encounter_map"] = self._build_encounter_map(session)
+            session["framework_assessment"] = build_framework_assessment(session)
+            session["application_readiness"] = build_application_readiness(session)
+            session["audit_plan"] = self._build_audit_plan(
+                session, session.get("selected_scenarios") or None
+            )
+            self._activity(
+                session,
+                "Encounter Orchestrator",
+                "completed",
+                "Built an editable encounter map from submitted artifacts.",
+            )
         self._save(
             session,
             "session_created",
@@ -154,10 +243,541 @@ class EncounterEngine:
         )
         return session
 
+    def _build_study_manifest(
+        self,
+        raw_manifest: Any,
+        *,
+        use_llm: bool,
+        created_at: str,
+    ) -> Optional[Dict[str, Any]]:
+        if raw_manifest is None:
+            return None
+        if not isinstance(raw_manifest, dict):
+            raise ValueError("Study manifest must be an object.")
+
+        clean: Dict[str, str] = {}
+        labels = {
+            "study_id": "Study ID",
+            "participant_id": "Participant code",
+            "case_id": "Case ID",
+        }
+        for key, label in labels.items():
+            value = str(raw_manifest.get(key, "")).strip()
+            if not _STUDY_CODE_PATTERN.fullmatch(value):
+                raise ValueError(
+                    f"{label} must be a 2-64 character pseudonymous code using only "
+                    "letters, numbers, hyphens, or underscores."
+                )
+            clean[key] = value
+
+        condition = str(raw_manifest.get("condition", "")).strip()
+        if condition not in STUDY_CONDITIONS:
+            raise ValueError(
+                "Study condition must be safebars_full or general_chat."
+            )
+        clean["condition"] = condition
+
+        order = raw_manifest.get("order")
+        if isinstance(order, bool):
+            raise ValueError("Study order must be a positive integer.")
+        try:
+            order = int(order)
+        except (TypeError, ValueError):
+            raise ValueError("Study order must be a positive integer.") from None
+        if order < 1 or order > 100:
+            raise ValueError("Study order must be between 1 and 100.")
+        if raw_manifest.get("consent_confirmed") is not True:
+            raise ValueError(
+                "Study consent must be confirmed before an instrumented session is created."
+            )
+
+        provider = self._active_provider_summary()
+        if not provider:
+            raise ValueError(
+                "A configured LLM provider is required for both formal study "
+                "conditions so safebars_full and general_chat use the same model."
+            )
+        model_enabled = bool(use_llm and provider)
+        if condition == "general_chat":
+            prompt_id = "general-research-chat-v1"
+            prompt_template = _GENERAL_CHAT_SYSTEM_PROMPT
+        else:
+            prompt_id = STUDY_PROMPT_VERSION
+            prompt_template = (
+                f"{_LLM_CRITIC_SYSTEM_PROMPT}\n{_LLM_CRITIC_USER_INSTRUCTION}"
+            )
+        prompt_hash = hashlib.sha256(prompt_template.encode("utf-8")).hexdigest()
+        commit_sha = next(
+            (
+                os.environ[name].strip()
+                for name in ("RENDER_GIT_COMMIT", "GITHUB_SHA", "CF_PAGES_COMMIT_SHA")
+                if os.environ.get(name, "").strip()
+            ),
+            None,
+        )
+        return {
+            "schema_version": STUDY_MANIFEST_SCHEMA_VERSION,
+            **clean,
+            "order": order,
+            "consent_confirmed": True,
+            "consent_confirmed_at": created_at,
+            "task_status": "configured",
+            "task_started_at": "",
+            "task_completed_at": "",
+            "elapsed_seconds": None,
+            "config_snapshot": {
+                "app_session_version": "2.3",
+                "commit_sha": commit_sha,
+                "prompt": {
+                    "id": prompt_id,
+                    "template_sha256": prompt_hash,
+                    "maximum_issues": 2,
+                },
+                "model": {
+                    "enabled": model_enabled,
+                    "requested": bool(use_llm),
+                    "configured": bool(provider),
+                    "provider": provider if model_enabled else None,
+                    "temperature": STUDY_LLM_TEMPERATURE if model_enabled else None,
+                    "max_tokens": STUDY_LLM_MAX_TOKENS if model_enabled else None,
+                    "timeout_seconds": (
+                        STUDY_LLM_TIMEOUT_SECONDS if model_enabled else None
+                    ),
+                },
+            },
+        }
+
+    @staticmethod
+    def _parse_timestamp(value: str) -> datetime:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+    @staticmethod
+    def _study_event_payload(manifest: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "study_id": manifest["study_id"],
+            "participant_id": manifest["participant_id"],
+            "condition": manifest["condition"],
+            "case_id": manifest["case_id"],
+            "order": manifest["order"],
+        }
+
+    @staticmethod
+    def _study_events(session: Dict[str, Any]) -> List[Dict[str, Any]]:
+        return [
+            event
+            for event in session.get("event_log", [])
+            if event.get("event_type") in {"study_task_start", "study_task_complete"}
+        ]
+
+    @staticmethod
+    def _study_submission_complete(session: Dict[str, Any]) -> bool:
+        submission = session.get("study_submission", {})
+        rationales = submission.get("decision_rationales", [])
+        return (
+            len(str(submission.get("final_artifact", "")).strip()) >= 40
+            and isinstance(rationales, list)
+            and len(rationales) == 2
+            and all(len(str(item).strip()) >= 10 for item in rationales)
+        )
+
+    @staticmethod
+    def _general_chat_source_context(session: Dict[str, Any]) -> str:
+        project = session.get("project", {})
+        sections = [
+            f"Project title: {project.get('title', '')}",
+            f"Review context: {project.get('review_context', '')}",
+            f"Project plan: {project.get('context', '')}",
+            f"People and relationships: {project.get('target_people', '')}",
+        ]
+        for key, value in session.get("artifacts", {}).items():
+            if str(value).strip():
+                sections.append(f"{key.replace('_', ' ').title()}: {value}")
+        return "\n\n".join(sections)[:12000]
+
+    @staticmethod
+    def _llm_usage_metrics(raw_usage: Any) -> Dict[str, int]:
+        """Keep only non-sensitive numeric token usage returned by a provider."""
+        if not isinstance(raw_usage, dict):
+            return {}
+        allowed = {
+            "prompt_tokens",
+            "completion_tokens",
+            "total_tokens",
+            "input_tokens",
+            "output_tokens",
+        }
+        usage: Dict[str, int] = {}
+        for key in allowed:
+            value = raw_usage.get(key)
+            if isinstance(value, bool):
+                continue
+            if isinstance(value, (int, float)) and value >= 0:
+                usage[key] = int(value)
+        return usage
+
+    def _record_study_llm_call(
+        self,
+        session: Dict[str, Any],
+        *,
+        call_type: str,
+        result: Dict[str, Any],
+        started_at: str,
+        completed_at: str,
+        latency_ms: float,
+        input_chars: int,
+    ) -> None:
+        """Append an inspectable call receipt without duplicating prompt or response text."""
+        if not session.get("study_manifest"):
+            return
+        provider = self._active_provider_summary() or {}
+        response_text = str(result.get("text", ""))
+        calls = session.setdefault("study_llm_calls", [])
+        calls.append(
+            {
+                "call_index": len(calls) + 1,
+                "call_type": call_type,
+                "started_at": started_at,
+                "completed_at": completed_at,
+                "latency_ms": latency_ms,
+                "ok": bool(result.get("ok")),
+                "error_type": str(result.get("error_type", ""))[:80],
+                "error": str(result.get("error", ""))[:300],
+                "status_code": result.get("status_code"),
+                "provider_id": self.llm_client.active_provider_id,
+                "model": result.get("model") or provider.get("model"),
+                "temperature": STUDY_LLM_TEMPERATURE,
+                "max_tokens": STUDY_LLM_MAX_TOKENS,
+                "usage": self._llm_usage_metrics(result.get("usage")),
+                "input_chars": max(0, int(input_chars)),
+                "output_chars": len(response_text),
+                "response_sha256": (
+                    hashlib.sha256(response_text.encode("utf-8")).hexdigest()
+                    if response_text
+                    else ""
+                ),
+            }
+        )
+
+    def study_status(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """Return the immutable study manifest and task timing for one session."""
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        manifest = session.get("study_manifest")
+        if not manifest:
+            raise ValueError("This is not an instrumented study session.")
+        return {
+            "session_id": session["id"],
+            "manifest": manifest,
+            "events": self._study_events(session),
+        }
+
+    def save_study_submission(
+        self,
+        session_id: str,
+        final_artifact: str,
+        decision_rationales: List[str],
+    ) -> Optional[Dict[str, Any]]:
+        """Save the condition-neutral final artifact required in both conditions."""
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        manifest = session.get("study_manifest")
+        if not manifest:
+            raise ValueError("This is not an instrumented study session.")
+        self._require_active_study_task(session)
+
+        final_artifact = str(final_artifact or "").strip()
+        if not isinstance(decision_rationales, list) or len(decision_rationales) != 2:
+            raise ValueError("Provide exactly two decision rationales.")
+        rationales = [str(item or "").strip() for item in decision_rationales]
+        if len(final_artifact) < 40:
+            raise ValueError("The final artifact must contain at least 40 characters.")
+        if len(final_artifact) > STUDY_FINAL_ARTIFACT_MAX_CHARS:
+            raise ValueError(
+                f"The final artifact is limited to {STUDY_FINAL_ARTIFACT_MAX_CHARS} characters."
+            )
+        if any(len(item) < 10 for item in rationales):
+            raise ValueError("Each decision rationale must contain at least 10 characters.")
+        if any(len(item) > STUDY_RATIONALE_MAX_CHARS for item in rationales):
+            raise ValueError(
+                f"Each decision rationale is limited to {STUDY_RATIONALE_MAX_CHARS} characters."
+            )
+
+        now = utc_now()
+        revision_number = int(
+            session.get("study_submission", {}).get("revision_number", 0) or 0
+        ) + 1
+        submission = {
+            "final_artifact": final_artifact,
+            "decision_rationales": rationales,
+            "saved_at": now,
+            "revision_number": revision_number,
+        }
+        session["study_submission"] = submission
+        session.setdefault("study_submission_history", []).append(dict(submission))
+        session["updated_at"] = now
+        self._save(
+            session,
+            "study_submission_saved",
+            {
+                **self._study_event_payload(manifest),
+                "revision_number": revision_number,
+                "final_artifact_chars": len(final_artifact),
+                "rationale_chars": [len(item) for item in rationales],
+            },
+        )
+        return session
+
+    def add_study_chat_turn(
+        self,
+        session_id: str,
+        message: str,
+    ) -> Optional[Dict[str, Any]]:
+        """Run and persist one bounded turn for the general-chat baseline."""
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        manifest = session.get("study_manifest")
+        if not manifest:
+            raise ValueError("This is not an instrumented study session.")
+        self._require_active_study_task(session)
+        if manifest.get("condition") != "general_chat":
+            raise ValueError("Study chat is available only in the general_chat condition.")
+
+        message = str(message or "").strip()
+        if not message:
+            raise ValueError("Enter a message before sending.")
+        if len(message) > STUDY_CHAT_MAX_INPUT_CHARS:
+            raise ValueError(
+                f"Study chat messages are limited to {STUDY_CHAT_MAX_INPUT_CHARS} characters."
+            )
+        turns = session.setdefault("study_chat", [])
+        if len(turns) >= STUDY_CHAT_MAX_TURNS:
+            raise ValueError(
+                f"Study chat is limited to {STUDY_CHAT_MAX_TURNS} turns."
+            )
+
+        user_timestamp = utc_now()
+        messages: List[Dict[str, str]] = [
+            {
+                "role": "system",
+                "content": (
+                    _GENERAL_CHAT_SYSTEM_PROMPT
+                    + "\n\nSubmitted research materials:\n"
+                    + self._general_chat_source_context(session)
+                ),
+            }
+        ]
+        for prior in turns:
+            messages.append({"role": "user", "content": prior.get("user_text", "")})
+            if prior.get("assistant_text"):
+                messages.append(
+                    {"role": "assistant", "content": prior.get("assistant_text", "")}
+                )
+        messages.append({"role": "user", "content": message})
+
+        started = time.perf_counter()
+        result = self.llm_client.chat_with_provider_detailed(
+            self.llm_client.active_provider_id,
+            messages,
+            temperature=STUDY_LLM_TEMPERATURE,
+            timeout=STUDY_LLM_TIMEOUT_SECONDS,
+        )
+        latency_ms = round((time.perf_counter() - started) * 1000, 3)
+        assistant_timestamp = utc_now()
+        assistant_text = str(result.get("text", ""))[:STUDY_CHAT_MAX_OUTPUT_CHARS]
+        provider = self._active_provider_summary() or {}
+        usage = self._llm_usage_metrics(result.get("usage"))
+        turn = {
+            "turn_index": len(turns) + 1,
+            "user_text": message,
+            "user_timestamp": user_timestamp,
+            "assistant_text": assistant_text,
+            "assistant_timestamp": assistant_timestamp,
+            "latency_ms": latency_ms,
+            "ok": bool(result.get("ok")),
+            "error_type": str(result.get("error_type", ""))[:80],
+            "error": str(result.get("error", ""))[:300],
+            "status_code": result.get("status_code"),
+            "provider_id": self.llm_client.active_provider_id,
+            "model": result.get("model") or provider.get("model"),
+            "temperature": STUDY_LLM_TEMPERATURE,
+            "usage": usage,
+            "response_sha256": (
+                hashlib.sha256(assistant_text.encode("utf-8")).hexdigest()
+                if assistant_text
+                else ""
+            ),
+        }
+        turns.append(turn)
+        self._record_study_llm_call(
+            session,
+            call_type="general_chat",
+            result={**result, "text": assistant_text},
+            started_at=user_timestamp,
+            completed_at=assistant_timestamp,
+            latency_ms=latency_ms,
+            input_chars=sum(len(item.get("content", "")) for item in messages),
+        )
+        session["updated_at"] = assistant_timestamp
+        self._save(
+            session,
+            "study_chat_turn",
+            {
+                **self._study_event_payload(manifest),
+                "turn_index": turn["turn_index"],
+                "input_chars": len(message),
+                "output_chars": len(assistant_text),
+                "latency_ms": latency_ms,
+                "ok": turn["ok"],
+                "error_type": turn["error_type"],
+            },
+        )
+        return session
+
+    def start_study_task(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """Start the measured task once; retries are idempotent."""
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        manifest = session.get("study_manifest")
+        if not manifest:
+            raise ValueError("This is not an instrumented study session.")
+        if manifest.get("task_status") == "completed":
+            raise ValueError("This study task is already complete.")
+        if manifest.get("task_started_at"):
+            return session
+
+        now = utc_now()
+        manifest["task_status"] = "in_progress"
+        manifest["task_started_at"] = now
+        manifest["task_completed_at"] = ""
+        manifest["elapsed_seconds"] = None
+        session["updated_at"] = now
+        self._save(
+            session,
+            "study_task_start",
+            self._study_event_payload(manifest),
+        )
+        return session
+
+    def complete_study_task(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """Complete the measured task once and store server-derived elapsed time."""
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        manifest = session.get("study_manifest")
+        if not manifest:
+            raise ValueError("This is not an instrumented study session.")
+        if manifest.get("task_status") == "completed":
+            return session
+        started_at = manifest.get("task_started_at")
+        if not started_at:
+            raise ValueError("Start the study task before completing it.")
+        if not self._study_submission_complete(session):
+            raise ValueError(
+                "Save one condition-neutral final artifact and exactly two decision "
+                "rationales before completing the task."
+            )
+
+        now = utc_now()
+        elapsed = max(
+            0.0,
+            (self._parse_timestamp(now) - self._parse_timestamp(started_at)).total_seconds(),
+        )
+        manifest["task_status"] = "completed"
+        manifest["task_completed_at"] = now
+        manifest["elapsed_seconds"] = round(elapsed, 3)
+        session["updated_at"] = now
+        event_payload = self._study_event_payload(manifest)
+        event_payload["elapsed_seconds"] = manifest["elapsed_seconds"]
+        self._save(session, "study_task_complete", event_payload)
+        return session
+
+    def study_export(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """Build a pseudonymous, analysis-ready study record without free-text names."""
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        manifest = session.get("study_manifest")
+        if not manifest:
+            raise ValueError("This is not an instrumented study session.")
+        decisions = Counter(
+            item.get("decision", "pending") for item in session.get("issues", [])
+        )
+        handoff_statuses = Counter(
+            item.get("status", "open") for item in session.get("handoffs", [])
+        )
+        linked_issue_outputs = sum(
+            bool(item.get("source_passage_ids")) for item in session.get("issues", [])
+        )
+        chat_turns = session.get("study_chat", [])
+        llm_calls = session.get("study_llm_calls", [])
+        submission = session.get("study_submission", {})
+        rationales = submission.get("decision_rationales", [])
+        usage_totals: Counter[str] = Counter()
+        for call in llm_calls:
+            usage_totals.update(self._llm_usage_metrics(call.get("usage")))
+        return {
+            "schema_version": STUDY_MANIFEST_SCHEMA_VERSION,
+            "exported_at": utc_now(),
+            "session_id": session["id"],
+            "manifest": manifest,
+            "task_events": self._study_events(session),
+            "outcomes": {
+                "session_status": session.get("status", ""),
+                "passage_count": len(session.get("passages", [])),
+                "trace_count": len(session.get("traces", [])),
+                "issue_count": len(session.get("issues", [])),
+                "issues_with_passage_evidence": linked_issue_outputs,
+                "decision_counts": dict(sorted(decisions.items())),
+                "handoff_count": len(session.get("handoffs", [])),
+                "handoff_status_counts": dict(sorted(handoff_statuses.items())),
+                "protocol_version": session.get("lineage", {}).get("version_number", 1),
+                "chat_turn_count": len(chat_turns),
+                "chat_input_chars": sum(
+                    len(str(item.get("user_text", ""))) for item in chat_turns
+                ),
+                "chat_output_chars": sum(
+                    len(str(item.get("assistant_text", ""))) for item in chat_turns
+                ),
+                "chat_error_count": sum(not item.get("ok", False) for item in chat_turns),
+                "llm_call_count": len(llm_calls),
+                "llm_success_count": sum(bool(item.get("ok")) for item in llm_calls),
+                "llm_error_count": sum(not item.get("ok", False) for item in llm_calls),
+                "llm_latency_ms_total": round(
+                    sum(float(item.get("latency_ms", 0) or 0) for item in llm_calls),
+                    3,
+                ),
+                "llm_token_usage": dict(sorted(usage_totals.items())),
+                "final_artifact_submitted": self._study_submission_complete(session),
+                "final_artifact_chars": len(
+                    str(submission.get("final_artifact", ""))
+                ),
+                "decision_rationale_chars": [
+                    len(str(item)) for item in rationales[:2]
+                ],
+                "submission_revision_count": int(
+                    submission.get("revision_number", 0) or 0
+                ),
+            },
+            "privacy_note": (
+                "This record uses a pseudonymous participant code and excludes reviewer names "
+                "and protocol free text. Pair it with separately governed artifacts only when "
+                "the approved study protocol requires that linkage."
+            ),
+        }
+
     def create_protocol_version(self, session_id: str) -> Optional[Dict[str, Any]]:
         source = self.get_session(session_id)
         if not source:
             return None
+        if source.get("study_manifest"):
+            raise ValueError(
+                "Instrumented study sessions are frozen. Start a separately assigned "
+                "study session instead of creating an untracked protocol version."
+            )
         current_version = int(source.get("lineage", {}).get("version_number", 1) or 1)
         payload = {
             "project": source.get("project", {}),
@@ -196,6 +816,8 @@ class EncounterEngine:
         session = self.get_session(session_id)
         if not session:
             return None
+        self._require_active_study_task(session)
+        self._require_safebars_condition(session)
         if self._human_review_started(session):
             raise ValueError("The encounter scope cannot change after human review has started. Create a new protocol version instead.")
         allowed_ids = {stage["id"] for stage in STAGE_DEFINITIONS}
@@ -237,6 +859,8 @@ class EncounterEngine:
         session = self.get_session(session_id)
         if not session:
             return None
+        self._require_active_study_task(session)
+        self._require_safebars_condition(session)
         valid_ids = {item["id"] for item in SCENARIO_LIBRARY}
         selected = [item for item in (scenario_ids or []) if item in valid_ids]
         if not selected:
@@ -267,6 +891,8 @@ class EncounterEngine:
         session = self.get_session(session_id)
         if not session:
             return None
+        self._require_active_study_task(session)
+        self._require_safebars_condition(session)
         if profile_id not in APPLICATION_PROFILES:
             raise ValueError("Select a recognized application profile.")
         session["application_profile_id"] = profile_id
@@ -282,6 +908,8 @@ class EncounterEngine:
         session = self.get_session(session_id)
         if not session:
             return None
+        self._require_active_study_task(session)
+        self._require_safebars_condition(session)
         allowed = {
             item.get("id"): item
             for item in session.get("framework_assessment", {}).get("tradeoffs", [])
@@ -324,6 +952,8 @@ class EncounterEngine:
         session = self.get_session(session_id)
         if not session:
             return None
+        self._require_active_study_task(session)
+        self._require_safebars_condition(session)
         if self._human_review_started(session):
             raise ValueError("The audit cannot be rerun after human review has started. Create a new protocol version to preserve the review record.")
 
@@ -424,6 +1054,8 @@ class EncounterEngine:
         session = self.get_session(session_id)
         if not session:
             return None
+        self._require_active_study_task(session)
+        self._require_safebars_condition(session)
         task = next((item for item in session.get("audit_plan", []) if item["id"] == task_id), None)
         if not task:
             raise KeyError("Audit task not found.")
@@ -507,6 +1139,8 @@ class EncounterEngine:
         session = self.get_session(session_id)
         if not session:
             return None
+        self._require_active_study_task(session)
+        self._require_safebars_condition(session)
         if decision not in {"accept", "edit", "reject", "defer", "pending"}:
             raise ValueError("Decision must be accept, edit, reject, defer, or pending.")
         issue = next((item for item in session.get("issues", []) if item["id"] == issue_id), None)
@@ -533,6 +1167,8 @@ class EncounterEngine:
         session = self.get_session(session_id)
         if not session:
             return None
+        self._require_active_study_task(session)
+        self._require_safebars_condition(session)
         handoff = next(
             (item for item in session.get("handoffs", []) if item.get("id") == handoff_id),
             None,
@@ -1239,28 +1875,35 @@ class EncounterEngine:
         messages = [
             {
                 "role": "system",
-                "content": (
-                    "You are a bounded SafeBARS protocol critic. Inspect only the submitted passages. "
-                    "Do not speak as a participant and do not claim what any population thinks, feels, or will do. "
-                    "Do not provide ethics approval or compliance verdicts. Return valid JSON only."
-                ),
+                "content": _LLM_CRITIC_SYSTEM_PROMPT,
             },
             {
                 "role": "user",
                 "content": (
-                    "Find at most two concrete relational or procedural gaps not already obvious from a generic checklist. "
-                    "Each gap must cite existing passage IDs. Return a JSON array with keys: title, category, severity "
-                    "(high/medium/low), source_passage_ids, observation, suggestion, handoff_owner. "
-                    "If no passage-grounded gap is justified, return [].\n\n"
+                    _LLM_CRITIC_USER_INSTRUCTION
+                    + "\n\n"
                     + "\n".join(passage_lines)
                 ),
             },
         ]
+        started_at = utc_now()
+        started = time.perf_counter()
         result = self.llm_client.chat_with_provider_detailed(
             self.llm_client.active_provider_id,
             messages,
-            temperature=0.15,
-            timeout=25,
+            temperature=STUDY_LLM_TEMPERATURE,
+            timeout=STUDY_LLM_TIMEOUT_SECONDS,
+        )
+        completed_at = utc_now()
+        latency_ms = round((time.perf_counter() - started) * 1000, 3)
+        self._record_study_llm_call(
+            session,
+            call_type="safebars_critic",
+            result=result,
+            started_at=started_at,
+            completed_at=completed_at,
+            latency_ms=latency_ms,
+            input_chars=sum(len(item.get("content", "")) for item in messages),
         )
         if not result.get("ok"):
             return [], f"LLM unavailable; deterministic trace remained active. {result.get('error', '')[:180]}"

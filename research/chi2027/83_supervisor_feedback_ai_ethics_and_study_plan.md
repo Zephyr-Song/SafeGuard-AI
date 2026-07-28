@@ -1,6 +1,8 @@
 # SafeBARS: AI-Era Ethics Basis and Empirical Study Plan
 
-Status: implementation and study-planning revision after supervisor feedback
+Status: supervisor-feedback synthesis retained for provenance. Its study
+sequence and sample decisions are superseded by
+`CURRENT_CANONICAL_PLAN.md` and files 86-90.
 Date: 23 July 2026
 
 ## Decision in one sentence

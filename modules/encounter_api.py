@@ -114,11 +114,119 @@ def get_session(session_id: str):
 @encounter_api.post("/sessions/<session_id>/versions")
 @require_session_role("researcher")
 def create_protocol_version(session_id: str):
-    encounter_session = encounter_engine.create_protocol_version(session_id)
+    try:
+        encounter_session = encounter_engine.create_protocol_version(session_id)
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
     if not encounter_session:
         return jsonify({"success": False, "error": "Session not found"}), 404
     access = encounter_engine.issue_access(encounter_session["id"])
     return jsonify({"success": True, "session": encounter_session, "access": access}), 201
+
+
+@encounter_api.get("/sessions/<session_id>/study")
+@require_session_role("researcher")
+def study_status(session_id: str):
+    try:
+        record = encounter_engine.study_status(session_id)
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    if not record:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({"success": True, **record})
+
+
+@encounter_api.post("/sessions/<session_id>/study/chat")
+@rate_limit(max_requests=15, window_seconds=120, scope="study_general_chat")
+@require_session_role("researcher")
+def study_chat(session_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        encounter_session = encounter_engine.add_study_chat_turn(
+            session_id, payload.get("message", "")
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({
+        "success": True,
+        "session": encounter_session,
+        "turn": encounter_session.get("study_chat", [])[-1],
+    })
+
+
+@encounter_api.post("/sessions/<session_id>/study/submission")
+@rate_limit(max_requests=20, window_seconds=120, scope="study_submission")
+@require_session_role("researcher")
+def save_study_submission(session_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        encounter_session = encounter_engine.save_study_submission(
+            session_id,
+            payload.get("final_artifact", ""),
+            payload.get("decision_rationales", []),
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({
+        "success": True,
+        "session": encounter_session,
+        "submission": encounter_session["study_submission"],
+    })
+
+
+@encounter_api.post("/sessions/<session_id>/study/task/start")
+@rate_limit(max_requests=10, window_seconds=60, scope="study_task_start")
+@require_session_role("researcher")
+def start_study_task(session_id: str):
+    try:
+        encounter_session = encounter_engine.start_study_task(session_id)
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({
+        "success": True,
+        "session": encounter_session,
+        "manifest": encounter_session["study_manifest"],
+    })
+
+
+@encounter_api.post("/sessions/<session_id>/study/task/complete")
+@rate_limit(max_requests=10, window_seconds=60, scope="study_task_complete")
+@require_session_role("researcher")
+def complete_study_task(session_id: str):
+    try:
+        encounter_session = encounter_engine.complete_study_task(session_id)
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    if not encounter_session:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    return jsonify({
+        "success": True,
+        "session": encounter_session,
+        "manifest": encounter_session["study_manifest"],
+    })
+
+
+@encounter_api.get("/sessions/<session_id>/study/export")
+@require_session_role("researcher")
+def export_study_record(session_id: str):
+    try:
+        record = encounter_engine.study_export(session_id)
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    if not record:
+        return jsonify({"success": False, "error": "Session not found"}), 404
+    filename = f"safebars_{session_id}_study_record.json"
+    return Response(
+        json.dumps(record, ensure_ascii=False, indent=2),
+        mimetype="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @encounter_api.patch("/sessions/<session_id>/map")
