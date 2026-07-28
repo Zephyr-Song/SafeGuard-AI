@@ -62,7 +62,7 @@ class EthicsApplicationReadinessTest(unittest.TestCase):
         document = Document(BytesIO(build_ethics_application_docx(session)))
         text = "\n".join(paragraph.text for paragraph in document.paragraphs)
 
-        self.assertIn("Submitted AI ethics-review supplement", text)
+        self.assertIn("Legacy AI governance notes", text)
         self.assertIn("Makridis et al. (2023)", text)
         self.assertIn("Connelly et al. (2025)", text)
         self.assertIn("AI human-subjects review questions", text)

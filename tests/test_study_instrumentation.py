@@ -378,7 +378,8 @@ class StudyInstrumentationTest(unittest.TestCase):
         self.assertEqual(created.status_code, 201)
         body = created.get_json()
         self.assertNotIn("study_manifest", body["session"])
-        self.assertFalse(body["session"]["use_llm"])
+        self.assertTrue(body["session"]["use_llm"])
+        self.assertTrue(body["session"]["project"]["uses_ai"])
         headers = {"X-SafeBARS-Access": body["access"]["researcher_token"]}
         status = self.client.get(
             f"/api/safebars/v2/sessions/{body['session']['id']}/study",

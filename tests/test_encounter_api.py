@@ -11,14 +11,26 @@ from modules.encounter_api import encounter_engine
 from modules.encounter_engine import EncounterStore, SAMPLE_PROJECT
 
 
+class UnconfiguredTestLLM:
+    providers = {}
+    active_provider_id = None
+
+    @staticmethod
+    def is_configured():
+        return False
+
+
 class EncounterApiTest(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         encounter_engine.store = EncounterStore(str(Path(self.temp_dir.name) / "api.db"))
+        self.original_llm_client = encounter_engine.llm_client
+        encounter_engine.llm_client = UnconfiguredTestLLM()
         app.config.update(TESTING=True, SAFEBARS_REQUIRE_ROLE_AUTH=True)
         self.client = app.test_client()
 
     def tearDown(self):
+        encounter_engine.llm_client = self.original_llm_client
         self.temp_dir.cleanup()
 
     def test_complete_api_workflow(self):
@@ -29,9 +41,13 @@ class EncounterApiTest(unittest.TestCase):
 
         payload = json.loads(json.dumps(SAMPLE_PROJECT))
         payload["use_llm"] = False
+        payload["artifacts"]["ai_governance"] = "Legacy clients must not add an eleventh public field."
         created = self.client.post("/api/safebars/v2/sessions", json=payload)
         self.assertEqual(created.status_code, 201)
         created_payload = created.get_json()
+        self.assertTrue(created_payload["session"]["project"]["uses_ai"])
+        self.assertTrue(created_payload["session"]["use_llm"])
+        self.assertEqual(created_payload["session"]["artifacts"]["ai_governance"], "")
         session_id = created_payload["session"]["id"]
         researcher_headers = {
             "X-SafeBARS-Access": created_payload["access"]["researcher_token"]
@@ -162,6 +178,8 @@ class EncounterApiTest(unittest.TestCase):
         self.assertEqual(versioned.status_code, 201)
         self.assertEqual(versioned.get_json()["session"]["lineage"]["parent_session_id"], session_id)
         self.assertEqual(versioned.get_json()["session"]["lineage"]["version_number"], 2)
+        self.assertTrue(versioned.get_json()["session"]["project"]["uses_ai"])
+        self.assertTrue(versioned.get_json()["session"]["use_llm"])
         self.assertEqual(
             versioned.get_json()["session"]["tradeoff_deliberations"]["recruitment_reach"]["value"],
             70,
@@ -372,7 +390,6 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Keep your record", workspace.data)
         self.assertIn(b"Six short questions", workspace.data)
         self.assertIn(b"Research area and ethics-review context", workspace.data)
-        self.assertIn(b"AI ethics-review supplement", workspace.data)
         self.assertNotIn(b"What are you studying", workspace.data)
         self.assertIn(b"Intake completed", workspace.data)
         self.assertIn(b"Done \xc2\xb7 review populated fields", workspace.data)
@@ -401,7 +418,21 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Unsaved material changes", workspace.data)
         self.assertIn(b"Excluded from scope", workspace.data)
         self.assertIn(b"hadUnsavedMaterialChanges", workspace.data)
-        self.assertIn(b"Optional bounded LLM critic", workspace.data)
+        self.assertNotIn(b"Project researches or uses AI", workspace.data)
+        self.assertNotIn(b"Optional bounded LLM critic", workspace.data)
+        self.assertNotIn(b'id="usesAi"', workspace.data)
+        self.assertNotIn(b'id="useLlm"', workspace.data)
+        self.assertNotIn(b'id="llmLabel"', workspace.data)
+        self.assertIn(b"AI review \xc2\xb7 automatic", workspace.data)
+        self.assertNotIn(b"Zhipu", workspace.data)
+        self.assertIn(b'id="artifactEditorSelect"', workspace.data)
+        self.assertIn(b"0 of 10 fields", workspace.data)
+        self.assertIn(b"1 of 6 \xc2\xb7 not added", workspace.data)
+        self.assertIn(b"keeps all six connected", workspace.data)
+        self.assertNotIn(b'data-artifact-panel="ai_governance"', workspace.data)
+        self.assertNotIn(b'id="artifactAiGovernance"', workspace.data)
+        self.assertNotIn(b"AI ethics-review supplement", workspace.data)
+        self.assertIn(b'for="artifactRecruitment"', workspace.data)
         self.assertIn(b"Run this check again", workspace.data)
         self.assertIn(b"The plan has already run", workspace.data)
         self.assertNotIn(b">V1</span>", workspace.data)

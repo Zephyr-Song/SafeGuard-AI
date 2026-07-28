@@ -857,11 +857,12 @@ def build_ethics_application_docx(session: Dict[str, Any]) -> bytes:
     if project.get("uses_ai") or assessment.get("uses_ai"):
         document.add_heading("7. AI use and risk-management appendix", level=1)
         _add_label_paragraph(document, "AI role described by researcher", project.get("context"))
-        _add_label_paragraph(
-            document,
-            "Submitted AI ethics-review supplement",
-            artifacts.get("ai_governance"),
-        )
+        if str(artifacts.get("ai_governance", "")).strip():
+            _add_label_paragraph(
+                document,
+                "Legacy AI governance notes",
+                artifacts.get("ai_governance"),
+            )
         _add_label_paragraph(
             document,
             "Review basis",
@@ -1041,11 +1042,12 @@ def build_research_design_docx(session: Dict[str, Any]) -> bytes:
     if project.get("uses_ai") or assessment.get("uses_ai"):
         document.add_heading("7. AI role, human oversight, and failure response", level=1)
         _add_label_paragraph(document, "Submitted AI role", project.get("context"))
-        _add_label_paragraph(
-            document,
-            "Submitted AI ethics-review supplement",
-            artifacts.get("ai_governance"),
-        )
+        if str(artifacts.get("ai_governance", "")).strip():
+            _add_label_paragraph(
+                document,
+                "Legacy AI governance notes",
+                artifacts.get("ai_governance"),
+            )
         _add_label_paragraph(
             document,
             "Design basis",
