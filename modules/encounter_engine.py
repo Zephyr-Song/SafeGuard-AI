@@ -780,11 +780,14 @@ class EncounterEngine:
             )
         current_version = int(source.get("lineage", {}).get("version_number", 1) or 1)
         payload = {
-            "project": source.get("project", {}),
-            "artifacts": source.get("artifacts", {}),
+            "project": {**source.get("project", {}), "uses_ai": True},
+            "artifacts": {
+                **source.get("artifacts", {}),
+                "ai_governance": "",
+            },
             "intake_transcript": source.get("intake_transcript", []),
             "selected_scenarios": source.get("selected_scenarios", []),
-            "use_llm": source.get("use_llm", False),
+            "use_llm": True,
             "application_profile_id": source.get("application_profile_id", ""),
             "tradeoff_deliberations": source.get("tradeoff_deliberations", {}),
             "lineage": {
@@ -1464,9 +1467,9 @@ class EncounterEngine:
                 "title": "Probe for additional passage-grounded gaps",
                 "goal": "Find at most two non-checklist gaps while remaining grounded to submitted passages.",
                 "reason": (
-                    "A provider is configured and the researcher enabled this optional probe."
+                    "The always-on AI review path found a configured provider for this bounded probe."
                     if llm_enabled
-                    else "Skipped because no configured provider was enabled; deterministic tracing remains active."
+                    else "The AI critic was requested automatically, but no provider is configured; deterministic tracing remains active."
                 ),
                 "priority": "low",
                 "status": "queued" if llm_enabled else "skipped",

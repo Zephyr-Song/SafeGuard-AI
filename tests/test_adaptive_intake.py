@@ -114,7 +114,7 @@ class AdaptiveIntakeApiTest(unittest.TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
-        self.assertEqual([s["id"] for s in data["conditional"]], ["ai_governance"])
+        self.assertEqual(data["conditional"], [])
 
     def test_plan_endpoint_accepts_flat_payload(self):
         resp = self.client.post(
@@ -122,7 +122,7 @@ class AdaptiveIntakeApiTest(unittest.TestCase):
             json={"title": "AI chatbot", "context": "LLM coach"},
         )
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual([s["id"] for s in resp.get_json()["conditional"]], ["ai_governance"])
+        self.assertEqual(resp.get_json()["conditional"], [])
 
 
 if __name__ == "__main__":

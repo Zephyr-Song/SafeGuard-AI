@@ -86,14 +86,32 @@ def adaptive_intake_plan():
     """
     payload = request.get_json(silent=True) or {}
     project = payload.get("project", payload) if isinstance(payload, dict) else {}
-    plan = build_intake_plan(project or {})
+    project = project if isinstance(project, dict) else {}
+    plan = build_intake_plan(project)
+    plan["conditional"] = []
+    plan["rationale"] = "SafeBARS uses the six core protocol questions; AI review runs automatically after submission."
     return jsonify({"success": True, **plan})
 
 
 @encounter_api.post("/sessions")
 def create_session():
     try:
-        encounter_session = encounter_engine.create_session(request.get_json(silent=True) or {})
+        raw_payload = request.get_json(silent=True) or {}
+        payload = raw_payload if isinstance(raw_payload, dict) else {}
+        project = payload.get("project", {})
+        project = project if isinstance(project, dict) else {}
+        artifacts = payload.get("artifacts", {})
+        artifacts = artifacts if isinstance(artifacts, dict) else {}
+        payload = {
+            **payload,
+            "project": {**project, "uses_ai": True},
+            "artifacts": {
+                key: value for key, value in artifacts.items()
+                if key != "ai_governance"
+            },
+            "use_llm": True,
+        }
+        encounter_session = encounter_engine.create_session(payload)
     except ValueError as exc:
         return jsonify({"success": False, "error": str(exc)}), 400
     except Exception as exc:

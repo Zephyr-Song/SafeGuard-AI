@@ -152,34 +152,6 @@
         textarea { min-height: 84px; resize: vertical; }
         .textarea-short { min-height: 64px; }
 
-        .artifact-group {
-            margin: 12px 0 14px;
-            border-top: 1px solid var(--line);
-        }
-
-        details.artifact {
-            border-bottom: 1px solid var(--line);
-            padding: 0;
-        }
-
-        details.artifact summary {
-            list-style: none;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            min-height: 42px;
-            font-size: 12px;
-            font-weight: 650;
-            cursor: pointer;
-        }
-
-        details.artifact summary::-webkit-details-marker { display: none; }
-        details.artifact[open] summary .chevron { transform: rotate(90deg); }
-        .chevron { transition: transform 120ms; }
-        .artifact-body { padding: 0 0 11px; }
-        .artifact-body textarea { min-height: 96px; }
-
         .btn {
             min-height: 36px;
             border: 1px solid var(--line-strong);
@@ -238,47 +210,6 @@
         .export-option-copy { min-width: 0; }
         .export-option-title { display: block; font-size: 12px; font-weight: 700; }
         .export-option-note { display: block; margin-top: 1px; color: var(--muted); font-size: 10px; }
-
-        .switch-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin: 12px 0;
-            color: #35414c;
-            font-size: 12px;
-        }
-
-        .switch {
-            position: relative;
-            width: 38px;
-            height: 22px;
-            flex: 0 0 auto;
-        }
-
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .switch span {
-            position: absolute;
-            inset: 0;
-            border-radius: 11px;
-            background: #b9c1c8;
-            transition: 120ms;
-        }
-
-        .switch span::after {
-            content: "";
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            left: 3px;
-            top: 3px;
-            border-radius: 50%;
-            background: #fff;
-            transition: 120ms;
-        }
-
-        .switch input:checked + span { background: var(--teal); }
-        .switch input:checked + span::after { transform: translateX(16px); }
 
         .boundary-note {
             display: flex;
@@ -1179,7 +1110,20 @@
         .uncertainty { margin-top: 9px; color: var(--muted); font-size: 11px; }
         .passage-quote { margin-top: 7px; padding: 7px 9px; border-left: 2px solid #9fb1c0; color: #46535f; background: #f3f6f8; font-size: 11px; }
         .passage-quote-head { display: flex; align-items: center; justify-content: space-between; gap: 7px; margin-bottom: 3px; }
-        .source-action { border: 0; padding: 2px 4px; background: transparent; color: var(--blue); font: inherit; font-size: 9px; font-weight: 750; cursor: pointer; }
+        .source-action {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            flex: 0 0 auto;
+            border: 0;
+            padding: 8px 10px;
+            background: transparent;
+            color: var(--blue);
+            font: inherit;
+            font-size: 11px;
+            font-weight: 750;
+            cursor: pointer;
+        }
         textarea.source-focus, input.source-focus { outline: 3px solid rgba(46,116,181,.22); border-color: var(--blue); }
         .issue-decision textarea { min-height: 66px; font-size: 12px; }
         .issue-decision .button-row { gap: 5px; flex-wrap: wrap; }
@@ -1563,16 +1507,122 @@
         }
         .materials-details > summary::-webkit-details-marker { display: none; }
         .materials-details > summary > span:first-child { display: inline-flex; align-items: center; gap: 7px; }
-        .materials-summary-note { color: var(--muted); font-size: 10px; font-weight: 600; }
+        .materials-summary-note { color: var(--muted); font-size: 11px; font-weight: 600; }
         .materials-body { padding: 4px 11px 2px; border-top: 1px solid var(--line); }
-        .artifact-group { margin-bottom: 4px; }
-        details.artifact summary { min-height: 45px; }
-        .switch-row {
-            min-height: 43px;
-            margin: 8px 0;
-            padding: 7px 0;
-            border-bottom: 1px solid #e6edf2;
+        .source-subheading {
+            color: #2d4155;
+            font-size: 12px;
+            font-weight: 780;
         }
+        .artifact-editor {
+            margin: 15px -2px 9px;
+            padding-top: 13px;
+            border-top: 1px solid var(--line);
+        }
+        .artifact-editor-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .artifact-editor-head p {
+            margin: 3px 0 0;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .ai-active-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex: 0 0 auto;
+            padding: 4px 6px;
+            border: 1px solid #add4cd;
+            border-radius: 5px;
+            color: #0b655d;
+            background: var(--green-soft);
+            font-size: 10px;
+            font-weight: 780;
+            line-height: 1.15;
+        }
+        .artifact-editor-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #43566a;
+            font-size: 11px;
+            font-weight: 740;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+        .artifact-editor-select {
+            min-height: 44px;
+            margin-bottom: 9px;
+            font-weight: 700;
+        }
+        .artifact-editor-panels {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #f9fbfc;
+            overflow: hidden;
+        }
+        .artifact-editor-panel { padding: 10px; }
+        .artifact-panel-heading {
+            display: grid;
+            grid-template-columns: 32px minmax(0, 1fr);
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .artifact-panel-icon {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #c2d9dc;
+            border-radius: 7px;
+            color: var(--teal);
+            background: var(--teal-soft);
+        }
+        .artifact-panel-heading label {
+            display: block;
+            color: #283d52;
+            font-size: 11px;
+            font-weight: 750;
+        }
+        .artifact-panel-heading small {
+            display: block;
+            margin-top: 1px;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.35;
+        }
+        .artifact-editor-panel textarea {
+            min-height: 142px;
+            background: #fff;
+        }
+        .artifact-reference {
+            margin-top: 7px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 11px;
+        }
+        .artifact-reference summary {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: var(--teal);
+            font-weight: 750;
+        }
+        .artifact-reference p { margin: 0 0 7px; line-height: 1.45; }
+        .artifact-editor-status {
+            margin: -4px 1px 8px;
+            color: var(--muted);
+            font-size: 11px;
+            text-align: right;
+        }
+        .artifact-editor-status.complete { color: var(--green); font-weight: 750; }
         .boundary-note { border-radius: 0 7px 7px 0; }
 
         .workspace-hero {
@@ -1921,6 +1971,17 @@
             .more-menu, .export-menu { position: fixed; top: 118px; right: 10px; left: 10px; width: auto; }
             .intake-panel { padding: 18px 14px 28px; }
             .materials-details:not([open]) { background: #f8fafb; }
+            .artifact-editor-head { display: block; }
+            .artifact-editor-head p,
+            .artifact-editor-label,
+            .artifact-panel-heading small,
+            .artifact-reference,
+            .artifact-editor-status,
+            .ai-active-badge { font-size: 12px; }
+            .ai-active-badge { margin-top: 7px; }
+            .artifact-editor-panel textarea { min-height: 165px; }
+            .passage-quote-head { align-items: flex-start; flex-wrap: wrap; }
+            .source-action { font-size: 12px; }
             .main-panel { padding-inline: 10px; }
             .workspace-hero { border-radius: 11px; padding: 23px 17px; }
             .workspace-hero h2 { font-size: 29px; }
@@ -2066,7 +2127,7 @@
             <button class="btn btn-teal full" id="guidedIntakeButton">
                 <i data-lucide="messages-square" size="16"></i><span id="guidedIntakeLabel">Start quick intake</span>
             </button>
-            <p class="section-kicker" id="guidedIntakeCopy" style="margin:7px 0 12px">Six short questions scaffold your review context, plan, participants, procedure, safeguards, and data. AI-related projects can then add a separate governance section.</p>
+            <p class="section-kicker" id="guidedIntakeCopy" style="margin:7px 0 12px">Six short questions scaffold the protocol. AI-assisted review runs automatically after the materials are submitted.</p>
 
             <div class="material-progress" aria-live="polite">
                 <div class="material-progress-copy"><span id="materialProgressText">No source material added yet</span><span id="materialProgressPercent">0%</span></div>
@@ -2093,56 +2154,57 @@
                 <textarea id="targetPeople" class="textarea-short" placeholder="Participants, helpers, partners, gatekeepers, services"></textarea>
             </div>
 
-            <div class="artifact-group" id="artifactGroup">
-                <details class="artifact" open>
-                    <summary><span>Recruitment message</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
-                    <div class="artifact-body"><textarea id="artifactRecruitment" placeholder="Invitation, eligibility, contact, compensation"></textarea></div>
-                </details>
-                <details class="artifact">
-                    <summary><span>Consent language</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
-                    <div class="artifact-body"><textarea id="artifactConsent" placeholder="Consent, recording, privacy, withdrawal"></textarea></div>
-                </details>
-                <details class="artifact">
-                    <summary><span>Interview questions</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
-                    <div class="artifact-body"><textarea id="artifactInterview" placeholder="One question per line"></textarea></div>
-                </details>
-                <details class="artifact">
-                    <summary><span>Workshop or activity plan</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
-                    <div class="artifact-body"><textarea id="artifactActivity" placeholder="Activities, duration, materials, transitions"></textarea></div>
-                </details>
-                <details class="artifact">
-                    <summary><span>Safety procedure</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
-                    <div class="artifact-body"><textarea id="artifactSafety" placeholder="Pause, distress, support, escalation, responsibility"></textarea></div>
-                </details>
-                <details class="artifact">
-                    <summary><span>Follow-up and data use</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
-                    <div class="artifact-body"><textarea id="artifactFollowUp" placeholder="Debrief, follow-up, storage, reporting, deletion"></textarea></div>
-                </details>
-                <details class="artifact" id="aiGovernanceArtifact" hidden>
-                    <summary><span>AI ethics-review supplement</span><i class="chevron" data-lucide="chevron-right" size="15"></i></summary>
-                    <div class="artifact-body">
-                        <div class="source-key" style="margin:0 0 8px"><strong>Why this appears:</strong> the prompts adapt AI-specific human-subjects review questions from <a href="https://doi.org/10.3389/fcomp.2023.1235226" target="_blank" rel="noopener">Makridis et al. (2023)</a> and university REC guidance from <a href="https://doi.org/10.5281/zenodo.13739834" target="_blank" rel="noopener">Connelly et al. (2025)</a>, alongside NIST AI RMF.</div>
-                        <textarea id="artifactAiGovernance" placeholder="AI role & decision authority:&#10;Data source & intended population:&#10;Participant disclosure & consent:&#10;Performance & subgroup bias:&#10;Privacy & security:&#10;Human oversight & monitoring:&#10;Stopping rule & fallback:&#10;Correction, complaints & accountable owner:"></textarea>
+            <section class="artifact-editor" id="artifactGroup" aria-labelledby="artifactEditorHeading">
+                <div class="artifact-editor-head">
+                    <div>
+                        <div class="source-subheading" id="artifactEditorHeading">Protocol documents</div>
+                        <p>Choose one document to edit. SafeBARS keeps all six connected behind this single workspace.</p>
                     </div>
-                </details>
-            </div>
+                    <span class="ai-active-badge" id="aiModeBadge"><i data-lucide="sparkles" size="12"></i><span id="aiModeText">AI review · automatic</span></span>
                 </div>
+
+                <label class="artifact-editor-label" for="artifactEditorSelect">Editing document</label>
+                <select class="artifact-editor-select" id="artifactEditorSelect">
+                    <option value="recruitment">Recruitment message</option>
+                    <option value="consent">Consent language</option>
+                    <option value="interview">Interview questions</option>
+                    <option value="activity">Workshop or activity plan</option>
+                    <option value="safety">Safety and escalation procedure</option>
+                    <option value="follow_up">Debrief, follow-up, and data use</option>
+                </select>
+                <div class="artifact-editor-status" id="artifactEditorStatus">1 of 6 · not added</div>
+
+                <div class="artifact-editor-panels">
+                    <section class="artifact-editor-panel active" data-artifact-panel="recruitment">
+                        <div class="artifact-panel-heading"><span class="artifact-panel-icon"><i data-lucide="megaphone" size="16"></i></span><div><label for="artifactRecruitment">Recruitment message</label><small id="artifactRecruitmentHint">Invitation, eligibility, contact route, compensation, and pressure safeguards.</small></div></div>
+                        <textarea id="artifactRecruitment" aria-describedby="artifactRecruitmentHint" placeholder="Paste or draft the invitation, eligibility, contact, and compensation wording"></textarea>
+                    </section>
+                    <section class="artifact-editor-panel" data-artifact-panel="consent" hidden>
+                        <div class="artifact-panel-heading"><span class="artifact-panel-icon"><i data-lucide="file-check-2" size="16"></i></span><div><label for="artifactConsent">Consent language</label><small id="artifactConsentHint">Comprehension, voluntariness, recording, data use, skipping, and withdrawal.</small></div></div>
+                        <textarea id="artifactConsent" aria-describedby="artifactConsentHint" placeholder="Paste or draft the consent, recording, privacy, and withdrawal wording"></textarea>
+                    </section>
+                    <section class="artifact-editor-panel" data-artifact-panel="interview" hidden>
+                        <div class="artifact-panel-heading"><span class="artifact-panel-icon"><i data-lucide="message-circle-question" size="16"></i></span><div><label for="artifactInterview">Interview questions</label><small id="artifactInterviewHint">Prompts, sensitive topics, optional questions, and interviewer follow-ups.</small></div></div>
+                        <textarea id="artifactInterview" aria-describedby="artifactInterviewHint" placeholder="Enter one interview question or prompt per line"></textarea>
+                    </section>
+                    <section class="artifact-editor-panel" data-artifact-panel="activity" hidden>
+                        <div class="artifact-panel-heading"><span class="artifact-panel-icon"><i data-lucide="panels-top-left" size="16"></i></span><div><label for="artifactActivity">Workshop or activity plan</label><small id="artifactActivityHint">Tasks, duration, technologies, breaks, accessibility, and alternatives.</small></div></div>
+                        <textarea id="artifactActivity" aria-describedby="artifactActivityHint" placeholder="Describe activities, duration, materials, transitions, breaks, and alternatives"></textarea>
+                    </section>
+                    <section class="artifact-editor-panel" data-artifact-panel="safety" hidden>
+                        <div class="artifact-panel-heading"><span class="artifact-panel-icon"><i data-lucide="shield-plus" size="16"></i></span><div><label for="artifactSafety">Safety and escalation procedure</label><small id="artifactSafetyHint">Pause or stop triggers, responsible staff, escalation limits, and real support routes.</small></div></div>
+                        <textarea id="artifactSafety" aria-describedby="artifactSafetyHint" placeholder="Describe distress, disclosure, privacy, pause, support, and escalation procedures"></textarea>
+                    </section>
+                    <section class="artifact-editor-panel" data-artifact-panel="follow_up" hidden>
+                        <div class="artifact-panel-heading"><span class="artifact-panel-icon"><i data-lucide="database-backup" size="16"></i></span><div><label for="artifactFollowUp">Debrief, follow-up, and data use</label><small id="artifactFollowUpHint">Debrief, complaints, access, storage, retention, deletion, and reporting.</small></div></div>
+                        <textarea id="artifactFollowUp" aria-describedby="artifactFollowUpHint" placeholder="Describe debrief, follow-up, storage, reporting, retention, deletion, and complaints"></textarea>
+                    </section>
+                </div>
+
+            </section>
+            </div>
             </details>
 
-            <div class="switch-row">
-                <span>Project researches or uses AI</span>
-                <label class="switch" title="Enable AI-specific university ethics-review questions and the NIST AI RMF extension">
-                    <input id="usesAi" type="checkbox">
-                    <span></span>
-                </label>
-            </div>
-            <div class="switch-row">
-                <span id="llmLabel">Optional bounded LLM critic · off by default</span>
-                <label class="switch" title="Optional: use the configured provider for up to two additional passage-grounded issues">
-                    <input id="useLlm" type="checkbox">
-                    <span></span>
-                </label>
-            </div>
             <button class="btn btn-primary full" id="buildMapButton">
                 <i data-lucide="network" size="17"></i>Build encounter map
             </button>
@@ -2480,7 +2542,7 @@
             <div class="guide-roles">
                 <section class="guide-role">
                     <h3>For researchers</h3><p>Prepare and stress-test a sensitive human-facing protocol.</p>
-                    <div class="guide-step"><span class="guide-step-number">1</span><div><strong>Complete Quick Intake</strong><p>Answer six short questions about the review context, research plan, people, procedures, safeguards, and data. AI projects receive one structured ethics-review supplement.</p></div></div>
+                    <div class="guide-step"><span class="guide-step-number">1</span><div><strong>Complete Quick Intake</strong><p>Answer six protocol questions. AI-assisted review runs automatically after submission.</p></div></div>
                     <div class="guide-step"><span class="guide-step-number">2</span><div><strong>Review the populated fields</strong><p>Correct the protocol materials in the left panel before analysis.</p></div></div>
                     <div class="guide-step"><span class="guide-step-number">3</span><div><strong>Build encounter map</strong><p>Create the case, index passages, and inspect the participant journey.</p></div></div>
                     <div class="guide-step"><span class="guide-step-number">4</span><div><strong>Run selected traces</strong><p>Choose breakdown scenarios and run the audit to identify issues and human handoffs.</p></div></div>
@@ -2553,13 +2615,13 @@
             activity: "artifactActivity",
             safety: "artifactSafety",
             follow_up: "artifactFollowUp",
-            ai_governance: "artifactAiGovernance",
         };
+        const artifactEditorOrder = Object.keys(artifactInputs);
 
         let intakePlan = null;  // server-driven question schema; falls back to the built-in steps below
 
         const coreIntakeSteps = [
-            {id: "context", question: "Which research area and ethics-review context applies, and what research plan will be submitted?", hint: "Use two sections if possible:\nReview context: research area; university or organisation; school or department; ethics committee or review pathway; country or jurisdiction.\nProject plan: aim, setting, method, why human participation is needed, and either describe the AI role or write 'No AI'.", min: 30, detectAi: true, fallbackTarget: "projectContext", sections: [
+            {id: "context", question: "Which research area and ethics-review context applies, and what research plan will be submitted?", hint: "Use two sections if possible:\nReview context: research area; university or organisation; school or department; ethics committee or review pathway; country or jurisdiction.\nProject plan: aim, setting, method, and why human participation is needed.", min: 30, fallbackTarget: "projectContext", sections: [
                 {target: "projectReviewContext", labels: ["review context", "research area", "institution", "university", "organisation", "organization", "school", "department", "committee", "jurisdiction"]},
                 {target: "projectContext", labels: ["project plan", "plan", "aim", "purpose", "method", "research"]},
             ]},
@@ -2576,19 +2638,51 @@
             {id: "follow_up", target: "artifactFollowUp", question: "What happens after participation and to the research data?", hint: "Cover debriefing, complaints, follow-up, access, storage, security, retention, deletion, reporting, and withdrawal after collection.", min: 30},
         ];
 
-        const aiIntakeStep = {id: "ai_governance", target: "artifactAiGovernance", question: "Complete the AI ethics-review supplement: how is AI used, governed, disclosed, tested, and corrected?", hint: "Use short labelled lines: AI role & decision authority; data source & intended population; participant disclosure & consent; performance & subgroup bias; privacy & security; human oversight & monitoring; stopping/fallback; correction, complaints & accountable owner.", min: 30};
-
         function activeIntakeSteps() {
-            const core = (intakePlan && Array.isArray(intakePlan.core)) ? intakePlan.core : coreIntakeSteps;
-            let aiStep = (intakePlan && Array.isArray(intakePlan.conditional))
-                ? intakePlan.conditional.find(s => s.id === "ai_governance")
-                : null;
-            if (!aiStep) aiStep = aiIntakeStep;  // built-in fallback preserves live reactivity
-            return [...core, ...($("usesAi").checked ? [aiStep] : [])];
+            return (intakePlan && Array.isArray(intakePlan.core)) ? intakePlan.core : coreIntakeSteps;
         }
 
         const $ = (id) => document.getElementById(id);
         const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+
+        function updateArtifactEditorStatus() {
+            const select = $("artifactEditorSelect");
+            if (!select) return;
+            const key = select.value;
+            const index = Math.max(0, artifactEditorOrder.indexOf(key));
+            const value = ($(artifactInputs[key])?.value || "").trim();
+            $("artifactEditorStatus").textContent = `${index + 1} of ${artifactEditorOrder.length} · ${value ? "added" : "not added"}`;
+            $("artifactEditorStatus").classList.toggle("complete", !!value);
+        }
+
+        function updateAiModeStatus() {
+            const legacySession = state.session
+                && (state.session.use_llm === false || state.session.project?.uses_ai === false);
+            const provider = state.options?.active_provider;
+            if (legacySession) {
+                $("aiModeText").textContent = "Legacy record · create AI version";
+                $("aiModeBadge").title = "This saved record predates always-on AI review. Create a new protocol version to apply the current AI workflow without rewriting its audit history.";
+                return;
+            }
+            $("aiModeText").textContent = provider
+                ? "AI review · automatic"
+                : "AI review · model setup needed";
+            $("aiModeBadge").title = provider
+                ? "A configured bounded model critic runs automatically."
+                : "No external model is configured. Framework routing and deterministic safeguards remain active.";
+        }
+
+        function selectArtifactEditor(key, focusEditor = false) {
+            if (!artifactInputs[key]) key = artifactEditorOrder[0];
+            $("artifactEditorSelect").value = key;
+            document.querySelectorAll("[data-artifact-panel]").forEach(panel => {
+                const active = panel.dataset.artifactPanel === key;
+                panel.hidden = !active;
+                panel.classList.toggle("active", active);
+            });
+            updateArtifactEditorStatus();
+            if (focusEditor) requestAnimationFrame(() => $(artifactInputs[key])?.focus());
+        }
 
         function studyConditionValue() {
             if (!STUDY_MODE) return "";
@@ -2609,12 +2703,6 @@
             $("exportControl").hidden = generalChat;
             $("guidedIntakeButton").hidden = generalChat;
             $("guidedIntakeCopy").hidden = generalChat;
-            $("useLlm").checked = true;
-            $("useLlm").disabled = true;
-            const provider = state.options?.active_provider;
-            $("llmLabel").textContent = provider
-                ? `Study model fixed · ${provider.label} · ${provider.model}`
-                : "Study model required · no provider configured";
             $("buildMapButton").innerHTML = generalChat
                 ? `<i data-lucide="message-square" size="17"></i>Create study workspace`
                 : `<i data-lucide="network" size="17"></i>Build encounter map`;
@@ -2679,24 +2767,21 @@
                 "artifactSafety",
                 "artifactFollowUp",
             ];
-            if ($("usesAi").checked) fieldIds.push("artifactAiGovernance");
             const filled = fieldIds.filter(id => ($(id)?.value || "").trim()).length;
             const total = fieldIds.length;
             const percent = Math.round((filled / total) * 100);
-            $("materialProgressBar").style.width = `${percent}%`;
-            $("materialProgressPercent").textContent = `${percent}%`;
-            $("materialFieldCount").textContent = `${filled} of ${total} fields`;
-            $("materialProgressText").textContent = filled
-                ? `${filled} source field${filled === 1 ? "" : "s"} ready for review`
-                : "No source material added yet";
+            const progress = document.querySelector(".material-progress");
+            if (progress.dataset.filled !== String(filled)) {
+                progress.dataset.filled = String(filled);
+                $("materialProgressBar").style.width = `${percent}%`;
+                $("materialProgressPercent").textContent = `${percent}%`;
+                $("materialFieldCount").textContent = `${filled} of ${total} fields`;
+                $("materialProgressText").textContent = filled
+                    ? `${filled} source field${filled === 1 ? "" : "s"} ready for review`
+                    : "No source material added yet";
+            }
             $("workspaceHero").classList.toggle("has-session", !!state.session);
-        }
-
-        function updateAiSupplementVisibility() {
-            const panel = $("aiGovernanceArtifact");
-            if (!panel) return;
-            panel.hidden = !$("usesAi").checked;
-            if (!panel.hidden && $("artifactAiGovernance").value.trim()) panel.open = true;
+            updateArtifactEditorStatus();
         }
 
         function collectPayload() {
@@ -2708,11 +2793,11 @@
                     review_context: $("projectReviewContext").value.trim(),
                     context: $("projectContext").value.trim(),
                     target_people: $("targetPeople").value.trim(),
-                    uses_ai: $("usesAi").checked,
+                    uses_ai: true,
                 },
                 artifacts,
                 selected_scenarios: selectedScenarioIds(),
-                use_llm: $("useLlm").checked,
+                use_llm: true,
                 intake_transcript: state.intakeTranscript,
             };
             if (STUDY_MODE) {
@@ -2741,9 +2826,6 @@
             $("projectReviewContext").value = project.review_context || "";
             $("projectContext").value = project.context || "";
             $("targetPeople").value = project.target_people || "";
-            $("usesAi").checked = !!project.uses_ai;
-            updateAiSupplementVisibility();
-            $("useLlm").checked = !!state.session.use_llm && !$("useLlm").disabled;
             Object.entries(artifactInputs).forEach(([key, id]) => $(id).value = state.session.artifacts?.[key] || "");
             state.intakeTranscript = state.session.intake_transcript || [];
             state.intakeComplete = state.intakeTranscript.some(item => /intake (?:is )?complete|quick intake complete/i.test(item.text || ""));
@@ -2932,7 +3014,7 @@
             ["studyId", "studyParticipantId", "studyCondition", "studyCaseId", "studyOrder", "studyConsentConfirmed"]
                 .forEach(id => $(id).disabled = locked);
             if (locked) {
-                ["projectTitle", "projectReviewContext", "projectContext", "targetPeople", ...Object.values(artifactInputs), "usesAi", "useLlm", "guidedIntakeButton", "buildMapButton"]
+                ["projectTitle", "projectReviewContext", "projectContext", "targetPeople", ...Object.values(artifactInputs), "guidedIntakeButton", "buildMapButton"]
                     .forEach(id => { if ($(id)) $(id).disabled = true; });
             }
             const status = manifest?.task_status || "not_configured";
@@ -3009,11 +3091,9 @@
             $("projectReviewContext").value = sample.project.review_context || "";
             $("projectContext").value = sample.project.context;
             $("targetPeople").value = sample.project.target_people;
-            $("usesAi").checked = false;
-            updateAiSupplementVisibility();
             Object.entries(artifactInputs).forEach(([key, id]) => $(id).value = sample.artifacts[key] || "");
-            document.querySelectorAll("details.artifact").forEach((details, index) => details.open = index < 3);
             $("materialsDetails").open = true;
+            selectArtifactEditor("recruitment");
             updateMaterialProgress();
             markAnalysisDirty();
             toast("Sample protocol loaded.");
@@ -3043,13 +3123,13 @@
             if (!step) {
                 state.intakeComplete = true;
                 const coreCount = (intakePlan && Array.isArray(intakePlan.core)) ? intakePlan.core.length : coreIntakeSteps.length;
-                appendIntakeMessage("bot", `Quick intake complete: ${coreCount} core questions${$("usesAi").checked ? " plus one AI follow-up" : ""}. Review or refine the populated fields before building the encounter map.`);
+                appendIntakeMessage("bot", `Quick intake complete: ${coreCount} protocol questions answered. Review or refine the populated fields before building the encounter map.`);
                 $("intakeProgress").textContent = "Complete · review the structured fields or continue directly";
                 showIntakeCompletion();
                 renderWorkflow();
                 return;
             }
-            $("intakeProgress").textContent = `Step ${state.intakeStep + 1} of ${steps.length} · ${step.id.replaceAll("_", " ")}${step.id === "ai_governance" ? " (AI only)" : ""}`;
+            $("intakeProgress").textContent = `Step ${state.intakeStep + 1} of ${steps.length} · ${step.id.replaceAll("_", " ")}`;
             appendIntakeMessage("bot", step.question);
             $("intakeAnswer").value = "";
             $("intakeAnswer").placeholder = step.hint;
@@ -3067,7 +3147,7 @@
                             review_context: $("projectReviewContext").value,
                             context: $("projectContext").value,
                             target_people: $("targetPeople").value,
-                            uses_ai: $("usesAi").checked,
+                            uses_ai: true,
                         },
                     }),
                 });
@@ -3090,7 +3170,7 @@
             $("intakeAnswer").disabled = false;
             $("intakeAnswer").hidden = false;
             $("intakeCompletePanel").hidden = true;
-            appendIntakeMessage("bot", "I will use six short questions to organise your protocol. You may skip a question and edit every populated field later. If AI is involved, one structured ethics-review supplement will appear.");
+            appendIntakeMessage("bot", "I will use six short questions to organise your protocol. You may skip a question and edit every populated field later.");
             askCurrentIntakeQuestion();
             refreshIcons();
         }
@@ -3147,13 +3227,6 @@
         }
 
         function applyIntakeAnswer(step, answer) {
-            if (step.detectAi) {
-                const normalized = answer.toLowerCase();
-                const explicitlyNoAi = /\b(no ai|without ai|does not use ai|do not use ai|not using ai)\b/.test(normalized);
-                const mentionsAi = /\b(ai|artificial intelligence|llm|language model|machine learning|algorithmic|automated model)\b/.test(normalized);
-                $("usesAi").checked = mentionsAi && !explicitlyNoAi;
-                updateAiSupplementVisibility();
-            }
             if (step.sections) applySectionAnswer(answer, step.sections, step.fallbackTarget);
             else if (step.appendTarget) {
                 const existing = $(step.appendTarget).value.trim();
@@ -3309,7 +3382,7 @@
                     project: previous.project,
                     artifacts: previous.artifacts,
                     selected_scenarios: scenarioIds,
-                    use_llm: previous.use_llm,
+                use_llm: true,
                 }),
             });
             state.session = created.session;
@@ -3394,16 +3467,23 @@
             return ids.length ? `<div class="source-row"><span class="source-help" title="A passage is a numbered excerpt from one submitted material field."><i data-lucide="info" size="12"></i>Evidence from</span>${ids.map(id => `<span class="source-chip">${escapeHtml(passageLabel(id))}</span>`).join("")}</div>` : "";
         }
         function sourceQuotes(ids = []) {
-            return ids.map(id => passage(id)).filter(Boolean).map(item => `<div class="passage-quote"><div class="passage-quote-head"><strong>${escapeHtml(passageLabel(item.id))}</strong><button type="button" class="source-action" data-focus-artifact="${escapeHtml(item.artifact_type)}">Show in protocol ↗</button></div>${escapeHtml(item.text)}</div>`).join("");
+            return ids.map(id => passage(id)).filter(Boolean).map(item => {
+                const action = artifactInputs[item.artifact_type]
+                    ? `<button type="button" class="source-action" data-focus-artifact="${escapeHtml(item.artifact_type)}" aria-label="Show ${escapeHtml(passageLabel(item.id))} in protocol">Show in protocol ↗</button>`
+                    : `<span class="source-help">Saved legacy material</span>`;
+                return `<div class="passage-quote"><div class="passage-quote-head"><strong>${escapeHtml(passageLabel(item.id))}</strong>${action}</div>${escapeHtml(item.text)}</div>`;
+            }).join("");
         }
         function bindSourceNavigation() {
             document.querySelectorAll("[data-focus-artifact]").forEach(button => button.onclick = () => {
-                const field = $(artifactInputs[button.dataset.focusArtifact]);
+                const artifactKey = button.dataset.focusArtifact;
+                const field = $(artifactInputs[artifactKey]);
                 if (!field) return;
-                const disclosure = field.closest("details");
-                if (disclosure) disclosure.open = true;
+                $("materialsDetails").open = true;
+                selectArtifactEditor(artifactKey);
                 requestAnimationFrame(() => {
-                    field.scrollIntoView({behavior:"smooth", block:"center"});
+                    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+                    field.scrollIntoView({behavior, block:"center"});
                     field.focus({preventScroll:true});
                     field.classList.add("source-focus");
                     setTimeout(() => field.classList.remove("source-focus"), 1600);
@@ -3585,6 +3665,7 @@
         }
 
         function renderAll() {
+            updateAiModeStatus();
             renderStudyCondition();
             if (!isGeneralChatCondition()) {
                 renderCounts();
@@ -4311,25 +4392,21 @@
         }
 
         async function initialize() {
+            const hasStoredSession = Boolean(sessionStorage.getItem(currentSessionStorageKey));
+            if (window.matchMedia("(max-width: 860px)").matches && !hasStoredSession) {
+                $("materialsDetails").open = false;
+            }
             try {
                 const evidenceRequest = loadTechnicalEvidence();
                 state.options = await api("/api/safebars/v2/options");
-                const provider = state.options.active_provider;
-                if (STUDY_MODE) {
-                    $("useLlm").disabled = true;
-                    $("useLlm").checked = true;
-                    renderStudyCondition();
-                } else {
-                    $("useLlm").disabled = !state.options.llm_configured;
-                    $("useLlm").checked = false;
-                    $("llmLabel").textContent = provider ? `Optional LLM critic · ${provider.label} · off by default` : "Optional LLM critic · unavailable";
-                }
+                updateAiModeStatus();
+                if (STUDY_MODE) renderStudyCondition();
                 const restored = await restoreCurrentSession();
                 if (!restored) {
                     renderScenarioOptions();
                     renderStudyInstrumentation();
                 }
-                if (window.matchMedia("(max-width: 860px)").matches && !state.session) $("materialsDetails").open = false;
+                selectArtifactEditor($("artifactEditorSelect").value || "recruitment");
                 updateMaterialProgress();
                 await evidenceRequest;
             } catch (error) { toast(error.message, true); }
@@ -4423,6 +4500,7 @@
             });
         }
         $("applicationProfile").addEventListener("change", updateApplicationProfile);
+        $("artifactEditorSelect").addEventListener("change", event => selectArtifactEditor(event.target.value));
         $("saveTradeoffsButton").addEventListener("click", saveTradeoffDeliberations);
         $("saveMapButton").addEventListener("click", () => saveMap(false));
         $("updatePlanButton").addEventListener("click", () => updateAuditPlan(false));
@@ -4433,12 +4511,7 @@
             markAnalysisDirty();
             updateMaterialProgress();
         }));
-        $("usesAi").addEventListener("change", () => {
-            updateAiSupplementVisibility();
-            markAnalysisDirty();
-            updateMaterialProgress();
-        });
-        updateAiSupplementVisibility();
+        selectArtifactEditor("recruitment");
         initialize();
     </script>
 </body>
