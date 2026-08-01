@@ -580,6 +580,32 @@ We expect the tool to help students who have limited access to individual superv
             ? firstValue(designChoice.quote, designChoice.text, designChoice.excerpt, "")
             : designChoice;
         const provenance = firstValue(item.provenance, {});
+        const linkedLensIds = asArray(firstValue(
+            item.lens_ids,
+            typeof provenance === "object" ? provenance.lens_ids : [],
+            relatedScenario?.lens_ids,
+            []
+        )).map(String).filter(Boolean);
+        const linkedLenses = linkedLensIds.map((lensId) => (
+            session.lenses.find((candidate) => candidate.id === lensId)
+        )).filter(Boolean);
+        const derivedAttentionLensIds = linkedLenses.filter((lens) => {
+            return lens.status !== "action-linked";
+        }).map((lens) => lens.id);
+        const explicitAttention = firstValue(
+            item.attention_required,
+            item.needs_attention,
+            item.requires_attention,
+            undefined
+        );
+        const needsAttention = explicitAttention === undefined
+            ? linkedLenses.length > 0 && !linkedLenses.some((lens) => lens.status === "action-linked")
+            : explicitAttention === true || String(explicitAttention).toLowerCase() === "true";
+        const attentionLensIds = asArray(firstValue(
+            item.attention_lens_ids,
+            item.attention?.lens_ids,
+            derivedAttentionLensIds
+        )).map(String).filter(Boolean);
         const literatureIds = asArray(firstValue(
             item.literature_ids,
             item.sources,
@@ -612,8 +638,17 @@ We expect the tool to help students who have limited access to individual superv
             affected_party: typeof partyValue === "object"
                 ? firstValue(partyValue.label, partyValue.name, partyValue.role, "Affected person")
                 : partyValue,
-            relation: String(firstValue(item.relation, item.type, item.edge_type, "conflict")).toLowerCase(),
-            tension: clamp(firstValue(item.tension_level, item.strength, item.severity, relatedScenario?.tension, 3), 0, 4),
+            relation: String(firstValue(item.relation, item.type, item.edge_type, "context_to_inspect")).toLowerCase(),
+            tension: clamp(firstValue(item.tension_level, item.strength, item.severity, relatedScenario?.tension, 2), 0, 4),
+            needs_attention: needsAttention,
+            attention_lens_ids: attentionLensIds,
+            attention_basis: firstValue(
+                item.attention_basis,
+                item.attention?.basis,
+                needsAttention
+                    ? "None of the linked lenses contains Action-linked plan evidence. This is a coverage-based focus rule, not an ethics score."
+                    : "This path remains available for inspection but does not meet the coverage-based attention rule."
+            ),
             rationale: firstValue(
                 item.rationale,
                 item.argument,
@@ -1716,8 +1751,8 @@ We expect the tool to help students who have limited access to individual superv
 
     function graphEdges() {
         const edges = state.session?.dissonance_edges || [];
-        if (state.mapMode === "strong") {
-            return edges.filter((edge) => edge.tension >= 2.5 || edge.relation.includes("conflict"));
+        if (["attention", "strong"].includes(state.mapMode)) {
+            return edges.filter((edge) => edge.needs_attention);
         }
         return edges;
     }
@@ -1761,11 +1796,26 @@ We expect the tool to help students who have limited access to individual superv
     }
 
     function renderGraph() {
+        const allEdges = state.session?.dissonance_edges || [];
         const edges = graphEdges();
+        const attentionCount = allEdges.filter((edge) => edge.needs_attention).length;
+        const allModeButton = document.querySelector('[data-map-mode="all"]');
+        const attentionModeButton = document.querySelector('[data-map-mode="attention"]');
+        if (allModeButton) allModeButton.textContent = `All paths (${allEdges.length})`;
+        if (attentionModeButton) attentionModeButton.textContent = `Needs attention (${attentionCount})`;
         dom.graphEmpty.hidden = edges.length > 0;
         dom.dissonanceGraph.style.display = edges.length ? "block" : "none";
         if (!edges.length) {
             dom.graphViewport.innerHTML = "";
+            const emptyTitle = dom.graphEmpty.querySelector("h3");
+            const emptyCopy = dom.graphEmpty.querySelector("p");
+            if (state.mapMode === "attention") {
+                if (emptyTitle) emptyTitle.textContent = "No paths meet the attention rule";
+                if (emptyCopy) emptyCopy.textContent = "All paths remain inspectable. Every current path has at least one linked lens with Action-linked plan evidence.";
+            } else {
+                if (emptyTitle) emptyTitle.textContent = "No dissonance paths yet";
+                if (emptyCopy) emptyCopy.textContent = "Run the literature and perspective analysis to construct the map.";
+            }
             renderInspector(null);
             return;
         }
@@ -1784,7 +1834,7 @@ We expect the tool to help students who have limited access to individual superv
         const markup = [];
         edges.forEach((edge, index) => {
             const y = 27 + index * rowHeight;
-            const isConflict = edge.relation.includes("conflict") || edge.relation.includes("tension");
+            const isConflict = edge.needs_attention;
             const edgeClass = isConflict ? "conflict" : "neutral";
             for (let connection = 0; connection < positions.length - 1; connection += 1) {
                 const from = positions[connection];
@@ -1899,6 +1949,10 @@ We expect the tool to help students who have limited access to individual superv
                 <div class="inspector-evidence">
                     <strong>Grounding &amp; limit</strong>
                     <p>${escapeHtml(sourceLabels.join("; ") || "No source identifier was returned for this path. Verify the scenario before using it.")}</p>
+                </div>
+                <div class="inspector-evidence ${edge.needs_attention ? "attention" : ""}">
+                    <strong>${edge.needs_attention ? "Why this appears under Needs attention" : "Why this remains under All paths"}</strong>
+                    <p>${escapeHtml(edge.attention_basis)}</p>
                 </div>
                 <div class="inspector-actions">
                     <button class="primary-button" type="button" data-revise-edge="${escapeAttr(edge.id)}">Respond to this tension</button>
@@ -2669,7 +2723,11 @@ We expect the tool to help students who have limited access to individual superv
         document.querySelectorAll("[data-map-mode]").forEach((button) => {
             button.addEventListener("click", () => {
                 state.mapMode = button.dataset.mapMode;
-                document.querySelectorAll("[data-map-mode]").forEach((item) => item.classList.toggle("is-active", item === button));
+                document.querySelectorAll("[data-map-mode]").forEach((item) => {
+                    const active = item === button;
+                    item.classList.toggle("is-active", active);
+                    item.setAttribute("aria-pressed", String(active));
+                });
                 renderGraph();
             });
         });

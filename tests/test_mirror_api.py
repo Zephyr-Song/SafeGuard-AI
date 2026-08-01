@@ -58,6 +58,8 @@ class MirrorApiTest(unittest.TestCase):
         self.assertIn("Question 1 of 8", html)
         self.assertIn("asks one question at a time", html)
         self.assertIn("does not use the camera to estimate age", html)
+        self.assertIn("Needs attention", html)
+        self.assertNotIn("Strong tensions", html)
 
     def test_frontend_normalizes_the_structured_provenance_contract(self):
         project_root = Path(__file__).resolve().parents[1]
@@ -76,6 +78,8 @@ class MirrorApiTest(unittest.TestCase):
             "revision.resolutions",
             "revision.after_snapshot",
             "revision.replay",
+            "item.attention_required",
+            "edge.needs_attention",
         ):
             with self.subTest(contract_marker=contract_marker):
                 self.assertIn(contract_marker, javascript)
@@ -205,6 +209,8 @@ class MirrorApiTest(unittest.TestCase):
         self.assertIs(analyzed_payload["success"], True)
         analyzed = analyzed_payload["session"]
         edge = analyzed["dissonance_edges"][0]
+        self.assertIn("attention_required", edge)
+        self.assertIn("attention_basis", edge)
 
         revised_plan = (
             SAMPLE_MIRROR_PROJECT["research_plan"]

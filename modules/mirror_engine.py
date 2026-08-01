@@ -924,6 +924,28 @@ class MirrorEngine:
                 for source_id in lens_map[lens_id]["source_ids"]:
                     if source_id not in literature_ids:
                         literature_ids.append(source_id)
+            linked_lenses = [lens_map[lens_id] for lens_id in lens_ids]
+            attention_lenses = [
+                lens for lens in linked_lenses if lens.get("state_id") != "action_linked"
+            ]
+            attention_required = bool(linked_lenses) and not any(
+                lens.get("state_id") == "action_linked" for lens in linked_lenses
+            )
+            attention_lens_ids = [lens["id"] for lens in attention_lenses]
+            if attention_required:
+                attention_basis = (
+                    f"None of the {len(linked_lenses)} linked literature lenses contains "
+                    "Action-linked plan evidence: an action plus a condition, owner, "
+                    "timing cue, or trigger. This transparent coverage rule selects a "
+                    "path for closer inspection; it is not an ethics or severity score."
+                )
+            else:
+                attention_basis = (
+                    "At least one linked literature lens contains Action-linked plan "
+                    "evidence, so this path remains available under All paths without "
+                    "being placed in the attention view. This is not an ethics or "
+                    "severity score."
+                )
             edge_id = f"EDGE-{index:03d}"
             design_choice = {
                 "passage_id": plan_passage["passage_id"],
@@ -948,6 +970,11 @@ class MirrorEngine:
                 },
                 "consequence": scenario["consequence"],
                 "affected_party": scenario["affected_party"],
+                "relation": "evidence_gap" if attention_required else "context_to_inspect",
+                "attention_required": attention_required,
+                "attention_rule": "no_linked_lens_has_action_linked_evidence",
+                "attention_lens_ids": attention_lens_ids,
+                "attention_basis": attention_basis,
                 "tension": (
                     f"You committed to “{commitment_text}”. Inspect whether the "
                     f"current design passage remains consistent with that commitment "

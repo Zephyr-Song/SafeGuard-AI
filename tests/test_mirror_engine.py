@@ -162,6 +162,12 @@ class MirrorEngineTest(unittest.TestCase):
                 self.assertTrue(edge["consequence"])
                 self.assertTrue(edge["affected_party"])
                 self.assertEqual(edge["status"], "open")
+                self.assertIsInstance(edge["attention_required"], bool)
+                self.assertEqual(
+                    edge["attention_rule"],
+                    "no_linked_lens_has_action_linked_evidence",
+                )
+                self.assertIn("not an ethics", edge["attention_basis"].lower())
 
                 provenance = edge["provenance"]
                 self.assertTrue(provenance["source_passage"]["passage_id"])
@@ -197,6 +203,50 @@ class MirrorEngineTest(unittest.TestCase):
 
         self.assertEqual(agents_by_commitment[value_commitment], "direct_user")
         self.assertEqual(agents_by_commitment[pause_threshold], "maintainer_auditor")
+
+    def test_attention_view_separates_focus_paths_without_an_ethics_score(self):
+        value_commitment = (
+            "Students should retain authorship and be able to understand, reject, "
+            "and contest consequential AI feedback."
+        )
+        pause_condition = (
+            "Readiness labels begin shaping grades or access to supervision, or some student groups "
+            "are repeatedly misclassified without an effective appeal route."
+        )
+        pause_threshold = (
+            "The research team will pause or redesign the app if " + pause_condition
+        )
+        research_plan = "\n\n".join(
+            (
+                "Research area and context\nComputer-science education in university project-design classes.",
+                "Intended change\nHelp students turn an early research idea into a clearer, more feasible project proposal when individual supervision is limited.",
+                "Direct users and encounter\nUndergraduate and master’s students would use the app while preparing project pitches; instructors may later view class-level feedback.",
+                "AI role and decision authority\nAn LLM would retrieve related papers, generate novelty and method feedback, and attach a readiness label. It would advise rather than grade.",
+                "Data and materials\nStudent project pitches, prompts, generated feedback, revision histories, clicks, and a short usefulness survey would be collected.",
+                "People affected without direct use\nStudents who do not use the tool, classmates compared through the dashboard, and instructors whose attention may be directed by readiness labels could still be affected.",
+                f"Researcher-authored value commitment\n{value_commitment}",
+                f"Pause or redesign condition\n{pause_condition}",
+            )
+        )
+        created = self.engine.create_session(
+            {
+                "title": "Guided attention-filter example",
+                "research_plan": research_plan,
+                "value_commitments": [value_commitment, pause_threshold],
+            }
+        )
+        analyzed = self.engine.analyze_session(created["id"], use_llm=False)
+        edges_by_agent = {
+            edge["scenario"]["agent_id"]: edge
+            for edge in analyzed["dissonance_edges"]
+        }
+
+        self.assertIs(edges_by_agent["direct_user"]["attention_required"], False)
+        self.assertIs(edges_by_agent["maintainer_auditor"]["attention_required"], True)
+        self.assertGreaterEqual(
+            len(edges_by_agent["maintainer_auditor"]["attention_lens_ids"]),
+            2,
+        )
 
     def test_revision_and_replay_ledger_survives_engine_restart(self):
         created = self.engine.create_session(SAMPLE_MIRROR_PROJECT)
