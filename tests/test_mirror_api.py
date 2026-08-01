@@ -58,7 +58,7 @@ class MirrorApiTest(unittest.TestCase):
         self.assertIn("Question 1 of 8", html)
         self.assertIn("asks one question at a time", html)
         self.assertIn("does not use the camera to estimate age", html)
-        self.assertIn("Needs attention", html)
+        self.assertIn("Focus next", html)
         self.assertNotIn("Strong tensions", html)
 
     def test_frontend_normalizes_the_structured_provenance_contract(self):
@@ -80,6 +80,8 @@ class MirrorApiTest(unittest.TestCase):
             "revision.replay",
             "item.attention_required",
             "edge.needs_attention",
+            "function focusEdge(edges)",
+            "Why SafeBARS puts this path first",
         ):
             with self.subTest(contract_marker=contract_marker):
                 self.assertIn(contract_marker, javascript)
