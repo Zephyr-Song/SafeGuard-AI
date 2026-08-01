@@ -1833,28 +1833,6 @@ textarea::placeholder {
 }
 
 /* Dissonance graph */
-.map-mode-switch {
-    display: inline-flex;
-    padding: 3px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, .65);
-}
-
-.map-mode-switch button {
-    padding: 7px 10px;
-    border: 0;
-    border-radius: 7px;
-    background: transparent;
-    color: var(--muted);
-    font-size: 10.5px;
-}
-
-.map-mode-switch button.is-active {
-    background: var(--forest);
-    color: white;
-}
-
 .nonjudgment-note {
     display: flex;
     gap: 9px;

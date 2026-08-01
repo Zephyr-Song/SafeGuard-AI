@@ -352,7 +352,6 @@ We expect the tool to help students who have limited access to individual superv
         selectedTensionId: null,
         resolutionDrafts: {},
         editorView: "edit",
-        mapMode: "all",
         graphScale: 1,
         ledgerFilter: "all",
         lastConnectionOk: false,
@@ -615,6 +614,18 @@ We expect the tool to help students who have limited access to individual superv
         )).map((source) => (
             typeof source === "object" ? firstValue(source.id, source.key, source.url, source.label) : source
         )).filter(Boolean);
+        const defaultAttentionBasis = needsAttention
+            ? "None of the linked lenses contains Action-linked plan evidence, so this path is flagged for closer inspection. This is not an ethics score."
+            : "This path remains inspectable and does not carry an evidence-coverage flag.";
+        const suppliedAttentionBasis = String(firstValue(
+            item.attention_basis,
+            item.attention?.basis,
+            ""
+        ));
+        const legacyMapModeCopy = /all paths|attention view|coverage-based focus rule|selects a path for closer inspection|puts this path first/i;
+        const attentionBasis = !suppliedAttentionBasis || legacyMapModeCopy.test(suppliedAttentionBasis)
+            ? defaultAttentionBasis
+            : suppliedAttentionBasis;
         return {
             id: firstValue(item.id, item.edge_id, item.path_id, `tension_${index + 1}`),
             commitment: typeof commitmentValue === "object"
@@ -647,13 +658,7 @@ We expect the tool to help students who have limited access to individual superv
                 label: lens.label,
                 status: lens.status,
             })),
-            attention_basis: firstValue(
-                item.attention_basis,
-                item.attention?.basis,
-                needsAttention
-                    ? "None of the linked lenses contains Action-linked plan evidence. This is a coverage-based focus rule, not an ethics score."
-                    : "This path remains available for inspection but does not meet the coverage-based attention rule."
-            ),
+            attention_basis: attentionBasis,
             rationale: firstValue(
                 item.rationale,
                 item.argument,
@@ -1754,58 +1759,6 @@ We expect the tool to help students who have limited access to individual superv
         });
     }
 
-    function linkedStateCounts(edge) {
-        const counts = { missing: 0, claimed: 0, reasoned: 0, "action-linked": 0 };
-        asArray(edge?.linked_lenses).forEach((lens) => {
-            const status = normaliseCoverage(lens?.status);
-            counts[status] = (counts[status] || 0) + 1;
-        });
-        return counts;
-    }
-
-    function focusEdge(edges) {
-        const unresolved = edges.filter((edge) => edge.status !== "resolved");
-        return [...unresolved].sort((a, b) => {
-            if (a.needs_attention !== b.needs_attention) return Number(b.needs_attention) - Number(a.needs_attention);
-            const aCounts = linkedStateCounts(a);
-            const bCounts = linkedStateCounts(b);
-            if (aCounts.missing !== bCounts.missing) return bCounts.missing - aCounts.missing;
-            if (aCounts.claimed !== bCounts.claimed) return bCounts.claimed - aCounts.claimed;
-            if (aCounts.reasoned !== bCounts.reasoned) return aCounts.reasoned - bCounts.reasoned;
-            return String(a.id).localeCompare(String(b.id));
-        })[0] || null;
-    }
-
-    function focusBasis(edge) {
-        const counts = linkedStateCounts(edge);
-        const statusSummary = [
-            `Missing ${counts.missing}`,
-            `Claimed ${counts.claimed}`,
-            `Reasoned ${counts.reasoned}`,
-            `Action-linked ${counts["action-linked"]}`,
-        ].join(", ");
-        return `SafeBARS places this unresolved path first using categorical evidence coverage (${statusSummary}); exact ties keep the stable path order. This orders review work and does not compute an ethics or severity score.`;
-    }
-
-    function graphEdges() {
-        const edges = state.session?.dissonance_edges || [];
-        if (["focus", "attention", "strong"].includes(state.mapMode)) {
-            const selected = focusEdge(edges);
-            return selected ? [selected] : [];
-        }
-        return edges;
-    }
-
-    function setMapMode(mode) {
-        state.mapMode = mode === "focus" ? "focus" : "all";
-        document.querySelectorAll("[data-map-mode]").forEach((item) => {
-            const active = item.dataset.mapMode === state.mapMode;
-            item.classList.toggle("is-active", active);
-            item.setAttribute("aria-pressed", String(active));
-        });
-        renderGraph();
-    }
-
     function wrapSvgText(text, maxChars = 28, maxLines = 3) {
         const words = String(text || "").split(/\s+/);
         const lines = [];
@@ -1845,27 +1798,15 @@ We expect the tool to help students who have limited access to individual superv
     }
 
     function renderGraph() {
-        const allEdges = state.session?.dissonance_edges || [];
-        const edges = graphEdges();
-        const focusCount = focusEdge(allEdges) ? 1 : 0;
-        const allModeButton = document.querySelector('[data-map-mode="all"]');
-        const focusModeButton = document.querySelector('[data-map-mode="focus"]');
-        if (allModeButton) allModeButton.textContent = `All paths (${allEdges.length})`;
-        if (focusModeButton) focusModeButton.textContent = `Focus next (${focusCount})`;
-        if (focusModeButton) focusModeButton.disabled = focusCount === 0;
+        const edges = state.session?.dissonance_edges || [];
         dom.graphEmpty.hidden = edges.length > 0;
         dom.dissonanceGraph.style.display = edges.length ? "block" : "none";
         if (!edges.length) {
             dom.graphViewport.innerHTML = "";
             const emptyTitle = dom.graphEmpty.querySelector("h3");
             const emptyCopy = dom.graphEmpty.querySelector("p");
-            if (state.mapMode === "focus") {
-                if (emptyTitle) emptyTitle.textContent = "No path is available to focus";
-                if (emptyCopy) emptyCopy.textContent = "Run the literature and perspective analysis before choosing a path to inspect first.";
-            } else {
-                if (emptyTitle) emptyTitle.textContent = "No dissonance paths yet";
-                if (emptyCopy) emptyCopy.textContent = "Run the literature and perspective analysis to construct the map.";
-            }
+            if (emptyTitle) emptyTitle.textContent = "No dissonance paths yet";
+            if (emptyCopy) emptyCopy.textContent = "Run the literature and perspective analysis to construct the map.";
             renderInspector(null);
             return;
         }
@@ -1906,10 +1847,7 @@ We expect the tool to help students who have limited access to individual superv
         dom.graphViewport.innerHTML = markup.join("");
         applyGraphScale();
         bindGraphEvents();
-        if (state.mapMode === "focus") {
-            state.selectedEdgeId = edges[0].id;
-            selectEdge(state.selectedEdgeId);
-        } else if (state.selectedEdgeId && edges.some((edge) => edge.id === state.selectedEdgeId)) {
+        if (state.selectedEdgeId && edges.some((edge) => edge.id === state.selectedEdgeId)) {
             selectEdge(state.selectedEdgeId);
         } else {
             renderInspector(null);
@@ -2004,18 +1942,12 @@ We expect the tool to help students who have limited access to individual superv
                     <p>${escapeHtml(sourceLabels.join("; ") || "No source identifier was returned for this path. Verify the scenario before using it.")}</p>
                 </div>
                 <div class="inspector-evidence ${edge.needs_attention ? "attention" : ""}">
-                    <strong>${edge.needs_attention ? "Why this path needs attention" : "Why this remains under All paths"}</strong>
+                    <strong>${edge.needs_attention ? "Why this path needs attention" : "Evidence-coverage context"}</strong>
                     <p>${escapeHtml(edge.attention_basis)}</p>
                 </div>
-                ${state.mapMode === "focus" ? `
-                    <div class="inspector-evidence attention">
-                        <strong>Why SafeBARS puts this path first</strong>
-                        <p>${escapeHtml(focusBasis(edge))}</p>
-                    </div>
-                ` : ""}
                 <div class="inspector-actions">
                     <button class="primary-button" type="button" data-revise-edge="${escapeAttr(edge.id)}">Respond to this tension</button>
-                    <button class="secondary-button" type="button" data-clear-edge>Return to all paths</button>
+                    <button class="secondary-button" type="button" data-clear-edge>Close details</button>
                 </div>
             </div>
         `;
@@ -2024,10 +1956,7 @@ We expect the tool to help students who have limited access to individual superv
             navigateToStep(5, true);
             renderTensions();
         });
-        dom.pathInspector.querySelector("[data-clear-edge]")?.addEventListener("click", () => {
-            clearEdgeSelection();
-            setMapMode("all");
-        });
+        dom.pathInspector.querySelector("[data-clear-edge]")?.addEventListener("click", clearEdgeSelection);
     }
 
     function applyGraphScale() {
@@ -2781,9 +2710,6 @@ We expect the tool to help students who have limited access to individual superv
         });
         document.querySelectorAll("[data-ledger-filter]").forEach((button) => {
             button.addEventListener("click", () => setLedgerFilter(button.dataset.ledgerFilter));
-        });
-        document.querySelectorAll("[data-map-mode]").forEach((button) => {
-            button.addEventListener("click", () => setMapMode(button.dataset.mapMode));
         });
         document.querySelectorAll("[data-editor-view]").forEach((button) => {
             button.addEventListener("click", () => setEditorView(button.dataset.editorView));

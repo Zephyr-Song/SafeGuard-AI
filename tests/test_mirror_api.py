@@ -58,7 +58,9 @@ class MirrorApiTest(unittest.TestCase):
         self.assertIn("Question 1 of 8", html)
         self.assertIn("asks one question at a time", html)
         self.assertIn("does not use the camera to estimate age", html)
-        self.assertIn("Focus next", html)
+        self.assertNotIn('data-map-mode=', html)
+        self.assertNotIn("Focus next", html)
+        self.assertNotIn("All paths", html)
         self.assertNotIn("Strong tensions", html)
 
     def test_frontend_normalizes_the_structured_provenance_contract(self):
@@ -80,11 +82,24 @@ class MirrorApiTest(unittest.TestCase):
             "revision.replay",
             "item.attention_required",
             "edge.needs_attention",
-            "function focusEdge(edges)",
-            "Why SafeBARS puts this path first",
         ):
             with self.subTest(contract_marker=contract_marker):
                 self.assertIn(contract_marker, javascript)
+
+        for removed_marker in (
+            "state.mapMode",
+            "function linkedStateCounts(",
+            "function focusEdge(",
+            "function focusBasis(",
+            "function graphEdges(",
+            "function setMapMode(",
+            "data-map-mode",
+            "Return to all paths",
+        ):
+            self.assertNotIn(removed_marker, javascript)
+        self.assertIn("Close details", javascript)
+        self.assertIn('addEventListener("click", clearEdgeSelection)', javascript)
+        self.assertIn("legacyMapModeCopy.test(suppliedAttentionBasis)", javascript)
 
         for mojibake_marker in ("鈥", "鉁", "鈫", "鈱"):
             self.assertNotIn(mojibake_marker, javascript)

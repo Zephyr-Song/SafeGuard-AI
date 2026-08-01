@@ -204,7 +204,7 @@ class MirrorEngineTest(unittest.TestCase):
         self.assertEqual(agents_by_commitment[value_commitment], "direct_user")
         self.assertEqual(agents_by_commitment[pause_threshold], "maintainer_auditor")
 
-    def test_attention_view_separates_focus_paths_without_an_ethics_score(self):
+    def test_attention_metadata_flags_missing_action_evidence_without_scoring(self):
         value_commitment = (
             "Students should retain authorship and be able to understand, reject, "
             "and contest consequential AI feedback."
@@ -247,6 +247,9 @@ class MirrorEngineTest(unittest.TestCase):
             len(edges_by_agent["maintainer_auditor"]["attention_lens_ids"]),
             2,
         )
+        for edge in edges_by_agent.values():
+            self.assertNotIn("All paths", edge["attention_basis"])
+            self.assertNotIn("attention view", edge["attention_basis"])
 
     def test_revision_and_replay_ledger_survives_engine_restart(self):
         created = self.engine.create_session(SAMPLE_MIRROR_PROJECT)

@@ -936,15 +936,14 @@ class MirrorEngine:
                 attention_basis = (
                     f"None of the {len(linked_lenses)} linked literature lenses contains "
                     "Action-linked plan evidence: an action plus a condition, owner, "
-                    "timing cue, or trigger. This transparent coverage rule selects a "
+                    "timing cue, or trigger. This transparent coverage rule flags the "
                     "path for closer inspection; it is not an ethics or severity score."
                 )
             else:
                 attention_basis = (
                     "At least one linked literature lens contains Action-linked plan "
-                    "evidence, so this path remains available under All paths without "
-                    "being placed in the attention view. This is not an ethics or "
-                    "severity score."
+                    "evidence, so this path remains inspectable without an evidence-"
+                    "coverage flag. This is not an ethics or severity score."
                 )
             edge_id = f"EDGE-{index:03d}"
             design_choice = {
