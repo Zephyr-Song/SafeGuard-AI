@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="SafeBARS Ethical Mirror helps researchers anticipate unintended consequences and revise AI-app research plans before implementation.">
+    <meta name="theme-color" content="#173f37">
+    <title>SafeBARS Ethical Mirror</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173f37'/%3E%3Cpath d='M15 20h34M15 32h26M15 44h34' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="{{ url_for('static', filename='safebars_mirror/mirror.css') }}">
+</head>
+<body data-api-root="/api/safebars/mirror">
+    <a class="skip-link" href="#workspace">Skip to the workspace</a>
+
+    <div class="app-shell">
+        <aside class="rail" aria-label="Ethical Mirror workflow">
+            <a class="brand" href="/safebars/mirror" aria-label="SafeBARS Ethical Mirror home">
+                <span class="brand-mark" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </span>
+                <span>
+                    <strong>SafeBARS</strong>
+                    <small>Ethical Mirror</small>
+                </span>
+            </a>
+
+            <div class="rail-intro">
+                <p class="eyebrow">Research-planning tool</p>
+                <p>See a proposed AI app through the people and futures it may affect—then revise the design.</p>
+            </div>
+
+            <nav class="step-nav" id="stepNav" aria-label="Six-step reflection workflow">
+                <button class="step-nav-item is-active" type="button" data-step-target="1" aria-current="step">
+                    <span class="step-number">01</span>
+                    <span class="step-nav-copy">
+                        <strong>Frame the plan</strong>
+                        <small>Plan + commitments</small>
+                    </span>
+                    <span class="step-state" aria-hidden="true"></span>
+                </button>
+                <button class="step-nav-item" type="button" data-step-target="2" aria-disabled="true">
+                    <span class="step-number">02</span>
+                    <span class="step-nav-copy">
+                        <strong>Inspect lenses</strong>
+                        <small>Literature coverage</small>
+                    </span>
+                    <span class="step-state" aria-hidden="true"></span>
+                </button>
+                <button class="step-nav-item" type="button" data-step-target="3" aria-disabled="true">
+                    <span class="step-number">03</span>
+                    <span class="step-nav-copy">
+                        <strong>Meet possible futures</strong>
+                        <small>Synthetic role probes</small>
+                    </span>
+                    <span class="step-state" aria-hidden="true"></span>
+                </button>
+                <button class="step-nav-item" type="button" data-step-target="4" aria-disabled="true">
+                    <span class="step-number">04</span>
+                    <span class="step-nav-copy">
+                        <strong>See the tension</strong>
+                        <small>Ethical Mirror map</small>
+                    </span>
+                    <span class="step-state" aria-hidden="true"></span>
+                </button>
+                <button class="step-nav-item" type="button" data-step-target="5" aria-disabled="true">
+                    <span class="step-number">05</span>
+                    <span class="step-nav-copy">
+                        <strong>Revise the design</strong>
+                        <small>Resolution sandbox</small>
+                    </span>
+                    <span class="step-state" aria-hidden="true"></span>
+                </button>
+                <button class="step-nav-item" type="button" data-step-target="6" aria-disabled="true">
+                    <span class="step-number">06</span>
+                    <span class="step-nav-copy">
+                        <strong>Review the change</strong>
+                        <small>Before / after ledger</small>
+                    </span>
+                    <span class="step-state" aria-hidden="true"></span>
+                </button>
+            </nav>
+
+            <div class="rail-legend">
+                <span class="rail-legend-title">Evidence coverage—not an ethics score</span>
+                <span><i class="coverage-dot missing"></i> Missing</span>
+                <span><i class="coverage-dot claimed"></i> Claimed</span>
+                <span><i class="coverage-dot reasoned"></i> Reasoned</span>
+                <span><i class="coverage-dot action-linked"></i> Action-linked</span>
+            </div>
+
+            <div class="rail-footer">
+                <button class="text-button" id="showMethodBtn" type="button">Method &amp; boundaries</button>
+                <button class="text-button" id="startOverBtn" type="button">Start a new mirror</button>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="topbar">
+                <div class="topbar-context">
+                    <span class="api-status" id="apiStatus">
+                        <i aria-hidden="true"></i>
+                        <span>Connecting</span>
+                    </span>
+                    <span class="context-divider" aria-hidden="true"></span>
+                    <span id="sessionLabel">Unsaved research plan</span>
+                </div>
+                <div class="topbar-actions">
+                    <button class="icon-button" id="resumeBtn" type="button" hidden aria-label="Resume the last saved session" title="Resume last session">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.34-5.66M4 4v6h6M12 8v5l3 2"/></svg>
+                    </button>
+                    <button class="quiet-button" id="loadExampleBtn" type="button">Load guided example</button>
+                    <button class="quiet-button" id="methodTopBtn" type="button">How it works</button>
+                </div>
+            </header>
+
+            <div class="connection-banner" id="connectionBanner" hidden role="status">
+                <strong>Working locally.</strong>
+                <span>The server could not be reached. Your text remains in this browser; analysis needs the SafeBARS backend.</span>
+                <button type="button" id="retryConnectionBtn">Retry</button>
+            </div>
+
+            <main class="workspace" id="workspace" tabindex="-1">
+                <section class="workflow-step is-active" data-step-panel="1" aria-labelledby="step1Title">
+                    <div class="step-heading">
+                        <div>
+                            <p class="eyebrow">Step 1 · Guided conversation</p>
+                            <h1 id="step1Title">Let’s understand the idea together.</h1>
+                            <p class="step-lead">SafeBARS asks one question at a time, reflects back what it heard, and gradually widens the view from intended benefit to people, data, values, and consequences.</p>
+                        </div>
+                        <div class="step-heading-mark" aria-hidden="true">
+                            <span>You</span>
+                            <i></i>
+                            <span>Mirror</span>
+                        </div>
+                    </div>
+
+                    <form id="planForm" class="guided-intake-layout" novalidate>
+                        <article class="surface intake-conversation" aria-labelledby="intakePrompt">
+                            <div class="intake-progress">
+                                <div>
+                                    <span id="intakeQuestionCount">Question 1 of 8</span>
+                                    <strong id="intakeStageLabel">Getting oriented</strong>
+                                </div>
+                                <div class="intake-progress-track" aria-hidden="true">
+                                    <span id="intakeProgressFill"></span>
+                                </div>
+                            </div>
+
+                            <div class="mirror-message">
+                                <div class="mirror-avatar" aria-hidden="true"><span></span><span></span><span></span></div>
+                                <div>
+                                    <p class="mirror-reflection" id="intakeReflection">Hi—there is no form to complete all at once. We’ll take this slowly.</p>
+                                    <h2 id="intakePrompt">What area or real-world problem are you exploring?</h2>
+                                    <p id="intakeHint">A few words are enough. You can revise any answer later.</p>
+                                    <button class="why-button" id="intakeWhyBtn" type="button" aria-expanded="false">Why am I being asked this?</button>
+                                    <p class="why-answer" id="intakeWhy" hidden></p>
+                                </div>
+                            </div>
+
+                            <div class="intake-answer">
+                                <div class="intake-options" id="intakeOptions" aria-label="Optional answer starters"></div>
+                                <label class="sr-only" for="intakeTextInput">Your answer</label>
+                                <textarea id="intakeTextInput" rows="5" maxlength="1400" placeholder="Type your answer here…"></textarea>
+                                <div class="intake-answer-meta">
+                                    <span id="intakeInputGuide">Write naturally—this is not an approval form.</span>
+                                    <span><b id="intakeCharCount">0</b> / 1400</span>
+                                </div>
+                            </div>
+
+                            <div class="intake-controls">
+                                <button class="quiet-button" id="intakeBackBtn" type="button" disabled>Back</button>
+                                <button class="quiet-button" id="intakeSkipBtn" type="button" hidden>Skip optional question</button>
+                                <button class="primary-button" id="intakeNextBtn" type="button">
+                                    <span>Save answer &amp; continue</span>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+                                </button>
+                            </div>
+
+                            <div class="form-actions intake-build-actions" id="intakeBuildActions" hidden>
+                                <button class="primary-button" id="buildMirrorBtn" type="submit" hidden>
+                                    <span>Build my Ethical Mirror</span>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+                                </button>
+                                <div class="validation-message" id="planValidation" role="alert"></div>
+                            </div>
+                        </article>
+
+                        <aside class="surface intake-trail-panel">
+                            <div class="card-heading">
+                                <div>
+                                    <p class="eyebrow">Your plan as it grows</p>
+                                    <h2>Conversation trail</h2>
+                                </div>
+                                <span class="count-badge" id="intakeAnsweredCount">0 / 8</span>
+                            </div>
+                            <p class="card-intro">Each answer becomes inspectable research-plan evidence. Select an earlier item to revise it.</p>
+                            <div class="intake-trail" id="intakeTrail" aria-live="polite"></div>
+
+                            <div class="intake-complete" id="intakeComplete" hidden>
+                                <div class="complete-mark" aria-hidden="true">✓</div>
+                                <div>
+                                    <strong>Your first plan is ready to mirror.</strong>
+                                    <p>SafeBARS will now contrast your own commitments with literature-grounded scenarios. You—not the AI—decide what should change.</p>
+                                </div>
+                            </div>
+
+                            <details class="optional-context">
+                                <summary>Share perspective context (optional)</summary>
+                                <label for="intakeOptionalContext">Is there anything about your role or lived experience that may shape what you notice—or miss?</label>
+                                <textarea id="intakeOptionalContext" rows="3" maxlength="700" placeholder="Only share what feels relevant. Demographic details are not required or inferred."></textarea>
+                                <small>SafeBARS does not use the camera to estimate age, race, gender, disability, or any other sensitive trait.</small>
+                            </details>
+
+                            <div class="intake-boundary">
+                                <span aria-hidden="true">↳</span>
+                                <p><strong>A reflection aid, not a judgement.</strong> Questions surface assumptions; they do not determine whether your project is ethical.</p>
+                            </div>
+                        </aside>
+
+                        <div class="intake-compat" hidden aria-hidden="true">
+                            <input id="projectTitle" name="title" type="text">
+                            <textarea id="researchPlan" name="research_plan"></textarea>
+                            <span id="planSignals"></span>
+                            <span id="planWordCount">0</span>
+                            <div id="signalRow">
+                                <span data-signal="purpose"></span><span data-signal="people"></span>
+                                <span data-signal="ai"></span><span data-signal="data"></span>
+                                <span data-signal="setting"></span>
+                            </div>
+                            <div id="commitmentList"></div>
+                            <span id="commitmentCount"></span>
+                            <button id="addCommitmentBtn" type="button"></button>
+                        </div>
+
+                    </form>
+                </section>
+
+                <section class="workflow-step" data-step-panel="2" aria-labelledby="step2Title" hidden>
+                    <div class="step-heading compact">
+                        <div>
+                            <p class="eyebrow">Step 2 · Ground</p>
+                            <h1 id="step2Title">Nine lenses, each traceable to literature.</h1>
+                            <p class="step-lead">Coverage describes how explicitly your plan reasons about a concern. It is not a measure of how ethical the project is.</p>
+                        </div>
+                        <button class="secondary-button" id="reanalyzeBtn" type="button">
+                            <span class="button-icon" aria-hidden="true">↻</span>
+                            Re-run analysis
+                        </button>
+                    </div>
+
+                    <div class="coverage-overview surface">
+                        <div class="coverage-title">
+                            <div>
+                                <p class="eyebrow">Evidence coverage</p>
+                                <h2 id="coverageHeadline">Waiting for analysis</h2>
+                            </div>
+                            <button class="source-button" id="openLiteratureBtn" type="button">
+                                <span id="literatureCount">0</span> grounding sources
+                                <span aria-hidden="true">↗</span>
+                            </button>
+                        </div>
+                        <div class="coverage-track" id="coverageTrack" aria-label="Coverage state distribution"></div>
+                        <div class="coverage-labels" id="coverageLabels"></div>
+                    </div>
+
+                    <div class="lens-toolbar">
+                        <div class="filter-group" role="group" aria-label="Filter dimensions by coverage">
+                            <button class="filter-chip is-active" type="button" data-lens-filter="all">All <span id="lensAllCount">9</span></button>
+                            <button class="filter-chip" type="button" data-lens-filter="missing">Missing</button>
+                            <button class="filter-chip" type="button" data-lens-filter="claimed">Claimed</button>
+                            <button class="filter-chip" type="button" data-lens-filter="reasoned">Reasoned</button>
+                            <button class="filter-chip" type="button" data-lens-filter="action-linked">Action-linked</button>
+                        </div>
+                        <span class="toolbar-note">Select a lens to inspect its evidence trail</span>
+                    </div>
+
+                    <div class="lens-grid" id="lensGrid" aria-live="polite"></div>
+                    <div class="empty-state" id="lensEmpty" hidden>
+                        <span aria-hidden="true">◌</span>
+                        <h3>No dimensions match this filter</h3>
+                        <p>Choose another coverage state to continue.</p>
+                    </div>
+
+                    <div class="step-footer">
+                        <button class="back-button" type="button" data-go-step="1">Back to research plan</button>
+                        <button class="primary-button" type="button" data-go-step="3">
+                            Meet the affected roles
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="workflow-step" data-step-panel="3" aria-labelledby="step3Title" hidden>
+                    <div class="step-heading compact">
+                        <div>
+                            <p class="eyebrow">Step 3 · Perspective probe</p>
+                            <h1 id="step3Title">Walk through futures the project plan does not describe.</h1>
+                            <p class="step-lead">Bounded agents create concrete, inspectable scenarios from different positions around the proposed app. They do not vote on ethics and they do not speak for real communities.</p>
+                        </div>
+                        <div class="agent-pulse" aria-label="Multi-agent perspective probe">
+                            <span></span><span></span><span></span><span></span>
+                            <small>separate bounded probes</small>
+                        </div>
+                    </div>
+
+                    <aside class="boundary-banner">
+                        <div class="boundary-icon" aria-hidden="true">S</div>
+                        <div>
+                            <strong>Synthetic perspective probe</strong>
+                            <p>Each role follows a separate objective and stopping rule. When a server-side model is available it enriches the bounded probe; otherwise SafeBARS shows its deterministic fallback. Either way, the result is a hypothesis—not lived experience, stakeholder testimony, or population evidence.</p>
+                        </div>
+                        <button type="button" id="boundaryDetailsBtn">View safeguards</button>
+                    </aside>
+
+                    <div class="scenario-toolbar">
+                        <div class="role-filter" id="roleFilter" role="group" aria-label="Filter scenarios by affected role">
+                            <button class="filter-chip is-active" type="button" data-role-filter="all">All roles</button>
+                        </div>
+                        <label class="select-label">
+                            <span class="sr-only">Arrange scenarios by</span>
+                            <select id="scenarioSort" aria-label="Arrange scenarios by">
+                                <option value="tension">Arrange: strongest tension</option>
+                                <option value="role">Arrange: role</option>
+                                <option value="uncertainty">Arrange: highest uncertainty</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="scenario-workbench">
+                        <div class="scenario-list" id="scenarioList" aria-label="Generated scenarios"></div>
+                        <article class="scenario-stage surface" id="scenarioStage">
+                            <div class="stage-placeholder">
+                                <span class="stage-placeholder-mark" aria-hidden="true">→</span>
+                                <h2>Select a scenario</h2>
+                                <p>Inspect its evidence, assumptions, and a short future-incident storyboard.</p>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="step-footer">
+                        <button class="back-button" type="button" data-go-step="2">Back to lenses</button>
+                        <button class="primary-button" type="button" data-go-step="4">
+                            Open the Ethical Mirror
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="workflow-step" data-step-panel="4" aria-labelledby="step4Title" hidden>
+                    <div class="step-heading compact">
+                        <div>
+                            <p class="eyebrow">Step 4 · Dissonance map</p>
+                            <h1 id="step4Title">See where a declared value and a design choice pull apart.</h1>
+                            <p class="step-lead">The map makes an argument inspectable: your commitment, the plan evidence, a plausible consequence, and the person who may experience it.</p>
+                        </div>
+                        <div class="map-mode-switch" role="group" aria-label="Map display">
+                            <button type="button" class="is-active" data-map-mode="all">All paths</button>
+                            <button type="button" data-map-mode="strong">Strong tensions</button>
+                        </div>
+                    </div>
+
+                    <aside class="nonjudgment-note">
+                        <strong>Reflection, not accusation.</strong>
+                        <span>A red path marks a proposition that deserves examination. It does not label you or the project “unethical.”</span>
+                    </aside>
+
+                    <div class="mirror-layout">
+                        <article class="mirror-canvas surface">
+                            <div class="map-toolbar">
+                                <div class="map-legend" aria-label="Node types">
+                                    <span><i class="node-key commitment"></i> Commitment</span>
+                                    <span><i class="node-key evidence"></i> Plan evidence</span>
+                                    <span><i class="node-key consequence"></i> Consequence</span>
+                                    <span><i class="node-key party"></i> Affected party</span>
+                                </div>
+                                <div class="zoom-controls" role="group" aria-label="Map zoom">
+                                    <button id="zoomOutBtn" type="button" aria-label="Zoom out">−</button>
+                                    <button id="fitGraphBtn" type="button">Fit</button>
+                                    <button id="zoomInBtn" type="button" aria-label="Zoom in">+</button>
+                                </div>
+                            </div>
+                            <div class="graph-wrap" id="graphWrap">
+                                <svg id="dissonanceGraph" role="img" aria-labelledby="graphTitle graphDescription" viewBox="0 0 1120 640">
+                                    <title id="graphTitle">Commitment-to-consequence dissonance map</title>
+                                    <desc id="graphDescription">Interactive paths connect the researcher's commitments to evidence in the plan, plausible consequences, and affected parties.</desc>
+                                    <defs>
+                                        <filter id="nodeShadow" x="-30%" y="-30%" width="160%" height="160%">
+                                            <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#12352e" flood-opacity=".12"/>
+                                        </filter>
+                                        <marker id="arrowConflict" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                                            <path d="M0,0 L8,4 L0,8 Z" fill="#cf5448"></path>
+                                        </marker>
+                                        <marker id="arrowNeutral" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                                            <path d="M0,0 L8,4 L0,8 Z" fill="#82928d"></path>
+                                        </marker>
+                                    </defs>
+                                    <g id="graphViewport"></g>
+                                </svg>
+                                <div class="graph-tooltip" id="graphTooltip" role="tooltip" hidden></div>
+                                <div class="graph-empty" id="graphEmpty" hidden>
+                                    <span aria-hidden="true">◇</span>
+                                    <h3>No dissonance paths yet</h3>
+                                    <p>Run the literature and perspective analysis to construct the map.</p>
+                                </div>
+                            </div>
+                        </article>
+
+                        <aside class="path-inspector surface" id="pathInspector">
+                            <div class="inspector-placeholder">
+                                <span aria-hidden="true">↗</span>
+                                <h2>Inspect one path</h2>
+                                <p>Select a node or connection in the map. The argument will be shown as four claims you can verify separately.</p>
+                            </div>
+                        </aside>
+                    </div>
+
+                    <div class="step-footer">
+                        <button class="back-button" type="button" data-go-step="3">Back to scenarios</button>
+                        <button class="primary-button" type="button" data-go-step="5">
+                            Take tensions into revision
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="workflow-step" data-step-panel="5" aria-labelledby="step5Title" hidden>
+                    <div class="step-heading compact">
+                        <div>
+                            <p class="eyebrow">Step 5 · Revision sandbox</p>
+                            <h1 id="step5Title">Change the design—or explain why the argument does not hold.</h1>
+                            <p class="step-lead">SafeBARS offers four legitimate responses. You retain authorship and may contest an AI-generated concern with evidence.</p>
+                        </div>
+                        <span class="autosave-state" id="revisionSaveState">Not yet saved</span>
+                    </div>
+
+                    <div class="revision-layout">
+                        <aside class="tension-queue surface">
+                            <div class="queue-heading">
+                                <div>
+                                    <p class="eyebrow">Tension queue</p>
+                                    <h2>Choose an argument</h2>
+                                </div>
+                                <span class="count-badge" id="tensionCount">0</span>
+                            </div>
+                            <div id="tensionList" class="tension-list"></div>
+                        </aside>
+
+                        <div class="revision-workspace">
+                            <article class="resolution-panel surface" id="resolutionPanel">
+                                <div class="resolution-placeholder">
+                                    <span aria-hidden="true">⌁</span>
+                                    <h2>Select a tension to respond</h2>
+                                    <p>Each response is recorded with the relevant commitment, plan passage, scenario, and literature source.</p>
+                                </div>
+                            </article>
+
+                            <article class="plan-editor surface">
+                                <div class="editor-heading">
+                                    <div>
+                                        <p class="eyebrow">Optional plan edit</p>
+                                        <h2>Keep or revise in context</h2>
+                                    </div>
+                                    <div class="editor-tabs" role="tablist" aria-label="Research plan versions">
+                                        <button type="button" role="tab" aria-selected="false" data-editor-view="before">Before</button>
+                                        <button type="button" role="tab" aria-selected="true" class="is-active" data-editor-view="edit">Working plan</button>
+                                        <button type="button" role="tab" aria-selected="false" data-editor-view="diff">Changes</button>
+                                    </div>
+                                </div>
+
+                                <p class="editor-guidance" id="planEditorGuidance">
+                                    <strong>You do not have to change the plan.</strong>
+                                    Edit only when a tension reveals a useful design change. To keep the wording, choose <em>Contest with evidence</em> or <em>Consult real people</em> above and record why.
+                                </p>
+                                <div class="editor-view" data-editor-panel="before" hidden>
+                                    <pre id="originalPlanView"></pre>
+                                </div>
+                                <div class="editor-view is-active" data-editor-panel="edit">
+                                    <label class="sr-only" for="revisedPlan">Revised research plan</label>
+                                    <textarea id="revisedPlan" rows="18" maxlength="30000" aria-describedby="planEditorGuidance" placeholder="Keep the current plan, or edit a feature, data flow, safeguard, evaluation, or stakeholder process here."></textarea>
+                                </div>
+                                <div class="editor-view diff-view" data-editor-panel="diff" hidden>
+                                    <div id="planDiff"></div>
+                                </div>
+                                <div class="editor-footer">
+                                    <span id="revisionStats">Plan unchanged · a reasoned response is still valid</span>
+                                    <button class="text-button" id="restoreOriginalBtn" type="button">Restore original</button>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+
+                    <div class="save-bar surface">
+                        <div>
+                            <strong>Record the response, then compare</strong>
+                            <span>Replay can test an edit or confirm that a contested or deferred tension remains open. It does not require a wording change.</span>
+                        </div>
+                        <div class="save-actions">
+                            <button class="secondary-button" id="saveRevisionBtn" type="button">Save response</button>
+                            <button class="primary-button" id="replayBtn" type="button">
+                                Save response &amp; replay
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="step-footer">
+                        <button class="back-button" type="button" data-go-step="4">Back to mirror</button>
+                        <button class="back-button" type="button" data-go-step="6">Review ledger without changes</button>
+                    </div>
+                </section>
+
+                <section class="workflow-step" data-step-panel="6" aria-labelledby="step6Title" hidden>
+                    <div class="step-heading compact">
+                        <div>
+                            <p class="eyebrow">Step 6 · Revision evidence</p>
+                            <h1 id="step6Title">What changed, what remains, and why.</h1>
+                            <p class="step-lead">The ledger preserves the chain from original plan evidence to possible consequence, researcher response, and revised design. It does not turn reflection into a pass/fail certificate.</p>
+                        </div>
+                        <div class="export-actions">
+                            <button class="secondary-button" id="downloadBundleBtn" type="button">Download study bundle</button>
+                            <button class="secondary-button" id="printLedgerBtn" type="button">Print view</button>
+                        </div>
+                    </div>
+
+                    <div class="outcome-grid" id="outcomeGrid">
+                        <article class="outcome-card">
+                            <span>Design changes</span>
+                            <strong id="metricChanges">0</strong>
+                            <small>Recorded edits or safeguards</small>
+                        </article>
+                        <article class="outcome-card">
+                            <span>Arguments addressed</span>
+                            <strong id="metricAddressed">0</strong>
+                            <small>With a researcher response</small>
+                        </article>
+                        <article class="outcome-card">
+                            <span>Open tensions</span>
+                            <strong id="metricOpen">0</strong>
+                            <small>Still requiring evidence or people</small>
+                        </article>
+                        <article class="outcome-card">
+                            <span>Action-linked lenses</span>
+                            <strong id="metricActionLinked">0</strong>
+                            <small>After replay</small>
+                        </article>
+                    </div>
+
+                    <div class="ledger-toolbar">
+                        <div class="filter-group" role="group" aria-label="Filter change ledger">
+                            <button class="filter-chip is-active" type="button" data-ledger-filter="all">All records</button>
+                            <button class="filter-chip" type="button" data-ledger-filter="changed">Design changed</button>
+                            <button class="filter-chip" type="button" data-ledger-filter="contested">Contested</button>
+                            <button class="filter-chip" type="button" data-ledger-filter="open">Still open</button>
+                        </div>
+                        <span class="toolbar-note" id="ledgerTimestamp">No replay recorded</span>
+                    </div>
+
+                    <div class="ledger-list" id="ledgerList" aria-live="polite"></div>
+                    <div class="empty-state" id="ledgerEmpty">
+                        <span aria-hidden="true">↺</span>
+                        <h3>No before / after evidence yet</h3>
+                        <p>Resolve at least one tension and replay the scenarios to build the ledger.</p>
+                        <button class="secondary-button" type="button" data-go-step="5">Go to revision sandbox</button>
+                    </div>
+
+                    <aside class="handoff-note surface">
+                        <div>
+                            <p class="eyebrow">Epistemic handoff</p>
+                            <h2>Some tensions should remain unresolved here.</h2>
+                        </div>
+                        <p>Questions about lived experience, acceptable burden, cultural meaning, or institutional responsibility require real participants, domain experts, or accountable decision-makers. SafeBARS should make those limits visible—not fabricate closure.</p>
+                    </aside>
+
+                    <div class="step-footer">
+                        <button class="back-button" type="button" data-go-step="5">Back to revision</button>
+                        <button class="primary-button" id="newMirrorBtn" type="button">Start another research plan</button>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <dialog class="drawer-dialog" id="literatureDialog" aria-labelledby="literatureTitle">
+        <div class="dialog-heading">
+            <div>
+                <p class="eyebrow">Inspectable grounding</p>
+                <h2 id="literatureTitle">Literature behind the design</h2>
+            </div>
+            <button class="dialog-close" type="button" data-close-dialog aria-label="Close literature panel">×</button>
+        </div>
+        <p class="dialog-intro">Every lens and intervention should identify its source, operationalisation, and limit. SafeBARS does not treat a citation as proof that a generated claim is correct.</p>
+        <div class="literature-list" id="literatureList"></div>
+    </dialog>
+
+    <dialog class="modal-dialog" id="methodDialog" aria-labelledby="methodTitle">
+        <div class="dialog-heading">
+            <div>
+                <p class="eyebrow">Method &amp; boundaries</p>
+                <h2 id="methodTitle">What the Ethical Mirror does</h2>
+            </div>
+            <button class="dialog-close" type="button" data-close-dialog aria-label="Close method panel">×</button>
+        </div>
+        <div class="method-flow">
+            <div><span>1</span><p><strong>Declare</strong>Your plan and value commitments.</p></div>
+            <div><span>2</span><p><strong>Ground</strong>Literature-derived consequence lenses.</p></div>
+            <div><span>3</span><p><strong>Probe</strong>Bounded synthetic affected-role scenarios.</p></div>
+            <div><span>4</span><p><strong>See</strong>Commitment–design–consequence tensions.</p></div>
+            <div><span>5</span><p><strong>Revise</strong>Change, safeguard, contest, or consult.</p></div>
+            <div><span>6</span><p><strong>Replay</strong>Compare before and after evidence.</p></div>
+        </div>
+        <div class="boundary-grid">
+            <article>
+                <h3>It can</h3>
+                <ul>
+                    <li>Make hidden assumptions and affected parties easier to inspect.</li>
+                    <li>Connect suggestions to plan passages and literature.</li>
+                    <li>Preserve disagreement and researcher reasoning.</li>
+                    <li>Record consequential design revisions.</li>
+                </ul>
+            </article>
+            <article>
+                <h3>It cannot</h3>
+                <ul>
+                    <li>Decide whether a study is ethical.</li>
+                    <li>Represent a community through synthetic personas.</li>
+                    <li>Predict real-world consequences with certainty.</li>
+                    <li>Replace participatory work or institutional review.</li>
+                </ul>
+            </article>
+        </div>
+    </dialog>
+
+    <dialog class="modal-dialog narrow" id="boundaryDialog" aria-labelledby="boundaryTitle">
+        <div class="dialog-heading">
+            <div>
+                <p class="eyebrow">Synthetic-role safeguards</p>
+                <h2 id="boundaryTitle">Use generated scenarios as questions.</h2>
+            </div>
+            <button class="dialog-close" type="button" data-close-dialog aria-label="Close safeguards panel">×</button>
+        </div>
+        <ol class="safeguard-list">
+            <li><strong>No representational claim.</strong> A role card never claims “what this group thinks.”</li>
+            <li><strong>Evidence separation.</strong> Plan excerpts, published cases, and model inference are visibly distinct.</li>
+            <li><strong>Uncertainty retained.</strong> Missing context becomes a question for people, not a confident answer.</li>
+            <li><strong>No synthetic consensus.</strong> Agents do not vote and numerical agreement is not treated as legitimacy.</li>
+            <li><strong>Human authorship.</strong> The researcher chooses, justifies, and owns every revision.</li>
+        </ol>
+    </dialog>
+
+    <div class="loading-layer" id="loadingLayer" hidden aria-live="assertive" aria-busy="true">
+        <div class="loading-card">
+            <div class="orbit-loader" aria-hidden="true"><span></span><span></span><span></span></div>
+            <p class="eyebrow" id="loadingEyebrow">Building the mirror</p>
+            <h2 id="loadingTitle">Tracing claims through possible futures…</h2>
+            <p id="loadingDetail">Bounded role probes work separately. Their outputs remain hypotheses, not stakeholder testimony.</p>
+            <div class="loading-steps" id="loadingSteps">
+                <span class="is-active">Parse the plan</span>
+                <span>Check literature lenses</span>
+                <span>Probe affected roles</span>
+                <span>Build tension paths</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="{{ url_for('static', filename='safebars_mirror/mirror.js') }}" defer></script>
+</body>
+</html>

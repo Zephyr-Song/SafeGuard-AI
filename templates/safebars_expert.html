@@ -30,6 +30,7 @@
         .btn-primary { border-color:var(--green); background:var(--green); color:#fff; }
         .btn-primary:hover { background:var(--green-dark); }
         .btn-danger { border-color:#d3a39f; color:var(--red); }
+        .btn:disabled { cursor:not-allowed; opacity:.46; }
         .shell { width:min(1440px,calc(100% - 28px)); margin:14px auto 44px; }
         .boundary { display:flex; align-items:flex-start; gap:9px; padding:9px 12px; border:1px solid #ead8ad; border-radius:8px; background:var(--amber-soft); color:#684c1f; font-size:11px; line-height:1.45; }
         .case-brief { margin-top:10px; padding:15px 16px; border:1px solid var(--line); border-radius:10px; background:#fff; }
@@ -104,10 +105,26 @@
         .impact-list { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
         .impact { padding:6px 8px; border-radius:7px; background:var(--blue-soft); color:#31576b; font-size:9px; font-weight:750; }
         .decision-layout { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:12px; }
-        .checklist { padding:11px; border:1px solid var(--line); border-radius:9px; background:var(--subtle); }
-        .checklist h3 { font-size:11px; }
-        .check { display:grid; grid-template-columns:16px 1fr; gap:7px; margin-top:9px; color:#4e5d55; font-size:10px; line-height:1.4; }
-        .check input { width:14px; min-height:14px; margin:1px 0 0; }
+        .closure-gate { padding:11px; border:1px solid var(--line); border-radius:9px; background:var(--subtle); }
+        .closure-gate h3 { font-size:11px; }
+        .closure-intro { margin-top:4px; color:var(--muted); font-size:9px; line-height:1.4; }
+        .closure-list { display:grid; gap:7px; margin-top:10px; }
+        .closure-row { display:grid; grid-template-columns:22px minmax(0,1fr) auto; gap:7px; align-items:center; padding:7px; border:1px solid var(--line); border-radius:7px; background:#fff; }
+        .closure-row.complete { border-color:#b8d1c2; background:var(--green-soft); }
+        .closure-icon { width:21px; height:21px; display:grid; place-items:center; border-radius:50%; background:#e8edea; color:var(--muted); }
+        .closure-row.complete .closure-icon { background:#fff; color:var(--green); }
+        .closure-copy strong { display:block; color:var(--ink); font-size:9px; }
+        .closure-copy span { display:block; margin-top:2px; color:var(--muted); font-size:8px; line-height:1.35; }
+        .closure-state { padding:3px 5px; border-radius:99px; background:#e8edea; color:var(--muted); font-size:7px; font-weight:850; text-transform:uppercase; }
+        .closure-row.complete .closure-state { background:#fff; color:var(--green); }
+        .closure-boundary { margin-top:9px; padding:8px; border-left:3px solid var(--amber); background:var(--amber-soft); color:#684c1f; font-size:9px; line-height:1.45; }
+        .draft-status { margin-top:8px; color:var(--muted); font-size:8px; text-align:right; }
+        .field-pair { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+        textarea.compact { min-height:82px; }
+        .evidence-review-note { display:flex; gap:8px; align-items:flex-start; margin-bottom:9px; padding:9px 10px; border:1px solid #b8d1c2; border-radius:8px; background:var(--green-soft); color:#405c4e; font-size:9px; line-height:1.45; }
+        .evidence-review-note.pending { border-color:#e4c887; background:var(--amber-soft); color:#684c1f; }
+        .evidence-review-note > div { min-width:0; flex:1; }
+        .evidence-review-note .btn { flex:0 0 auto; }
         .field { margin-bottom:10px; }
         .field-help { margin-top:4px; color:var(--muted); font-size:9px; line-height:1.4; }
         .decision-actions { flex-wrap:wrap; padding-top:10px; border-top:1px solid var(--line); }
@@ -131,7 +148,7 @@
         .toast.show { display:block; }
         .toast.error { border-color:#d99b95; background:#fff8f7; }
         @media (max-width:980px) { .workspace { grid-template-columns:280px minmax(0,1fr); } .evidence-grid,.decision-layout { grid-template-columns:1fr; } .progress-wrap { width:240px; } }
-        @media (max-width:760px) { header,.case-title-row,.reviewer-row { align-items:stretch; flex-direction:column; } .header-actions { flex-wrap:wrap; } .reviewer-row .identity,.workspace,.routing { grid-template-columns:1fr; } .progress-wrap { width:100%; } .stats { grid-template-columns:1fr 1fr; } .queue-panel { position:static; max-height:430px; } .next-action { grid-template-columns:36px 1fr; } .next-action .btn { grid-column:1/-1; } }
+        @media (max-width:760px) { header,.case-title-row,.reviewer-row { align-items:stretch; flex-direction:column; } .header-actions { flex-wrap:wrap; } .reviewer-row .identity,.workspace,.routing,.field-pair { grid-template-columns:1fr; } .progress-wrap { width:100%; } .stats { grid-template-columns:1fr 1fr; } .queue-panel { position:static; max-height:430px; } .next-action { grid-template-columns:36px 1fr; } .next-action .btn { grid-column:1/-1; } }
     </style>
 </head>
 <body data-session-id="{{ session_id }}">
@@ -201,8 +218,182 @@
                 label.insertAdjacentElement("afterend", hint);
             });
         }
-        function isWaiting(item) { return item.status === "needs_clarification" && !item.researcher_response && !(item.researcher_revision_history || []).length; }
+        function decisionDraftKey(itemId) { return `safebars_expert_draft_${sessionId}_${itemId}`; }
+        function evidenceReviewKey(itemId) { return `safebars_expert_evidence_${sessionId}_${itemId}`; }
+        function timestampValue(value) {
+            const parsed = Date.parse(value || "");
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+        function latestTimestamp(values) {
+            return (values || []).filter(Boolean).reduce(
+                (latest, value) => timestampValue(value) > timestampValue(latest) ? value : latest,
+                "",
+            );
+        }
+        function loadDecisionDraft(itemId) {
+            try { return JSON.parse(sessionStorage.getItem(decisionDraftKey(itemId)) || "{}"); }
+            catch { return {}; }
+        }
+        function latestResearcherEvidenceAt(item) {
+            return latestTimestamp([
+                item.researcher_responded_at,
+                ...(item.researcher_revision_history || []).map(event => event.timestamp),
+            ]);
+        }
+        function evidenceReviewRecord(item) {
+            let local = {};
+            try { local = JSON.parse(sessionStorage.getItem(evidenceReviewKey(item.id)) || "{}"); }
+            catch { local = {}; }
+            const localTime = local.viewedAt || "";
+            const backendTime = item.evidence_reviewed_at || "";
+            const useLocal = timestampValue(localTime) >= timestampValue(backendTime);
+            const record = useLocal ? local : {
+                viewedAt: backendTime,
+                reviewedPassageIds: item.reviewed_passage_ids || [],
+                evidenceGapAcknowledged: Boolean(item.evidence_gap_acknowledged),
+            };
+            const latestResearcherAt = latestResearcherEvidenceAt(item);
+            const localTracksRevision = Object.prototype.hasOwnProperty.call(record, "researcherEvidenceAtSeen");
+            const recordIsStale = latestResearcherAt && (
+                localTracksRevision
+                    ? record.researcherEvidenceAtSeen !== latestResearcherAt
+                    : timestampValue(record.viewedAt) < timestampValue(latestResearcherAt)
+            );
+            if (recordIsStale) {
+                return {
+                    viewedAt: record.viewedAt || "",
+                    reviewedPassageIds: [],
+                    evidenceGapAcknowledged: false,
+                    stale: true,
+                };
+            }
+            return {
+                viewedAt: record.viewedAt || "",
+                reviewedPassageIds: record.reviewedPassageIds || [],
+                evidenceGapAcknowledged: Boolean(record.evidenceGapAcknowledged),
+                stale: false,
+            };
+        }
+        function markEvidenceReviewed(item) {
+            const citedIds = (item.issue?.source_passage_ids || []).filter(id => passage(id));
+            const record = {
+                viewedAt: new Date().toISOString(),
+                reviewedPassageIds: citedIds,
+                evidenceGapAcknowledged: citedIds.length === 0,
+                researcherEvidenceAtSeen: latestResearcherEvidenceAt(item),
+                reviewerName: $("reviewerName")?.value.trim() || "",
+                reviewerRole: $("reviewerRole")?.value || "",
+            };
+            sessionStorage.setItem(evidenceReviewKey(item.id), JSON.stringify(record));
+            return record;
+        }
+        function adviceTypeOptions(selected = "") {
+            const choices = options.expert_advice_types || [];
+            return `<option value="">Select the kind of expert response...</option>` + choices.map(choice => `<option value="${escapeHtml(choice.id)}" ${choice.id === selected ? "selected" : ""}>${escapeHtml(choice.label)} — ${escapeHtml(choice.description)}</option>`).join("");
+        }
+        function currentDecisionValues(item) {
+            const draft = loadDecisionDraft(item.id);
+            return {
+                advice_type: $(`advice-type-${item.id}`)?.value ?? draft.advice_type ?? item.advice_type ?? "",
+                advice: $(`advice-${item.id}`)?.value ?? draft.advice ?? item.expert_advice ?? "",
+                rationale: $(`rationale-${item.id}`)?.value ?? draft.rationale ?? item.expert_rationale ?? "",
+                responsible_actor: $(`actor-${item.id}`)?.value ?? draft.responsible_actor ?? item.responsible_actor ?? "",
+                closure_evidence: $(`closure-${item.id}`)?.value ?? draft.closure_evidence ?? item.closure_evidence ?? "",
+            };
+        }
+        function hasCurrentResearcherResponse(item, adviceType) {
+            if (!["required_change","clarification_request"].includes(adviceType)) return true;
+            const matchingEvents = (item.review_history || []).filter(event =>
+                ["advise","request_clarification"].includes(event.action)
+                && (
+                    event.advice_type === adviceType
+                    || (adviceType === "clarification_request" && event.action === "request_clarification")
+                )
+            );
+            const latestRequestAt = latestTimestamp(matchingEvents.map(event => event.timestamp || ""));
+            const responseAt = latestResearcherEvidenceAt(item);
+            return Boolean(
+                latestRequestAt
+                && responseAt
+                && timestampValue(responseAt) > timestampValue(latestRequestAt)
+            );
+        }
+        function latestBlockingRequestAt(item) {
+            return latestTimestamp((item.review_history || [])
+                .filter(event =>
+                    ["advise","request_clarification"].includes(event.action)
+                    && (
+                        ["required_change","clarification_request"].includes(event.advice_type)
+                        || event.action === "request_clarification"
+                    )
+                )
+                .map(event => event.timestamp || "")
+            );
+        }
+        function decisionReadiness(item) {
+            const values = currentDecisionValues(item);
+            const evidence = evidenceReviewRecord(item);
+            const citedIds = item.issue?.source_passage_ids || [];
+            const evidenceComplete = citedIds.length
+                ? citedIds.some(id => evidence.reviewedPassageIds.includes(id))
+                : evidence.evidenceGapAcknowledged;
+            const fields = {
+                evidence: evidenceComplete,
+                classification: Boolean((options.expert_advice_types || []).some(choice => choice.id === values.advice_type)),
+                instruction: values.advice.trim().length >= 10,
+                rationale: values.rationale.trim().length >= 10,
+                actor: values.responsible_actor.trim().length >= 2,
+                closure: values.closure_evidence.trim().length >= 10,
+            };
+            const blockingRequestAt = latestBlockingRequestAt(item);
+            const researcherResponseAt = latestResearcherEvidenceAt(item);
+            const unansweredRequest = Boolean(
+                blockingRequestAt
+                && (
+                    !researcherResponseAt
+                    || timestampValue(researcherResponseAt) <= timestampValue(blockingRequestAt)
+                )
+            );
+            let responseRequired = ["required_change","clarification_request"].includes(values.advice_type) || unansweredRequest;
+            if (!citedIds.length) responseRequired = true;
+            if (unansweredRequest) {
+                fields.response = false;
+            } else if (["required_change","clarification_request"].includes(values.advice_type)) {
+                fields.response = hasCurrentResearcherResponse(item, values.advice_type);
+            } else if (!citedIds.length) {
+                fields.response = Boolean(
+                    item.researcher_response
+                    || item.researcher_revised_text
+                    || (item.researcher_revision_history || []).length
+                );
+            } else {
+                fields.response = true;
+            }
+            const coreComplete = fields.evidence && fields.instruction && fields.rationale && fields.actor && fields.closure;
+            return {
+                values,
+                evidence,
+                fields,
+                responseRequired,
+                canAdvise: item.status !== "resolved" && coreComplete && fields.classification && values.advice_type !== "clarification_request",
+                canAsk: item.status !== "resolved" && coreComplete && values.advice_type === "clarification_request",
+                canResolve: item.status !== "resolved" && coreComplete && fields.classification && fields.response,
+            };
+        }
+        function isWaiting(item) {
+            if (item.status === "resolved") return false;
+            const responseAt = latestResearcherEvidenceAt(item);
+            const requestAt = latestBlockingRequestAt(item);
+            if (requestAt && (!responseAt || timestampValue(responseAt) <= timestampValue(requestAt))) return true;
+            return item.status === "needs_clarification" && !responseAt;
+        }
         function isActionable(item) { return item.status !== "resolved" && !isWaiting(item); }
+        function defaultTabFor(item) {
+            if (!item) return "decision";
+            if (item.status === "resolved" || isWaiting(item)) return "history";
+            if (["researcher_revised","researcher_responded"].includes(item.status)) return "evidence";
+            return "decision";
+        }
         function nextAction(item) {
             if (item.status === "resolved") return {title:"Review complete", text:"This question has been addressed. Reopen it only if new evidence changes the judgment.", icon:"circle-check-big", cta:"View record"};
             if (isWaiting(item)) return {title:"Waiting for the researcher", text:"No expert decision is needed until the requested clarification or protocol revision arrives.", icon:"clock-3", cta:"View request"};
@@ -241,46 +432,147 @@
         }
         function renderQueue() {
             const queue = filteredQueue();
-            if (!queue.some(item => item.id === selectedId)) selectedId = queue[0]?.id || "";
+            if (!queue.some(item => item.id === selectedId)) {
+                selectedId = queue[0]?.id || "";
+                activeTab = defaultTabFor(queue[0]);
+            }
             $("queueCount").textContent = `${queue.length} item${queue.length === 1 ? "" : "s"} in this view`;
             $("queue").innerHTML = queue.length ? queue.map((item,index) => { const next = nextAction(item); const issue = item.issue || {}; return `<button class="queue-item ${item.id === selectedId ? "active" : ""} ${item.status === "resolved" ? "resolved" : ""}" data-select-id="${escapeHtml(item.id)}"><div class="meta-row"><span class="queue-number">${index + 1}</span><span class="badge ${escapeHtml(item.priority)}">${escapeHtml(item.priority)} priority</span><span class="badge ${escapeHtml(item.status)}">${escapeHtml(item.status.replaceAll("_"," "))}</span></div><div class="queue-title">${escapeHtml(issue.title || item.question)}</div><div class="queue-next">Next: ${escapeHtml(next.title)}</div></button>`; }).join("") : `<div class="empty">No items match this view.</div>`;
-            document.querySelectorAll("[data-select-id]").forEach(button => button.addEventListener("click", () => { selectedId = button.dataset.selectId; activeTab = ["resolved","needs_clarification"].includes(summary.queue.find(item => item.id === selectedId)?.status) ? "history" : "decision"; render(); }));
+            document.querySelectorAll("[data-select-id]").forEach(button => button.addEventListener("click", () => {
+                selectedId = button.dataset.selectId;
+                activeTab = defaultTabFor(summary.queue.find(item => item.id === selectedId));
+                render();
+            }));
         }
         function timelineEvents(item) {
             const events = [{title:"AI handoff created", actor:"Boundary and Handoff Agent", time:item.created_at || "", text:item.why_ai_cannot_resolve || ""}];
             if (item.assigned_role || item.status === "assigned") events.push({title:"Assigned for expert review", actor:item.assigned_reviewer_name || roleLabel(item.assigned_role || item.recommended_role), time:item.assigned_at || item.reviewed_at || "", text:item.assigned_role_label || roleLabel(item.assigned_role || item.recommended_role)});
-            (item.review_history || []).forEach(event => events.push({title:event.action.replaceAll("_"," "), actor:event.reviewer_name || event.reviewer_role_label || event.reviewer_role, time:event.timestamp || "", text:[event.advice,event.rationale,event.redirect_role_label ? `Redirected to ${event.redirect_role_label}` : ""].filter(Boolean).join(" · ")}));
+            (item.review_history || []).forEach(event => events.push({
+                title:event.action.replaceAll("_"," "),
+                actor:event.reviewer_name || event.reviewer_role_label || event.reviewer_role,
+                time:event.timestamp || "",
+                text:[
+                    event.advice_type_label ? `Response type: ${event.advice_type_label}` : "",
+                    event.advice,
+                    event.rationale,
+                    event.responsible_actor ? `Responsible actor: ${event.responsible_actor}` : "",
+                    event.closure_evidence ? `Closure evidence: ${event.closure_evidence}` : "",
+                    (event.reviewed_passage_ids || []).length ? `Reviewed passages: ${event.reviewed_passage_ids.join(", ")}` : "",
+                    event.evidence_gap_acknowledged ? "Evidence gap reviewed and acknowledged." : "",
+                    event.redirect_role_label ? `Redirected to ${event.redirect_role_label}` : "",
+                ].filter(Boolean).join(" · ")
+            }));
             (item.researcher_revision_history || []).forEach(event => events.push({title:"Researcher response", actor:"Researcher", time:event.timestamp || "", text:[event.response,event.revised_text ? `Revision: ${event.revised_text}` : ""].filter(Boolean).join(" · ")}));
-            if (item.resolved_at) events.push({title:"Resolved", actor:item.reviewer_name || "Expert reviewer", time:item.resolved_at, text:"Marked addressed for the researcher record; not institutional approval."});
+            if (item.resolved_at && !(item.review_history || []).some(event => event.action === "resolve")) {
+                events.push({title:"Resolved", actor:item.reviewer_name || "Expert reviewer", time:item.resolved_at, text:"Legacy closure record; marked addressed, not institutional approval."});
+            }
             return events;
         }
         function evidencePanel(item) {
             const issue = item.issue || {};
             const sources = (issue.source_passage_ids || []).map(id => passage(id)).filter(Boolean);
-            return `<div class="evidence-grid"><div><div class="block"><h3>The decision you are being asked to make</h3><p>${escapeHtml(item.question)}</p></div><div class="block"><h3>Protocol evidence</h3><p>${escapeHtml(issue.observation || "No direct observation was recorded.")}</p>${sources.length ? sources.map(source => `<div class="source"><strong>${escapeHtml(source.artifact_label)} · ${escapeHtml(source.id)}</strong><br>${escapeHtml(source.text)}</div>`).join("") : `<div class="source">No exact passage was attached. Treat this as an evidence gap and ask for clarification before resolving.</div>`}</div>${item.researcher_response ? `<div class="block"><h3>Researcher's latest response</h3><p>${escapeHtml(item.researcher_response)}</p>${item.researcher_revised_text ? `<div class="source"><strong>Proposed protocol revision</strong><br>${escapeHtml(item.researcher_revised_text)}</div>` : ""}</div>` : ""}</div><div><div class="block"><h3>Why the AI handed this over</h3><p>${escapeHtml(item.why_ai_cannot_resolve)}</p></div><div class="block"><h3>Routing and ownership</h3><div class="routing"><div class="routing-card"><strong>Best-fit role</strong><p>${escapeHtml(item.recommended_role_label || item.owner)}</p></div><div class="routing-card"><strong>Current owner</strong><p>${escapeHtml(item.assigned_reviewer_name || "Not assigned")}<br>${escapeHtml(item.assigned_role_label || "")}</p></div></div><p>${escapeHtml(item.recommended_role_scope || "")}</p></div><div class="block"><h3>Why this was prioritized</h3><ul>${(item.triage_factors || ["Situated human judgment is required."]).map(factor => `<li>${escapeHtml(factor)}</li>`).join("")}</ul></div><div class="block"><h3>Downstream outputs</h3><p>Your saved judgment will be visible in the researcher handoff and exports.</p><div class="impact-list"><span class="impact">Ethics application draft</span><span class="impact">Research design report</span><span class="impact">Expert review summary</span></div></div></div></div>`;
+            const reviewed = evidenceReviewRecord(item);
+            const recorded = sources.length
+                ? sources.some(source => reviewed.reviewedPassageIds.includes(source.id))
+                : reviewed.evidenceGapAcknowledged;
+            const reviewCopy = reviewed.stale
+                ? "The researcher added newer material. Inspect it, then record a fresh evidence review."
+                : (recorded
+                    ? `${sources.length ? `${sources.length} cited passage${sources.length === 1 ? "" : "s"}` : "The evidence gap"} recorded as reviewed in this browser.`
+                    : (sources.length
+                        ? "Inspect the cited protocol passages below, then record the review to unlock a substantive expert action."
+                        : "No exact passage is attached. Inspect the gap, then explicitly record it before asking the researcher."));
+            const reviewMeta = recorded && reviewed.viewedAt
+                ? `Recorded ${reviewed.viewedAt}${reviewed.reviewerName ? ` by ${reviewed.reviewerName}` : ""}`
+                : "";
+            const recordLabel = sources.length ? "Record evidence review" : "Record evidence-gap review";
+            return `<div class="evidence-review-note ${recorded && !reviewed.stale ? "" : "pending"}"><i data-lucide="${recorded && !reviewed.stale ? "badge-check" : "scan-search"}" size="15"></i><div><strong>${recorded && !reviewed.stale ? "Evidence review recorded" : "Evidence review required"}</strong><br>${escapeHtml(reviewCopy)}${reviewMeta ? `<br><span class="muted">${escapeHtml(reviewMeta)}</span>` : ""}</div><button class="btn ${recorded && !reviewed.stale ? "" : "btn-primary"}" data-record-evidence="${escapeHtml(item.id)}">${escapeHtml(recorded && !reviewed.stale ? "Record again" : recordLabel)}</button></div><div class="evidence-grid"><div><div class="block"><h3>The decision you are being asked to make</h3><p>${escapeHtml(item.question)}</p></div><div class="block"><h3>Protocol evidence</h3><p>${escapeHtml(issue.observation || "No direct observation was recorded.")}</p>${sources.length ? sources.map(source => `<div class="source"><strong>${escapeHtml(source.artifact_label)} · ${escapeHtml(source.id)}</strong><br>${escapeHtml(source.text)}</div>`).join("") : `<div class="source">No exact passage was attached. Treat this as an evidence gap and ask for clarification before resolving.</div>`}</div>${item.researcher_response ? `<div class="block"><h3>Researcher's latest response</h3><p>${escapeHtml(item.researcher_response)}</p>${item.researcher_revised_text ? `<div class="source"><strong>Proposed protocol revision</strong><br>${escapeHtml(item.researcher_revised_text)}</div>` : ""}</div>` : ""}</div><div><div class="block"><h3>Why the AI handed this over</h3><p>${escapeHtml(item.why_ai_cannot_resolve)}</p></div><div class="block"><h3>Routing and ownership</h3><div class="routing"><div class="routing-card"><strong>Best-fit role</strong><p>${escapeHtml(item.recommended_role_label || item.owner)}</p></div><div class="routing-card"><strong>Current owner</strong><p>${escapeHtml(item.assigned_reviewer_name || "Not assigned")}<br>${escapeHtml(item.assigned_role_label || "")}</p></div></div><p>${escapeHtml(item.recommended_role_scope || "")}</p></div><div class="block"><h3>Why this was prioritized</h3><ul>${(item.triage_factors || ["Situated human judgment is required."]).map(factor => `<li>${escapeHtml(factor)}</li>`).join("")}</ul></div><div class="block"><h3>Downstream outputs</h3><p>Your saved judgment will be visible in the researcher handoff and exports.</p><div class="impact-list"><span class="impact">Ethics application draft</span><span class="impact">Research design report</span><span class="impact">Expert review summary</span></div></div></div></div>`;
         }
         function actionFeedback(item) {
             const latest = (item.review_history || []).at(-1);
-            const actor = item.assigned_reviewer_name || latest?.reviewer_name || item.assigned_role_label || "Expert reviewer";
+            const latestResearcher = (item.researcher_revision_history || []).at(-1);
+            const researcherState = ["researcher_revised","researcher_responded"].includes(item.status);
+            const actor = researcherState
+                ? "Researcher"
+                : (latest?.reviewer_name || item.assigned_reviewer_name || item.assigned_role_label || "Expert reviewer");
+            const feedbackTime = researcherState ? latestResearcher?.timestamp : latest?.timestamp;
             const states = {
                 advised:{kind:"saved",icon:"send",title:"Advice sent to the researcher",text:"The advice and rationale are now visible in the researcher workspace."},
                 needs_clarification:{kind:"waiting",icon:"clock-3",title:"Waiting for the researcher",text:"The clarification request is recorded. The researcher must respond before closure."},
                 redirected:{kind:"redirected",icon:"route",title:"Handoff redirected",text:`Responsibility moved to ${item.assigned_role_label || item.recommended_role_label || "the selected expert role"}.`},
                 resolved:{kind:"resolved",icon:"circle-check-big",title:"Handoff closed",text:"This question is marked addressed. This is not institutional ethics approval."},
                 assigned:{kind:"saved",icon:"user-check",title:"Review claimed",text:"You can now send advice, ask the researcher, or close the handoff."},
+                researcher_revised:{kind:"waiting",icon:"file-pen-line",title:"Researcher revision received",text:"Inspect the revised evidence, record a fresh evidence review, then decide whether the handoff can close."},
+                researcher_responded:{kind:"waiting",icon:"message-square-reply",title:"Researcher response received",text:"Inspect the new response, record a fresh evidence review, then decide whether the handoff can close."},
             };
             const state = states[item.status] || {kind:"",icon:"info",title:"No expert action saved yet",text:"Your first substantive action will automatically record ownership."};
-            return `<div class="action-result ${state.kind}"><i data-lucide="${state.icon}" size="16"></i><div><strong>${escapeHtml(state.title)}</strong>${escapeHtml(state.text)}${latest?.timestamp ? `<br><span class="muted">Last action by ${escapeHtml(actor)} · ${escapeHtml(latest.timestamp)}</span>` : ""}</div></div>`;
+            return `<div class="action-result ${state.kind}"><i data-lucide="${state.icon}" size="16"></i><div><strong>${escapeHtml(state.title)}</strong>${escapeHtml(state.text)}${feedbackTime ? `<br><span class="muted">Last action by ${escapeHtml(actor)} · ${escapeHtml(feedbackTime)}</span>` : ""}</div></div>`;
         }
         function redirectRoleOptions(item) {
             const currentRole = item.assigned_role || item.recommended_role || "";
             return `<option value="">Select a different expert role...</option>` + options.expert_roles.filter(role => role.id !== currentRole).map(role => `<option value="${escapeHtml(role.id)}">${escapeHtml(role.label)}</option>`).join("");
         }
+        function closureRequirementRow(key, title, copy) {
+            return `<div class="closure-row" data-requirement="${key}"><span class="closure-icon"><i data-lucide="circle" size="12"></i></span><div class="closure-copy"><strong>${escapeHtml(title)}</strong><span data-requirement-copy="${key}">${escapeHtml(copy)}</span></div><span class="closure-state" data-requirement-state="${key}">Needed</span></div>`;
+        }
         function decisionPanel(item) {
-            const draftKey = `safebars_expert_draft_${sessionId}_${item.id}`;
-            let draft = {};
-            try { draft = JSON.parse(sessionStorage.getItem(draftKey) || "{}"); } catch { draft = {}; }
-            return `<div class="decision-layout"><div>${actionFeedback(item)}<div class="block" style="margin-bottom:10px;background:var(--green-soft);border-color:#b8d1c2"><h3>Enter your expert response below</h3><p>Write an actionable requirement or clarification request. Your first saved action automatically records ownership.</p></div><div class="field"><label for="advice-${escapeHtml(item.id)}">Required change or expert advice</label><textarea id="advice-${escapeHtml(item.id)}" data-draft-field="advice" placeholder="State what the researcher should change or clarify, in language they can act on.">${escapeHtml(draft.advice ?? item.expert_advice ?? "")}</textarea><div class="field-help">Required for sending advice or asking the researcher.</div></div><div class="field"><label for="rationale-${escapeHtml(item.id)}">Ethical rationale and closure condition</label><textarea id="rationale-${escapeHtml(item.id)}" data-draft-field="rationale" placeholder="Explain why it matters and what evidence would be sufficient to close this item.">${escapeHtml(draft.rationale ?? item.expert_rationale ?? "")}</textarea><div class="field-help">This preserves the reasoning trail for the researcher and later reviewers.</div></div><div class="routing-action"><div><label for="redirect-${escapeHtml(item.id)}">Route to another expert</label><select id="redirect-${escapeHtml(item.id)}">${redirectRoleOptions(item)}</select></div><button class="btn" data-action="redirect" data-id="${escapeHtml(item.id)}"><i data-lucide="route" size="13"></i>Redirect handoff</button></div><div class="decision-actions"><button class="btn btn-primary" data-action="advise" data-id="${escapeHtml(item.id)}"><i data-lucide="send" size="13"></i>Send advice to researcher</button><button class="btn" data-action="request_clarification" data-id="${escapeHtml(item.id)}"><i data-lucide="message-circle-question" size="13"></i>Ask researcher</button><button class="btn ${item.status === "resolved" ? "btn-danger" : ""}" data-action="${item.status === "resolved" ? "reopen" : "resolve"}" data-id="${escapeHtml(item.id)}"><i data-lucide="${item.status === "resolved" ? "rotate-ccw" : "circle-check-big"}" size="13"></i>${item.status === "resolved" ? "Reopen handoff" : "Close handoff"}</button></div></div><aside class="checklist"><h3>Before you save a decision</h3><label class="check"><input type="checkbox"><span>I checked the cited protocol evidence, not only the AI summary.</span></label><label class="check"><input type="checkbox"><span>I separated a required change from an optional recommendation.</span></label><label class="check"><input type="checkbox"><span>I stated who should act and what would count as sufficient evidence.</span></label><label class="check"><input type="checkbox"><span>I avoided presenting this advice as formal institutional approval.</span></label></aside></div>`;
+            const draft = loadDecisionDraft(item.id);
+            const adviceType = draft.advice_type ?? item.advice_type ?? "";
+            const advice = draft.advice ?? item.expert_advice ?? "";
+            const rationale = draft.rationale ?? item.expert_rationale ?? "";
+            const actor = draft.responsible_actor ?? item.responsible_actor ?? "";
+            const closureEvidence = draft.closure_evidence ?? item.closure_evidence ?? "";
+            const legacyNotice = item.legacy_resolution
+                ? `<div class="action-result waiting"><i data-lucide="history" size="16"></i><div><strong>Legacy closure record</strong>This item remains resolved, but its older record does not contain the new structured evidence fields. Reopen it if the record needs to be brought up to the current standard.</div></div>`
+                : "";
+            return `<div class="decision-layout"><div>${actionFeedback(item)}${legacyNotice}<div class="block" style="margin-bottom:10px;background:var(--green-soft);border-color:#b8d1c2"><h3>Enter one auditable expert response</h3><p>Classify the judgment, name the person who should act, and define the evidence that would make the issue closable.</p></div><div class="field"><label for="advice-type-${escapeHtml(item.id)}">Expert response type</label><select id="advice-type-${escapeHtml(item.id)}" data-draft-field="advice_type">${adviceTypeOptions(adviceType)}</select><div class="field-help">Required changes and clarification requests stay open until the researcher responds.</div></div><div class="field"><label for="advice-${escapeHtml(item.id)}">Required change, recommendation, or question</label><textarea id="advice-${escapeHtml(item.id)}" data-draft-field="advice" placeholder="State what the researcher should change, consider, or clarify in language they can act on.">${escapeHtml(advice)}</textarea><div class="field-help">Write at least one concrete, actionable instruction or conclusion.</div></div><div class="field"><label for="rationale-${escapeHtml(item.id)}">Ethical rationale</label><textarea id="rationale-${escapeHtml(item.id)}" data-draft-field="rationale" placeholder="Explain which ethical concern is affected and why this response is proportionate.">${escapeHtml(rationale)}</textarea><div class="field-help">This reasoning appears in the review history and exported records.</div></div><div class="field-pair"><div class="field"><label for="actor-${escapeHtml(item.id)}">Responsible person or role</label><input id="actor-${escapeHtml(item.id)}" data-draft-field="responsible_actor" value="${escapeHtml(actor)}" placeholder="e.g., Principal investigator"><div class="field-help">Who must take or verify the next action?</div></div><div class="field"><label for="closure-${escapeHtml(item.id)}">Evidence sufficient to close</label><textarea class="compact" id="closure-${escapeHtml(item.id)}" data-draft-field="closure_evidence" placeholder="e.g., Revised consent paragraph plus named withdrawal contact">${escapeHtml(closureEvidence)}</textarea><div class="field-help">Describe an observable document change, answer, or safeguard.</div></div></div><div class="routing-action"><div><label for="redirect-${escapeHtml(item.id)}">Route to another expert</label><select id="redirect-${escapeHtml(item.id)}">${redirectRoleOptions(item)}</select></div><button class="btn" data-action="redirect" data-id="${escapeHtml(item.id)}" ${item.status === "resolved" ? "disabled" : ""}><i data-lucide="route" size="13"></i>Redirect handoff</button></div><div class="decision-actions"><button class="btn btn-primary" data-action="advise" data-id="${escapeHtml(item.id)}" disabled><i data-lucide="send" size="13"></i>Send advice to researcher</button><button class="btn" data-action="request_clarification" data-id="${escapeHtml(item.id)}" disabled><i data-lucide="message-circle-question" size="13"></i>Ask researcher</button><button class="btn ${item.status === "resolved" ? "btn-danger" : ""}" data-action="${item.status === "resolved" ? "reopen" : "resolve"}" data-id="${escapeHtml(item.id)}" ${item.status === "resolved" ? "" : "disabled"}><i data-lucide="${item.status === "resolved" ? "rotate-ccw" : "circle-check-big"}" size="13"></i>${item.status === "resolved" ? "Reopen handoff" : "Close handoff"}</button></div></div><aside class="closure-gate"><h3>Closure requirements</h3><p class="closure-intro">Calculated automatically from the evidence visit and saved record — these are not checkboxes.</p><div class="closure-list">${closureRequirementRow("evidence","Protocol evidence reviewed","Open Evidence and inspect the cited passage, not only the AI summary.")}${closureRequirementRow("classification","Response classified","Separate a required change, optional recommendation, clarification request, or no-change conclusion.")}${closureRequirementRow("instruction","Actionable expert response","State a concrete instruction, recommendation, question, or conclusion.")}${closureRequirementRow("rationale","Ethical rationale recorded","Explain why the response is ethically relevant and proportionate.")}${closureRequirementRow("actor","Responsible actor named","Identify who should act or verify the safeguard.")}${closureRequirementRow("closure","Closure evidence defined","State what observable evidence would be sufficient.")}${closureRequirementRow("response","Researcher response condition","Required changes and questions need a later researcher response.")}</div><div class="closure-boundary"><strong>Decision-support boundary.</strong> Closing records this handoff as addressed; it does not grant formal institutional ethics approval.</div><div class="draft-status" id="draft-status-${escapeHtml(item.id)}">${draft.updatedAt ? `Draft saved ${escapeHtml(draft.updatedAt)}` : "Draft saves in this browser as you type."}</div></aside></div>`;
+        }
+        function updateDecisionReadiness(item) {
+            const readiness = decisionReadiness(item);
+            const intro = document.querySelector(".closure-intro");
+            if (intro) intro.textContent = "Calculated from the recorded Evidence review and structured response fields — these are not checkboxes.";
+            const copies = {
+                evidence: readiness.evidence.stale
+                    ? "The researcher added new material. Inspect it and record a fresh Evidence review."
+                    : ((item.issue?.source_passage_ids || []).length
+                        ? "Open Evidence, inspect the cited passages, and press Record evidence review."
+                        : "Open Evidence and explicitly record the evidence gap; ask the researcher before closure."),
+                classification: "Choose the kind of expert response.",
+                instruction: "Write at least 10 characters of actionable advice or a clear conclusion.",
+                rationale: "Explain the ethical reason in at least 10 characters.",
+                actor: "Name the person or role responsible for acting.",
+                closure: "Describe the observable evidence needed for closure.",
+                response: readiness.responseRequired
+                    ? "A researcher response later than the expert request is required."
+                    : "No later researcher response is required for this response type.",
+            };
+            Object.entries(readiness.fields).forEach(([key, complete]) => {
+                const row = document.querySelector(`[data-requirement="${key}"]`);
+                if (!row) return;
+                row.classList.toggle("complete", complete);
+                const state = row.querySelector(`[data-requirement-state="${key}"]`);
+                const copy = row.querySelector(`[data-requirement-copy="${key}"]`);
+                const icon = row.querySelector("[data-lucide]");
+                if (state) state.textContent = complete ? (key === "response" && !readiness.responseRequired ? "Not needed" : "Ready") : "Needed";
+                if (copy) copy.textContent = copies[key];
+                if (icon) icon.setAttribute("data-lucide", complete ? "check" : "circle");
+            });
+            const adviseButton = document.querySelector(`[data-action="advise"][data-id="${CSS.escape(item.id)}"]`);
+            const askButton = document.querySelector(`[data-action="request_clarification"][data-id="${CSS.escape(item.id)}"]`);
+            const closeButton = document.querySelector(`[data-action="resolve"][data-id="${CSS.escape(item.id)}"]`);
+            if (adviseButton) {
+                adviseButton.disabled = !readiness.canAdvise;
+                adviseButton.title = readiness.canAdvise ? "Send this structured advice to the researcher." : "Complete the evidence review and all response fields; clarification requests use Ask researcher.";
+            }
+            if (askButton) {
+                askButton.disabled = !readiness.canAsk;
+                askButton.title = readiness.canAsk ? "Send this classified clarification request and wait for the researcher." : "Choose Clarification request, record the Evidence review, and complete every response field.";
+            }
+            if (closeButton) {
+                closeButton.disabled = !readiness.canResolve;
+                closeButton.title = readiness.canResolve ? "All closure requirements are satisfied." : "Complete every closure requirement shown on the right.";
+            }
+            refreshIcons();
         }
         function historyPanel(item) {
             const events = timelineEvents(item);
@@ -294,9 +586,20 @@
             const index = summary.queue.findIndex(entry => entry.id === item.id) + 1;
             $("focusPanel").innerHTML = `<div class="workspace-head"><div><div class="meta-row"><span class="badge ${escapeHtml(item.priority)}">${escapeHtml(item.priority)} priority</span><span class="badge ${escapeHtml(item.status)}">${escapeHtml(item.status.replaceAll("_"," "))}</span><span class="badge">${escapeHtml(issue.category || "ethics issue")}</span></div><h2>${escapeHtml(issue.title || item.question)}</h2></div><div class="step-indicator"><strong>Handoff ${index} of ${summary.queue.length}</strong><span class="muted">${escapeHtml(item.deadline_stage || "Before fieldwork")}</span></div></div><div class="next-action"><div class="next-icon"><i data-lucide="${next.icon}" size="18"></i></div><div><h3>${escapeHtml(next.title)}</h3><p>${escapeHtml(next.text)}</p></div><button class="btn btn-primary" id="nextActionButton">${escapeHtml(next.cta)}</button></div><div class="tabs" role="tablist"><button class="tab ${activeTab === "decision" ? "active" : ""}" data-tab="decision">1. Expert response · enter advice</button><button class="tab ${activeTab === "evidence" ? "active" : ""}" data-tab="evidence">2. Evidence</button><button class="tab ${activeTab === "history" ? "active" : ""}" data-tab="history">3. History (${timelineEvents(item).length})</button></div><div class="tab-panel ${activeTab === "decision" ? "active" : ""}" data-panel="decision">${decisionPanel(item)}</div><div class="tab-panel ${activeTab === "evidence" ? "active" : ""}" data-panel="evidence">${evidencePanel(item)}</div><div class="tab-panel ${activeTab === "history" ? "active" : ""}" data-panel="history">${historyPanel(item)}</div>`;
             humanizeSourceLabels();
-            document.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", () => { activeTab = button.dataset.tab; renderFocus(); }));
+            document.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", () => {
+                activeTab = button.dataset.tab;
+                renderFocus();
+            }));
             document.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => review(button.dataset.id, button.dataset.action)));
-            document.querySelectorAll("[data-draft-field]").forEach(field => field.addEventListener("input", saveDraft));
+            document.querySelectorAll("[data-record-evidence]").forEach(button => button.addEventListener("click", () => {
+                markEvidenceReviewed(item);
+                renderFocus();
+                toast((item.issue?.source_passage_ids || []).length ? "Evidence review recorded for the cited protocol passages." : "Evidence gap review recorded. Ask the researcher before closure.");
+            }));
+            document.querySelectorAll("[data-draft-field]").forEach(field => {
+                field.addEventListener("input", () => { saveDraft(); updateDecisionReadiness(item); });
+                field.addEventListener("change", () => { saveDraft(); updateDecisionReadiness(item); });
+            });
             $("nextActionButton").addEventListener("click", () => {
                 if (item.status === "resolved" || isWaiting(item)) {
                     activeTab = "history";
@@ -308,6 +611,7 @@
                     openDecisionForm(item.id);
                 }
             });
+            updateDecisionReadiness(item);
             refreshIcons();
         }
         function focusDecisionField(id) {
@@ -328,9 +632,11 @@
         function saveDraft() {
             const item = summary.queue.find(entry => entry.id === selectedId);
             if (!item) return;
-            const advice = $(`advice-${item.id}`)?.value || "";
-            const rationale = $(`rationale-${item.id}`)?.value || "";
-            sessionStorage.setItem(`safebars_expert_draft_${sessionId}_${item.id}`, JSON.stringify({advice,rationale}));
+            const values = currentDecisionValues(item);
+            const updatedAt = new Date().toISOString();
+            sessionStorage.setItem(decisionDraftKey(item.id), JSON.stringify({...values, updatedAt}));
+            const status = $(`draft-status-${item.id}`);
+            if (status) status.textContent = `Draft saved ${updatedAt}`;
         }
         function render() {
             $("projectTitle").textContent = summary.project.title || "Untitled project";
@@ -347,11 +653,32 @@
             refreshIcons();
         }
         async function review(id, action) {
-            const adviceField = $(`advice-${id}`);
-            const rationaleField = $(`rationale-${id}`);
+            const item = summary.queue.find(entry => entry.id === id);
+            if (!item) return;
+            const readiness = decisionReadiness(item);
             const redirectField = $(`redirect-${id}`);
-            const body = {action, reviewer_role:$("reviewerRole").value, reviewer_name:$("reviewerName").value.trim(), advice:adviceField?.value.trim() || "", rationale:rationaleField?.value.trim() || "", redirect_role:redirectField?.value || ""};
-            if (["advise","request_clarification"].includes(action) && !body.advice) { toast("Write a concrete instruction or clarification request first.", true); activeTab = "decision"; renderFocus(); return; }
+            const evidence = readiness.evidence;
+            const values = readiness.values;
+            const body = {
+                action,
+                reviewer_role:$("reviewerRole").value,
+                reviewer_name:$("reviewerName").value.trim(),
+            };
+            if (["advise","request_clarification","resolve"].includes(action)) {
+                Object.assign(body, {
+                    advice_type:values.advice_type,
+                    advice:values.advice.trim(),
+                    rationale:values.rationale.trim(),
+                    responsible_actor:values.responsible_actor.trim(),
+                    closure_evidence:values.closure_evidence.trim(),
+                    reviewed_passage_ids:evidence.reviewedPassageIds,
+                    evidence_gap_acknowledged:evidence.evidenceGapAcknowledged,
+                });
+            }
+            if (action === "redirect") body.redirect_role = redirectField?.value || "";
+            if (action === "advise" && !readiness.canAdvise) { toast("Complete the evidence review and every structured response field before sending advice.", true); activeTab = "decision"; renderFocus(); return; }
+            if (action === "request_clarification" && !readiness.canAsk) { toast("Choose Clarification request, record the Evidence review, and complete every response field first.", true); activeTab = "decision"; renderFocus(); return; }
+            if (action === "resolve" && !readiness.canResolve) { toast("This handoff cannot close until every requirement on the right is ready.", true); activeTab = "decision"; renderFocus(); return; }
             if (action === "redirect" && !body.redirect_role) { toast("Select a different expert role before redirecting.", true); redirectField?.focus(); return; }
             if (action === "resolve" && !confirm("Close this handoff as addressed? This records closure, not institutional ethics approval.")) return;
             const actionButton = document.querySelector(`[data-action="${action}"][data-id="${CSS.escape(id)}"]`);
@@ -359,12 +686,18 @@
             if (actionButton) actionButton.textContent = "Saving...";
             try {
                 await api(`/api/safebars/v2/sessions/${sessionId}/handoffs/${id}/review`, {method:"POST", body:JSON.stringify(body)});
-                sessionStorage.removeItem(`safebars_expert_draft_${sessionId}_${id}`);
-                if (action === "request_clarification") $("statusFilter").value = "waiting";
+                if (["advise","request_clarification","resolve"].includes(action)) sessionStorage.removeItem(decisionDraftKey(id));
+                if (action === "request_clarification" || (action === "advise" && values.advice_type === "required_change")) $("statusFilter").value = "waiting";
                 if (action === "resolve") $("statusFilter").value = "resolved";
-                if (action === "reopen") $("statusFilter").value = "actionable";
+                if (action === "reopen") {
+                    $("statusFilter").value = "actionable";
+                    sessionStorage.removeItem(evidenceReviewKey(id));
+                }
                 await loadSummary();
-                activeTab = ["request_clarification","resolve"].includes(action) ? "history" : "decision";
+                activeTab = (
+                    ["request_clarification","resolve"].includes(action)
+                    || (action === "advise" && values.advice_type === "required_change")
+                ) ? "history" : "decision";
                 renderFocus();
                 if (action === "assign") focusDecisionField(id);
                 const messages = {advise:"Advice sent to the researcher.",request_clarification:"Clarification request sent. Waiting for the researcher.",redirect:"Handoff redirected to the selected expert role.",resolve:"Handoff closed as addressed.",reopen:"Handoff reopened.",assign:"Review claimed."};
@@ -397,7 +730,7 @@
         }
         $("statusFilter").addEventListener("change", render);
         $("roleFilter").addEventListener("change", render);
-        $("nextItem").addEventListener("click", () => { const queue = filteredQueue(); if (!queue.length) return; const index = queue.findIndex(item => item.id === selectedId); selectedId = queue[(index + 1) % queue.length].id; activeTab = "decision"; render(); });
+        $("nextItem").addEventListener("click", () => { const queue = filteredQueue(); if (!queue.length) return; const index = queue.findIndex(item => item.id === selectedId); const next = queue[(index + 1) % queue.length]; selectedId = next.id; activeTab = defaultTabFor(next); render(); });
         $("reviewerName").addEventListener("change", saveReviewerProfile);
         $("reviewerRole").addEventListener("change", saveReviewerProfile);
         $("downloadSummary").addEventListener("click", downloadSummary);

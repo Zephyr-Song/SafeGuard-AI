@@ -406,6 +406,8 @@ class StudyInstrumentationTest(unittest.TestCase):
             b'data-export-format="study"',
         ):
             self.assertIn(marker, workspace.data)
+        self.assertIn(b'<button id="readinessCheckButton" hidden', workspace.data)
+        self.assertNotIn(b"See blockers and the next action", workspace.data)
 
 
 if __name__ == "__main__":

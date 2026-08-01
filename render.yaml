@@ -15,6 +15,8 @@ services:
         value: "1"
       - key: SAFEBARS_V2_DB_PATH
         value: /tmp/safebars_v2.db
+      - key: SAFEBARS_MIRROR_DB
+        value: /tmp/safebars_mirror.db
       - key: ENABLE_DEMO_AUTH
         value: "0"
       - key: FLASK_SECRET_KEY

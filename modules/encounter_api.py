@@ -403,6 +403,11 @@ def review_handoff(session_id: str, handoff_id: str):
             advice=payload.get("advice", ""),
             rationale=payload.get("rationale", ""),
             redirect_role=payload.get("redirect_role", ""),
+            advice_type=payload.get("advice_type", ""),
+            responsible_actor=payload.get("responsible_actor", ""),
+            closure_evidence=payload.get("closure_evidence", ""),
+            reviewed_passage_ids=payload.get("reviewed_passage_ids", []),
+            evidence_gap_acknowledged=payload.get("evidence_gap_acknowledged") is True,
         )
     except ValueError as exc:
         return jsonify({"success": False, "error": str(exc)}), 400

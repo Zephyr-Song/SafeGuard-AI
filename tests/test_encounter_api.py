@@ -114,6 +114,13 @@ class EncounterApiTest(unittest.TestCase):
         audited_session = rerun.get_json()["session"]
 
         handoff = audited_session["handoffs"][0]
+        handoff_issue = next(
+            item for item in audited_session["issues"] if item["id"] == handoff["issue_id"]
+        )
+        reviewed_passage_id = handoff_issue["source_passage_ids"][0]
+        closure_evidence = (
+            "A revised withdrawal paragraph names the deletion deadline, process, and responsible contact."
+        )
         summary = self.client.get(
             f"/api/safebars/v2/sessions/{session_id}/expert-summary",
             headers=expert_headers,
@@ -128,6 +135,10 @@ class EncounterApiTest(unittest.TestCase):
                 "reviewer_name": "School ethics advisor",
                 "advice": "Clarify the withdrawal and deletion boundary.",
                 "rationale": "The current procedure is ambiguous.",
+                "advice_type": "required_change",
+                "responsible_actor": "Principal investigator",
+                "closure_evidence": closure_evidence,
+                "reviewed_passage_ids": [reviewed_passage_id],
             },
             headers=expert_headers,
         )
@@ -139,6 +150,11 @@ class EncounterApiTest(unittest.TestCase):
         )
         self.assertEqual(reviewed_handoff["assigned_role"], "ethics_board")
         self.assertEqual(reviewed_handoff["assigned_reviewer_name"], "School ethics advisor")
+        self.assertEqual(reviewed_handoff["advice_type"], "required_change")
+        self.assertEqual(reviewed_handoff["responsible_actor"], "Principal investigator")
+        self.assertEqual(reviewed_handoff["closure_evidence"], closure_evidence)
+        self.assertEqual(reviewed_handoff["reviewed_passage_ids"], [reviewed_passage_id])
+        self.assertTrue(reviewed_handoff["evidence_reviewed"])
         self.assertGreaterEqual(len(reviewed_handoff["review_history"]), 1)
         reviewed_summary = self.client.get(
             f"/api/safebars/v2/sessions/{session_id}/expert-summary",
@@ -163,6 +179,32 @@ class EncounterApiTest(unittest.TestCase):
                 if item["id"] == handoff["id"]
             )["status"],
             "researcher_revised",
+        )
+        rereviewed = self.client.post(
+            f"/api/safebars/v2/sessions/{session_id}/handoffs/{handoff['id']}/review",
+            json={
+                "action": "advise",
+                "reviewer_role": "ethics_board",
+                "reviewer_name": "School ethics advisor",
+                "advice": "Clarify the withdrawal and deletion boundary.",
+                "rationale": "The revised procedure still requires an auditable expert record.",
+                "advice_type": "required_change",
+                "responsible_actor": "Principal investigator",
+                "closure_evidence": closure_evidence,
+                "reviewed_passage_ids": [reviewed_passage_id],
+            },
+            headers=expert_headers,
+        )
+        self.assertEqual(rereviewed.status_code, 200)
+        rereviewed_handoff = next(
+            item
+            for item in rereviewed.get_json()["session"]["handoffs"]
+            if item["id"] == handoff["id"]
+        )
+        self.assertTrue(rereviewed_handoff["evidence_reviewed"])
+        self.assertEqual(
+            rereviewed_handoff["reviewed_passage_ids"],
+            [reviewed_passage_id],
         )
         protected_rerun = self.client.post(
             f"/api/safebars/v2/sessions/{session_id}/audit",
@@ -222,6 +264,11 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn("Framework-grounded ethics map", word_text)
         self.assertIn("Inspectable audit plan", word_text)
         self.assertIn("Resolution rule", word_text)
+        self.assertIn("Expert response type", word_text)
+        self.assertIn("Required change", word_text)
+        self.assertIn("Principal investigator", word_text)
+        self.assertIn(closure_evidence, word_text)
+        self.assertIn(f"Protocol passages reviewed: {reviewed_passage_id}", word_text)
 
         pdf_report = self.client.get(
             f"/api/safebars/v2/sessions/{session_id}/export.pdf",
@@ -246,6 +293,13 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn("formal approval", application_text)
         self.assertIn("Research area and ethics-review context", application_text)
         self.assertIn(SAMPLE_PROJECT["project"]["review_context"], application_text)
+        self.assertIn("Required change", application_text)
+        self.assertIn("Principal investigator", application_text)
+        self.assertIn(closure_evidence, application_text)
+        self.assertIn(
+            f"Protocol passages reviewed: {reviewed_passage_id}",
+            application_text,
+        )
 
         research_design = self.client.get(
             f"/api/safebars/v2/sessions/{session_id}/export.research-design.docx",
@@ -262,6 +316,10 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn("Expert dependencies and unresolved design questions", design_text)
         self.assertIn("Narrow eligibility: 70", design_text)
         self.assertIn("A narrower group is methodologically necessary", design_text)
+        self.assertIn("Required change", design_text)
+        self.assertIn("Principal investigator", design_text)
+        self.assertIn(closure_evidence, design_text)
+        self.assertIn(f"Protocol passages reviewed: {reviewed_passage_id}", design_text)
 
         expert_export = self.client.get(
             f"/api/safebars/v2/sessions/{session_id}/export.expert.docx"
@@ -272,6 +330,11 @@ class EncounterApiTest(unittest.TestCase):
         expert_text = "\n".join(paragraph.text for paragraph in expert_document.paragraphs)
         self.assertIn("SAFEBARS EXPERT REVIEW SUMMARY", expert_text)
         self.assertIn("Expert advice", expert_text)
+        self.assertIn("Expert response type", expert_text)
+        self.assertIn("Required change", expert_text)
+        self.assertIn("Principal investigator", expert_text)
+        self.assertIn(closure_evidence, expert_text)
+        self.assertIn(f"Protocol passages reviewed: {reviewed_passage_id}", expert_text)
 
         second_payload = json.loads(json.dumps(SAMPLE_PROJECT))
         second_payload["project"]["title"] = "Second sensitive-service protocol"
@@ -304,8 +367,313 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(SAMPLE_PROJECT["project"]["title"], portfolio_text)
         self.assertIn("Second sensitive-service protocol", portfolio_text)
         self.assertIn("Clarify the withdrawal and deletion boundary.", portfolio_text)
+        self.assertIn("Required change", portfolio_text)
+        self.assertIn("Principal investigator", portfolio_text)
+        self.assertIn(closure_evidence, portfolio_text)
+        self.assertIn(f"Protocol passages reviewed: {reviewed_passage_id}", portfolio_text)
         self.assertIn("Recorded research-design trade-offs", portfolio_text)
         self.assertIn("Data minimization outweighs richer recordings", portfolio_text)
+
+    def test_structured_expert_review_api_enforces_closure_contract(self):
+        payload = json.loads(json.dumps(SAMPLE_PROJECT))
+        payload["use_llm"] = False
+        created = self.client.post("/api/safebars/v2/sessions", json=payload)
+        self.assertEqual(created.status_code, 201)
+        created_payload = created.get_json()
+        session_id = created_payload["session"]["id"]
+        researcher_headers = {
+            "X-SafeBARS-Access": created_payload["access"]["researcher_token"]
+        }
+        expert_headers = {
+            "X-SafeBARS-Access": created_payload["access"]["expert_token"]
+        }
+
+        audited = self.client.post(
+            f"/api/safebars/v2/sessions/{session_id}/audit",
+            json={"scenario_ids": ["partial_withdrawal"]},
+            headers=researcher_headers,
+        )
+        self.assertEqual(audited.status_code, 200)
+        audited_session = audited.get_json()["session"]
+        handoff = next(
+            item
+            for item in audited_session["handoffs"]
+            if item["issue_id"] == "issue_partial_withdrawal"
+        )
+        issue = next(
+            item for item in audited_session["issues"] if item["id"] == handoff["issue_id"]
+        )
+        reviewed_passage_id = issue["source_passage_ids"][0]
+        review_payload = {
+            "reviewer_role": "ethics_board",
+            "reviewer_name": "School ethics advisor",
+            "advice_type": "required_change",
+            "advice": "Revise the withdrawal procedure before recruitment begins.",
+            "rationale": "Participants need a clear and usable boundary for deletion requests.",
+            "responsible_actor": "Principal investigator",
+            "closure_evidence": (
+                "A revised protocol paragraph states the deadline, contact, and deletion process."
+            ),
+            "reviewed_passage_ids": [reviewed_passage_id],
+        }
+        review_url = (
+            f"/api/safebars/v2/sessions/{session_id}/handoffs/{handoff['id']}/review"
+        )
+
+        missing_field = self.client.post(
+            review_url,
+            json={**review_payload, "action": "advise", "closure_evidence": ""},
+            headers=expert_headers,
+        )
+        self.assertEqual(missing_field.status_code, 400)
+        self.assertIn("evidence would be sufficient", missing_field.get_json()["error"])
+
+        forged_evidence = self.client.post(
+            review_url,
+            json={
+                **review_payload,
+                "action": "advise",
+                "reviewed_passage_ids": ["CON-999"],
+            },
+            headers=expert_headers,
+        )
+        self.assertEqual(forged_evidence.status_code, 400)
+        self.assertIn("unknown protocol passage", forged_evidence.get_json()["error"])
+
+        after_rejections = self.client.get(
+            f"/api/safebars/v2/sessions/{session_id}/expert-summary",
+            headers=expert_headers,
+        )
+        rejected_handoff = next(
+            item
+            for item in after_rejections.get_json()["summary"]["queue"]
+            if item["id"] == handoff["id"]
+        )
+        self.assertEqual(rejected_handoff["status"], "open")
+        self.assertEqual(rejected_handoff["review_history"], [])
+
+        advised = self.client.post(
+            review_url,
+            json={**review_payload, "action": "advise"},
+            headers=expert_headers,
+        )
+        self.assertEqual(advised.status_code, 200)
+
+        premature_close = self.client.post(
+            review_url,
+            json={**review_payload, "action": "resolve"},
+            headers=expert_headers,
+        )
+        self.assertEqual(premature_close.status_code, 400)
+        self.assertIn("has not responded", premature_close.get_json()["error"])
+
+        researcher_response = self.client.post(
+            f"/api/safebars/v2/sessions/{session_id}/handoffs/{handoff['id']}/researcher-response",
+            json={
+                "response": (
+                    "The deletion deadline, responsible contact, and confirmation step are now explicit."
+                ),
+                "revised_text": (
+                    "Participants may request deletion until anonymised analysis begins by "
+                    "contacting the principal investigator."
+                ),
+            },
+            headers=researcher_headers,
+        )
+        self.assertEqual(researcher_response.status_code, 200)
+        revised_handoff = next(
+            item
+            for item in researcher_response.get_json()["session"]["handoffs"]
+            if item["id"] == handoff["id"]
+        )
+        self.assertEqual(revised_handoff["status"], "researcher_revised")
+        self.assertEqual(revised_handoff["reviewed_passage_ids"], [])
+        self.assertFalse(revised_handoff["evidence_reviewed"])
+        self.assertFalse(revised_handoff["evidence_reviewed_at"])
+
+        stale_summary = self.client.get(
+            f"/api/safebars/v2/sessions/{session_id}/expert-summary",
+            headers=expert_headers,
+        ).get_json()["summary"]
+        stale_handoff = next(
+            item for item in stale_summary["queue"] if item["id"] == handoff["id"]
+        )
+        self.assertFalse(stale_handoff["evidence_review_current"])
+        self.assertFalse(stale_handoff["closure_record_complete"])
+
+        close_without_new_evidence_review = self.client.post(
+            review_url,
+            json={
+                "action": "resolve",
+                "reviewer_role": review_payload["reviewer_role"],
+                "reviewer_name": review_payload["reviewer_name"],
+            },
+            headers=expert_headers,
+        )
+        self.assertEqual(close_without_new_evidence_review.status_code, 400)
+        self.assertIn(
+            "review at least one cited protocol passage",
+            close_without_new_evidence_review.get_json()["error"],
+        )
+
+        resolved = self.client.post(
+            review_url,
+            json={**review_payload, "action": "resolve"},
+            headers=expert_headers,
+        )
+        self.assertEqual(resolved.status_code, 200)
+        resolved_handoff = next(
+            item
+            for item in resolved.get_json()["session"]["handoffs"]
+            if item["id"] == handoff["id"]
+        )
+        self.assertEqual(resolved_handoff["status"], "resolved")
+
+        summary = self.client.get(
+            f"/api/safebars/v2/sessions/{session_id}/expert-summary",
+            headers=expert_headers,
+        ).get_json()["summary"]
+        closed_summary = next(
+            item for item in summary["queue"] if item["id"] == handoff["id"]
+        )
+        self.assertTrue(closed_summary["closure_record_complete"])
+        self.assertFalse(closed_summary["legacy_resolution"])
+        self.assertEqual(summary["counts"]["resolved"], 1)
+        self.assertEqual(summary["counts"]["unresolved"], 0)
+
+        state_before_rejected_response = {
+            "status": closed_summary["status"],
+            "resolved_at": closed_summary["resolved_at"],
+            "researcher_response": closed_summary.get("researcher_response", ""),
+            "researcher_revised_text": closed_summary.get(
+                "researcher_revised_text",
+                "",
+            ),
+            "researcher_revision_history": list(
+                closed_summary.get("researcher_revision_history", [])
+            ),
+            "review_history": list(closed_summary["review_history"]),
+            "reviewed_passage_ids": list(closed_summary["reviewed_passage_ids"]),
+            "evidence_reviewed": closed_summary["evidence_reviewed"],
+            "closure_record_complete": closed_summary["closure_record_complete"],
+        }
+        rejected_response = self.client.post(
+            f"/api/safebars/v2/sessions/{session_id}/handoffs/{handoff['id']}/researcher-response",
+            json={
+                "response": "A later response must not silently reopen a closed handoff.",
+                "revised_text": "This text must not be stored.",
+            },
+            headers=researcher_headers,
+        )
+        self.assertEqual(rejected_response.status_code, 400)
+        self.assertIn("handoff is closed", rejected_response.get_json()["error"])
+
+        unchanged_summary = self.client.get(
+            f"/api/safebars/v2/sessions/{session_id}/expert-summary",
+            headers=expert_headers,
+        ).get_json()["summary"]
+        unchanged_handoff = next(
+            item
+            for item in unchanged_summary["queue"]
+            if item["id"] == handoff["id"]
+        )
+        state_after_rejected_response = {
+            "status": unchanged_handoff["status"],
+            "resolved_at": unchanged_handoff["resolved_at"],
+            "researcher_response": unchanged_handoff.get("researcher_response", ""),
+            "researcher_revised_text": unchanged_handoff.get(
+                "researcher_revised_text",
+                "",
+            ),
+            "researcher_revision_history": list(
+                unchanged_handoff.get("researcher_revision_history", [])
+            ),
+            "review_history": list(unchanged_handoff["review_history"]),
+            "reviewed_passage_ids": list(unchanged_handoff["reviewed_passage_ids"]),
+            "evidence_reviewed": unchanged_handoff["evidence_reviewed"],
+            "closure_record_complete": unchanged_handoff[
+                "closure_record_complete"
+            ],
+        }
+        self.assertEqual(
+            state_after_rejected_response,
+            state_before_rejected_response,
+        )
+
+    def test_legacy_resolved_handoff_summary_and_export_remain_compatible(self):
+        payload = json.loads(json.dumps(SAMPLE_PROJECT))
+        payload["use_llm"] = False
+        created = self.client.post("/api/safebars/v2/sessions", json=payload)
+        self.assertEqual(created.status_code, 201)
+        created_payload = created.get_json()
+        session_id = created_payload["session"]["id"]
+        researcher_headers = {
+            "X-SafeBARS-Access": created_payload["access"]["researcher_token"]
+        }
+        expert_headers = {
+            "X-SafeBARS-Access": created_payload["access"]["expert_token"]
+        }
+        audited = self.client.post(
+            f"/api/safebars/v2/sessions/{session_id}/audit",
+            json={"scenario_ids": ["partial_withdrawal"]},
+            headers=researcher_headers,
+        )
+        self.assertEqual(audited.status_code, 200)
+        legacy_session = audited.get_json()["session"]
+        legacy_handoff = legacy_session["handoffs"][0]
+        legacy_handoff["status"] = "resolved"
+        legacy_handoff["resolved_at"] = "2025-01-01T00:00:00+00:00"
+        legacy_handoff["expert_advice"] = (
+            "Legacy advice recorded before structured closure fields existed."
+        )
+        legacy_handoff["expert_rationale"] = (
+            "Legacy ethical rationale retained for the audit trail."
+        )
+        legacy_handoff["review_history"] = [
+            {
+                "action": "resolve",
+                "reviewer_role": "ethics_board",
+                "reviewer_name": "Legacy reviewer",
+                "advice": legacy_handoff["expert_advice"],
+                "rationale": legacy_handoff["expert_rationale"],
+                "timestamp": "2025-01-01T00:00:00+00:00",
+            }
+        ]
+        for field in (
+            "advice_type",
+            "advice_type_label",
+            "responsible_actor",
+            "closure_evidence",
+            "reviewed_passage_ids",
+            "evidence_gap_acknowledged",
+            "evidence_reviewed",
+            "evidence_reviewed_at",
+        ):
+            legacy_handoff.pop(field, None)
+        encounter_engine.store.save(legacy_session)
+
+        summary_response = self.client.get(
+            f"/api/safebars/v2/sessions/{session_id}/expert-summary",
+            headers=expert_headers,
+        )
+        self.assertEqual(summary_response.status_code, 200)
+        summary = summary_response.get_json()["summary"]
+        legacy_summary = next(
+            item for item in summary["queue"] if item["id"] == legacy_handoff["id"]
+        )
+        self.assertEqual(legacy_summary["status"], "resolved")
+        self.assertFalse(legacy_summary["closure_record_complete"])
+        self.assertTrue(legacy_summary["legacy_resolution"])
+
+        expert_export = self.client.get(
+            f"/api/safebars/v2/sessions/{session_id}/export.expert.docx",
+            headers=expert_headers,
+        )
+        self.assertEqual(expert_export.status_code, 200)
+        document = Document(BytesIO(expert_export.data))
+        text = "\n".join(paragraph.text for paragraph in document.paragraphs)
+        self.assertIn("Legacy advice recorded", text)
+        self.assertIn("No reviewed protocol evidence was recorded.", text)
 
     def test_role_tokens_and_expert_invite_rotation(self):
         payload = json.loads(json.dumps(SAMPLE_PROJECT))
@@ -440,7 +808,14 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Closest submitted material to inspect", workspace.data)
         self.assertIn(b"Show in protocol", workspace.data)
         self.assertIn(b"Connected design decisions", workspace.data)
-        self.assertIn(b"Research rehearsal", workspace.data)
+        self.assertIn(b'id="readinessCheckButton"', workspace.data)
+        self.assertIn(b'id="readinessCheckDialog"', workspace.data)
+        self.assertIn(b"Review readiness", workspace.data)
+        self.assertIn(b"See blockers and the next action", workspace.data)
+        self.assertIn(b"function readinessSnapshot()", workspace.data)
+        self.assertIn(b"function followReadinessNextAction()", workspace.data)
+        self.assertNotIn(b'href="/safebars/v1"', workspace.data)
+        self.assertNotIn(b"Research rehearsal", workspace.data)
         self.assertIn(b"frameworkCoverageSummary", workspace.data)
         self.assertIn(b"frameworkCoverageDonut", workspace.data)
         self.assertIn(b"Evidence coverage at a glance", workspace.data)
@@ -486,8 +861,79 @@ class EncounterApiTest(unittest.TestCase):
         self.assertIn(b"Needs expert action", expert.data)
         self.assertIn(b"The decision you are being asked to make", expert.data)
         self.assertIn(b"Downstream outputs", expert.data)
-        self.assertIn(b"Before you save a decision", expert.data)
-        self.assertIn(b"Enter your expert response below", expert.data)
+        self.assertIn(b"Enter one auditable expert response", expert.data)
+        self.assertIn(b"Expert response type", expert.data)
+        self.assertIn(b"Responsible person or role", expert.data)
+        self.assertIn(b"Evidence sufficient to close", expert.data)
+        self.assertIn(b"Closure requirements", expert.data)
+        self.assertIn(b"these are not checkboxes", expert.data)
+        self.assertIn(b"Decision-support boundary", expert.data)
+        self.assertIn(b"function decisionReadiness", expert.data)
+        self.assertIn(b"function markEvidenceReviewed", expert.data)
+        self.assertIn(b"Record evidence review", expert.data)
+        self.assertIn(b"data-record-evidence", expert.data)
+        self.assertNotIn(b"Evidence review is recorded automatically", expert.data)
+        self.assertIn(
+            b'canAsk: item.status !== "resolved" && coreComplete && values.advice_type === "clarification_request"',
+            expert.data,
+        )
+        self.assertIn(b"function isWaiting(item)", expert.data)
+        self.assertIn(b"const responseAt = latestResearcherEvidenceAt(item)", expert.data)
+        self.assertIn(b"const requestAt = latestBlockingRequestAt(item)", expert.data)
+        self.assertIn(
+            b"timestampValue(responseAt) <= timestampValue(requestAt)",
+            expert.data,
+        )
+        self.assertIn(b"function defaultTabFor(item)", expert.data)
+        self.assertIn(
+            b'if (item.status === "resolved" || isWaiting(item)) return "history"',
+            expert.data,
+        )
+        self.assertIn(
+            b'if (["researcher_revised","researcher_responded"].includes(item.status)) return "evidence"',
+            expert.data,
+        )
+        self.assertIn(b"activeTab = defaultTabFor(queue[0])", expert.data)
+        self.assertIn(b"activeTab = defaultTabFor(next)", expert.data)
+        expert_html = expert.get_data(as_text=True)
+        review_function_start = expert_html.index("async function review(id, action)")
+        body_start = expert_html.index("const body = {", review_function_start)
+        substantive_guard = expert_html.index(
+            'if (["advise","request_clarification","resolve"].includes(action))',
+            body_start,
+        )
+        redirect_payload = expert_html.index(
+            'if (action === "redirect") body.redirect_role',
+            substantive_guard,
+        )
+        base_body = expert_html[body_start:substantive_guard]
+        substantive_body = expert_html[substantive_guard:redirect_payload]
+        for structured_field in (
+            "advice_type",
+            "advice:",
+            "rationale:",
+            "responsible_actor",
+            "closure_evidence",
+            "reviewed_passage_ids",
+            "evidence_gap_acknowledged",
+        ):
+            self.assertNotIn(structured_field, base_body)
+            self.assertIn(structured_field, substantive_body)
+        reopen_start = expert_html.index(
+            'if (action === "reopen") {',
+            redirect_payload,
+        )
+        reopen_end = expert_html.index("await loadSummary()", reopen_start)
+        reopen_block = expert_html[reopen_start:reopen_end]
+        self.assertIn(
+            "sessionStorage.removeItem(evidenceReviewKey(id))",
+            reopen_block,
+        )
+        self.assertNotIn(b"Before you save a decision", expert.data)
+        self.assertNotIn(
+            b"I checked the cited protocol evidence, not only the AI summary.",
+            expert.data,
+        )
         self.assertIn(b"Expert response \xc2\xb7 enter advice", expert.data)
         self.assertIn(b"function openDecisionForm", expert.data)
         self.assertIn(b"field.scrollIntoView", expert.data)

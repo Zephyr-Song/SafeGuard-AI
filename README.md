@@ -34,6 +34,35 @@ evidence, an approval, or a substitute for community or reviewer judgment.
 
 ## What it is
 
+### Ethical Mirror redesign
+
+The new research-design prototype is isolated at
+`/safebars/mirror` (`/safebars/mirror/study` for the study shell). It preserves
+the earlier workspace while testing a substantially different interaction:
+
+1. an eight-turn, one-question-at-a-time conversation gradually elicits the
+   research context, intended benefit, direct encounter, AI role, data,
+   indirectly affected people, the researcher's own value commitment, and a
+   concrete pause/redesign condition;
+   when the proposed data includes camera-derived, biometric, demographic, or
+   family-status inference, a ninth conditional question asks the researcher
+   to justify necessity and consider a less intrusive alternative;
+2. answers become an editable conversation trail and a structured research
+   plan rather than disappearing into a chat transcript;
+3. nine literature-derived lenses describe **evidence coverage**, never an
+   ethics score;
+4. five bounded synthetic-role probes construct inspectable future scenarios,
+   explicitly labelled as hypotheses rather than stakeholder testimony;
+5. an interactive commitment → plan evidence → possible consequence →
+   affected-party map makes the cognitive-dissonance argument visible;
+6. researchers can revise, add a safeguard, contest with evidence, or hand a
+   question to real people, then replay the same probes and inspect a concise
+   before/after ledger.
+
+The intake does not infer age, race, gender, disability, or other sensitive
+traits from a camera. Optional perspective context is self-described and is
+collected only when the researcher considers it relevant.
+
 Sensitive research (trauma, violence, addiction, marginalised communities) faces
 ethical challenges that static IRB review struggles to catch: power asymmetries,
 inadequate consent, privacy leakage, and harm that only emerges in the field.
@@ -107,8 +136,12 @@ Older research files remain an audit trail and must not override that index.
 | `modules/encounter_report.py` | Word/PDF report generation |
 | `modules/ethics_framework.py` | Human-subjects, AI-review, NIST, VSD, and ESR coverage + expert routing |
 | `modules/ethics_application.py` | Application-profile completeness checks |
+| `modules/mirror_engine.py` | Ethical Mirror lens analysis, bounded role probes, dissonance paths, revision, and replay |
+| `modules/mirror_literature.py` | Auditable source registry and nine-lens design synthesis |
+| `modules/mirror_store.py` | Isolated restart-safe SQLite session and event storage |
+| `modules/mirror_api.py` | Ethical Mirror REST API under `/api/safebars/mirror` |
 | `modules/ratelimit.py` | In-memory rate limiting for LLM-backed endpoints |
-| `templates/` | `safebars_v2.html`, `safebars_expert.html`, `safebars.html`, … |
+| `templates/` | `safebars_mirror.html`, `safebars_v2.html`, `safebars_expert.html`, `safebars.html`, … |
 
 ## Three parties
 
@@ -191,6 +224,18 @@ token (`X-SafeBARS-Access` header).
 | GET | `/sessions/<id>/export*` | researcher | JSON / DOCX / PDF exports |
 
 Legacy rehearsal endpoints (`/api/safebars/*`) back the v1 interface.
+
+The isolated Ethical Mirror API uses `/api/safebars/mirror`:
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/config` | Nine lenses, role boundaries, evidence states, and limits |
+| GET | `/literature` | Inspectable source registry and operationalisation boundaries |
+| POST | `/sessions` | Create a persistent guided-intake session |
+| GET | `/sessions/<id>` | Restore the conversation, analysis, and revision state |
+| POST | `/sessions/<id>/analyze` | Re-run lenses, bounded roles, and tension paths |
+| POST | `/sessions/<id>/revisions` | Save a revised plan and researcher responses |
+| POST | `/sessions/<id>/replay` | Compare the same probes before and after revision |
 
 ### Framework selector (pre-session helper)
 

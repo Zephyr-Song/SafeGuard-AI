@@ -975,6 +975,68 @@
         .guide-glossary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
         .guide-term { padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: #fbfcfc; font-size: 9px; line-height: 1.45; color: var(--muted); }
         .guide-term strong { display: block; margin-bottom: 2px; color: var(--ink); font-size: 10px; }
+        .readiness-check-dialog { width: min(720px, calc(100vw - 28px)); }
+        .readiness-check-overview {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 14px;
+            align-items: center;
+            padding: 14px;
+            border: 1px solid #b9d7ca;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #f2f8f5 0%, #f8fbfa 58%, #eef5f7 100%);
+        }
+        .readiness-check-count {
+            min-width: 104px;
+            padding: 10px 12px;
+            border: 1px solid #9bc8b0;
+            border-radius: 8px;
+            background: #fff;
+            text-align: center;
+        }
+        .readiness-check-count strong { display: block; color: var(--navy); font-size: 22px; line-height: 1.1; }
+        .readiness-check-count span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; font-weight: 750; text-transform: uppercase; }
+        .readiness-check-copy strong { display: block; font-size: 13px; }
+        .readiness-check-copy p { margin: 4px 0 8px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+        .readiness-check-track { height: 7px; overflow: hidden; border-radius: 999px; background: #dfe8e4; }
+        .readiness-check-track span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--green); transition: width 180ms ease; }
+        .readiness-check-list { display: grid; gap: 7px; margin-top: 12px; }
+        .readiness-check-item {
+            display: grid;
+            grid-template-columns: 30px minmax(0, 1fr) auto;
+            gap: 9px;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+        }
+        .readiness-check-icon {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #eef1f3;
+            color: var(--muted);
+        }
+        .readiness-check-item.complete .readiness-check-icon { background: var(--green-soft); color: var(--green); }
+        .readiness-check-item.current { border-color: #d7b55b; background: #fffaf0; }
+        .readiness-check-item.current .readiness-check-icon { background: var(--amber-soft); color: #8a641d; }
+        .readiness-check-item-title { font-size: 11px; font-weight: 800; }
+        .readiness-check-item-copy { margin-top: 2px; color: var(--muted); font-size: 9px; line-height: 1.4; }
+        .readiness-check-status { padding: 4px 7px; border-radius: 999px; background: #eef1f3; color: var(--muted); font-size: 8px; font-weight: 820; text-transform: uppercase; white-space: nowrap; }
+        .readiness-check-item.complete .readiness-check-status { background: var(--green-soft); color: var(--green); }
+        .readiness-check-item.current .readiness-check-status { background: var(--amber-soft); color: #76591d; }
+        .readiness-next-card { margin-top: 12px; padding: 11px 12px; border-left: 3px solid var(--teal); border-radius: 0 8px 8px 0; background: var(--teal-soft); }
+        .readiness-next-card strong { display: block; color: #31565a; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+        .readiness-next-card p { margin: 3px 0 0; color: #31565a; font-size: 10px; line-height: 1.45; }
+        @media (max-width: 620px) {
+            .readiness-check-overview { grid-template-columns: 1fr; }
+            .readiness-check-count { min-width: 0; }
+            .readiness-check-item { grid-template-columns: 30px minmax(0, 1fr); }
+            .readiness-check-status { grid-column: 2; justify-self: start; }
+        }
         .scenario-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2109,14 +2171,15 @@
                     <a class="more-option" href="/safebars/expert" title="Open the ethics expert caseload">
                         <i data-lucide="inbox" size="17"></i><span><strong>Expert workspace caseload</strong><small>Browse assigned review requests</small></span>
                     </a>
-                    <a class="more-option" href="/safebars/v1" title="Open the earlier research rehearsal workspace">
-                        <i data-lucide="history" size="17"></i><span><strong>Research rehearsal</strong><small>Open the earlier workspace</small></span>
-                    </a>
+                    <button class="more-option" id="readinessCheckButton" type="button" title="Check blockers before expert review or export">
+                        <i data-lucide="clipboard-check" size="17"></i><span><strong>Review readiness</strong><small>See blockers and the next action</small></span>
+                    </button>
                 </div>
             </details>
             {% else %}
             <button id="sampleButton" hidden type="button"></button>
             <button id="newVersionButton" hidden type="button" disabled></button>
+            <button id="readinessCheckButton" hidden type="button"></button>
             {% endif %}
         </div>
     </header>
@@ -2379,7 +2442,7 @@
                         <div class="tradeoff-grid" id="tradeoffGrid"></div>
                         <div class="framework-boundary" id="frameworkBoundary"></div>
                     </div>
-                    <div class="readiness-panel">
+                    <div class="readiness-panel" id="applicationReadinessPanel">
                         <div class="panel-heading">
                             <div><h2 class="section-heading">Application draft readiness</h2><p class="section-kicker">A completeness scaffold, never an ethics verdict or institutional form.</p></div>
                             <select id="applicationProfile" aria-label="Application profile"></select>
@@ -2402,7 +2465,7 @@
                         <button class="btn btn-quiet" id="saveMapButton"><i data-lucide="save" size="15"></i>Save scope</button>
                     </div>
                     <div class="map-grid" id="mapGrid"></div>
-                    <div class="scenario-section">
+                    <div class="scenario-section" id="scenarioSection">
                         <div class="panel-heading">
                             <div><h2 class="section-heading">Scenario queue</h2><p class="section-kicker">Bounded test conditions, not predictions.</p></div>
                         </div>
@@ -2608,6 +2671,33 @@
         </div>
     </dialog>
 
+    <dialog class="guide-dialog readiness-check-dialog" id="readinessCheckDialog" aria-labelledby="readinessCheckTitle">
+        <div class="intake-header">
+            <div><h2 class="section-heading" id="readinessCheckTitle">Review readiness</h2><div class="intake-progress">Live workflow preflight before expert review or export</div></div>
+            <button class="btn btn-quiet btn-icon" id="closeReadinessCheckButton" type="button" title="Close readiness check" aria-label="Close readiness check"><span class="dialog-close-symbol" aria-hidden="true">&times;</span></button>
+        </div>
+        <div class="guide-body">
+            <div class="readiness-check-overview">
+                <div class="readiness-check-count"><strong id="readinessCheckCount">0 of 6</strong><span>checks complete</span></div>
+                <div class="readiness-check-copy">
+                    <strong id="readinessCheckHeadline">Start with the source materials</strong>
+                    <p id="readinessCheckSummary">This is a workflow completeness check, not an ethics verdict, approval score, or institutional decision.</p>
+                    <div class="readiness-check-track" role="progressbar" aria-label="Workflow checks complete" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><span id="readinessCheckProgress"></span></div>
+                </div>
+            </div>
+            <div class="readiness-check-list" id="readinessCheckList"></div>
+            <div class="readiness-next-card">
+                <strong>Recommended next action</strong>
+                <p id="readinessNextCopy">Complete the missing protocol materials before creating an encounter map.</p>
+            </div>
+            <div class="guide-actions">
+                <button class="btn" id="readinessDetailsButton" type="button"><i data-lucide="list-checks" size="15"></i>View application details</button>
+                <button class="btn btn-primary" id="readinessNextButton" type="button" data-action="materials"><i data-lucide="arrow-right" size="15"></i><span>Complete source materials</span></button>
+                <button class="btn btn-quiet" id="readinessDoneButton" type="button">Close</button>
+            </div>
+        </div>
+    </dialog>
+
     <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="info" size="17"></i><div class="toast-copy" id="toastCopy"></div></div>
     <div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite" aria-hidden="true"><div class="loading-box"><i class="spinner" data-lucide="loader-circle" size="26"></i><div class="empty-title" id="loadingTitle">Working</div><div class="empty-copy" id="loadingCopy">SafeBARS is updating the shared audit state.</div></div></div>
 
@@ -2647,6 +2737,18 @@
             follow_up: "artifactFollowUp",
         };
         const artifactEditorOrder = Object.keys(artifactInputs);
+        const materialFields = [
+            {id: "projectTitle", label: "Project title"},
+            {id: "projectReviewContext", label: "Research and review context"},
+            {id: "projectContext", label: "Project plan"},
+            {id: "targetPeople", label: "People and relationships"},
+            {id: "artifactRecruitment", label: "Recruitment message", artifact: "recruitment"},
+            {id: "artifactConsent", label: "Consent language", artifact: "consent"},
+            {id: "artifactInterview", label: "Interview questions", artifact: "interview"},
+            {id: "artifactActivity", label: "Workshop or activity plan", artifact: "activity"},
+            {id: "artifactSafety", label: "Safety procedure", artifact: "safety"},
+            {id: "artifactFollowUp", label: "Follow-up and data use", artifact: "follow_up"},
+        ];
 
         let intakePlan = null;  // server-driven question schema; falls back to the built-in steps below
 
@@ -2785,20 +2887,8 @@
         }
 
         function updateMaterialProgress() {
-            const fieldIds = [
-                "projectTitle",
-                "projectReviewContext",
-                "projectContext",
-                "targetPeople",
-                "artifactRecruitment",
-                "artifactConsent",
-                "artifactInterview",
-                "artifactActivity",
-                "artifactSafety",
-                "artifactFollowUp",
-            ];
-            const filled = fieldIds.filter(id => ($(id)?.value || "").trim()).length;
-            const total = fieldIds.length;
+            const filled = materialFields.filter(field => ($(field.id)?.value || "").trim()).length;
+            const total = materialFields.length;
             const percent = Math.round((filled / total) * 100);
             const progress = document.querySelector(".material-progress");
             if (progress.dataset.filled !== String(filled)) {
@@ -2812,6 +2902,155 @@
             }
             $("workspaceHero").classList.toggle("has-session", !!state.session);
             updateArtifactEditorStatus();
+        }
+
+        function readinessSnapshot() {
+            const session = state.session;
+            const filledMaterials = materialFields.filter(field => ($(field.id)?.value || "").trim()).length;
+            const traces = session?.traces || [];
+            const issues = session?.issues || [];
+            const handoffs = session?.handoffs || [];
+            const audited = traces.length > 0;
+            const pendingIssues = issues.filter(issue => (issue.decision || "pending") === "pending").length;
+            const unresolvedHandoffs = handoffs.filter(handoff => handoff.status !== "resolved").length;
+            const application = session?.application_readiness || null;
+            const applicationCounts = application?.counts || {};
+            const checks = [
+                {
+                    id: "materials",
+                    label: "Source materials",
+                    complete: filledMaterials === materialFields.length,
+                    value: `${filledMaterials} of ${materialFields.length} fields contain material`,
+                },
+                {
+                    id: "analysis",
+                    label: "Current encounter analysis",
+                    complete: !!session && !state.analysisDirty,
+                    value: !session
+                        ? "No encounter map has been created"
+                        : (state.analysisDirty ? "Materials changed after the saved analysis" : `${session.encounter_map?.length || 0} encounter stages mapped`),
+                },
+                {
+                    id: "traces",
+                    label: "Scenario tests",
+                    complete: audited,
+                    value: audited ? `${traces.length} selected traces completed` : "Selected breakdown scenarios have not been run",
+                },
+                {
+                    id: "decisions",
+                    label: "Researcher decisions",
+                    complete: audited && pendingIssues === 0,
+                    value: !audited
+                        ? "Available after scenario tests"
+                        : (pendingIssues ? `${pendingIssues} issue${pendingIssues === 1 ? "" : "s"} still need a researcher decision` : "All generated issues have a recorded decision"),
+                },
+                {
+                    id: "handoffs",
+                    label: "Expert questions",
+                    complete: audited && unresolvedHandoffs === 0,
+                    value: !audited
+                        ? "Available after scenario tests"
+                        : (unresolvedHandoffs ? `${unresolvedHandoffs} expert request${unresolvedHandoffs === 1 ? "" : "s"} remain open; this becomes Complete only after every handoff is closed` : (handoffs.length ? "Every expert handoff has been closed" : "No expert handoff was required")),
+                },
+                {
+                    id: "application",
+                    label: "Application draft evidence",
+                    complete: !!application && (applicationCounts.partial || 0) === 0 && (applicationCounts.missing || 0) === 0,
+                    value: !application
+                        ? "Calculated after the encounter map is built"
+                        : `${application.completion_percent || 0}% documented; ${applicationCounts.partial || 0} partial and ${applicationCounts.missing || 0} missing`,
+                },
+            ];
+            const firstIncomplete = checks.findIndex(check => !check.complete);
+            checks.forEach((check, index) => check.displayStatus = check.complete ? "complete" : (index === firstIncomplete ? "current" : "waiting"));
+
+            let nextAction;
+            if (filledMaterials < materialFields.length) {
+                const missing = materialFields.find(field => !($(field.id)?.value || "").trim());
+                nextAction = {id: "materials", label: `Complete ${missing?.label || "source materials"}`, copy: `${materialFields.length - filledMaterials} source field${materialFields.length - filledMaterials === 1 ? "" : "s"} still need material. SafeBARS checks what is written, not whether a box merely exists.`};
+            } else if (!session || state.analysisDirty) {
+                nextAction = {id: "analysis", label: session ? "Rebuild encounter map" : "Build encounter map", copy: session ? "Your source materials changed. Rebuild the encounter map before relying on the existing analysis." : "Create the protocol case, index its passages, and build the participant encounter map."};
+            } else if (!audited) {
+                nextAction = {id: "traces", label: "Choose and run scenarios", copy: "Confirm the encounter scope, choose relevant breakdown scenarios, and run the selected traces."};
+            } else if (pendingIssues) {
+                nextAction = {id: "decisions", label: `Resolve ${pendingIssues} decision${pendingIssues === 1 ? "" : "s"}`, copy: "Record whether each generated issue is accepted, revised, rejected, or deferred to a qualified person."};
+            } else if (unresolvedHandoffs) {
+                nextAction = {id: "handoffs", label: `Open ${unresolvedHandoffs} expert request${unresolvedHandoffs === 1 ? "" : "s"}`, copy: "Review the questions that SafeBARS stopped on and route them to an appropriate ethics or domain expert."};
+            } else if (application && !application.submission_ready) {
+                nextAction = {id: "application", label: "Review application gaps", copy: `${applicationCounts.partial || 0} partial and ${applicationCounts.missing || 0} missing application field${(applicationCounts.partial || 0) + (applicationCounts.missing || 0) === 1 ? "" : "s"} remain in the generic draft scaffold.`};
+            } else {
+                nextAction = {id: "export", label: "Export application draft", copy: "The workflow checks are complete. Export the draft, then map it to the institution's current form and obtain formal approval."};
+            }
+            return {checks, filledMaterials, completed: checks.filter(check => check.complete).length, pendingIssues, unresolvedHandoffs, application, nextAction};
+        }
+
+        function renderReadinessCheck() {
+            const snapshot = readinessSnapshot();
+            const percent = Math.round(snapshot.completed / snapshot.checks.length * 100);
+            $("readinessCheckCount").textContent = `${snapshot.completed} of ${snapshot.checks.length}`;
+            $("readinessCheckHeadline").textContent = snapshot.completed === snapshot.checks.length
+                ? "Workflow record complete"
+                : `${snapshot.checks.length - snapshot.completed} workflow check${snapshot.checks.length - snapshot.completed === 1 ? "" : "s"} still need attention`;
+            const applicationSummary = snapshot.application
+                ? ` The application scaffold is ${snapshot.application.completion_percent || 0}% documented under ${snapshot.application.profile?.label || "the selected profile"}.`
+                : " Build the encounter map to calculate framework-grounded application completeness.";
+            $("readinessCheckSummary").textContent = `This is a workflow completeness check, not an ethics verdict, approval score, or institutional decision.${applicationSummary}`;
+            $("readinessCheckProgress").style.width = `${percent}%`;
+            $("readinessCheckProgress").parentElement.setAttribute("aria-valuenow", String(snapshot.completed));
+            $("readinessCheckProgress").parentElement.setAttribute("aria-valuemax", String(snapshot.checks.length));
+            $("readinessCheckList").innerHTML = snapshot.checks.map(check => `
+                <div class="readiness-check-item ${check.displayStatus}">
+                    <span class="readiness-check-icon"><i data-lucide="${check.complete ? "check" : (check.displayStatus === "current" ? "arrow-right" : "lock-keyhole")}" size="15"></i></span>
+                    <div><div class="readiness-check-item-title">${escapeHtml(check.label)}</div><div class="readiness-check-item-copy">${escapeHtml(check.value)}</div></div>
+                    <span class="readiness-check-status">${check.complete ? "Complete" : (check.displayStatus === "current" ? "Next" : "Waiting")}</span>
+                </div>
+            `).join("");
+            $("readinessNextCopy").textContent = snapshot.nextAction.copy;
+            $("readinessNextButton").dataset.action = snapshot.nextAction.id;
+            $("readinessNextButton").querySelector("span").textContent = snapshot.nextAction.label;
+            $("readinessDetailsButton").disabled = !state.session;
+            refreshIcons();
+        }
+
+        function openReadinessCheck() {
+            renderReadinessCheck();
+            if ($("moreControl")) $("moreControl").open = false;
+            $("readinessCheckDialog").showModal();
+        }
+
+        function focusFirstMissingMaterial() {
+            const field = materialFields.find(item => !($(item.id)?.value || "").trim());
+            if (!field) return;
+            if (field.artifact) selectArtifactEditor(field.artifact, true);
+            else {
+                $(field.id).scrollIntoView({behavior: "smooth", block: "center"});
+                $(field.id).focus();
+            }
+        }
+
+        function openApplicationReadinessDetails() {
+            if (!state.session) return toast("Build the encounter map before viewing application-level readiness.", true);
+            if ($("readinessCheckDialog").open) $("readinessCheckDialog").close();
+            switchTab("map");
+            requestAnimationFrame(() => $("applicationReadinessPanel").scrollIntoView({behavior: "smooth", block: "start"}));
+        }
+
+        function followReadinessNextAction() {
+            const action = $("readinessNextButton").dataset.action;
+            $("readinessCheckDialog").close();
+            if (action === "materials") return focusFirstMissingMaterial();
+            if (action === "analysis") return $("buildMapButton").click();
+            if (action === "traces") {
+                switchTab("map");
+                return requestAnimationFrame(() => $("scenarioSection").scrollIntoView({behavior: "smooth", block: "center"}));
+            }
+            if (action === "decisions") return switchTab("issues");
+            if (action === "handoffs") return switchTab("handoffs");
+            if (action === "application") return openApplicationReadinessDetails();
+            if (action === "export") {
+                toggleExportMenu(true);
+                return $("exportButton").focus();
+            }
         }
 
         function collectPayload() {
@@ -3716,6 +3955,7 @@
             $("sessionLabel").textContent = state.session ? state.session.id.replace("encounter_", "") : "not created";
             renderStudyInstrumentation();
             updateMaterialProgress();
+            if ($("readinessCheckDialog").open) renderReadinessCheck();
             refreshIcons();
         }
 
@@ -4463,6 +4703,11 @@
             $("usageGuideDialog").showModal();
         });
         $("closeUsageGuideButton").addEventListener("click", () => $("usageGuideDialog").close());
+        $("readinessCheckButton").addEventListener("click", openReadinessCheck);
+        $("closeReadinessCheckButton").addEventListener("click", () => $("readinessCheckDialog").close());
+        $("readinessDoneButton").addEventListener("click", () => $("readinessCheckDialog").close());
+        $("readinessDetailsButton").addEventListener("click", openApplicationReadinessDetails);
+        $("readinessNextButton").addEventListener("click", followReadinessNextAction);
         $("sampleButton").addEventListener("click", loadSample);
         $("newVersionButton").addEventListener("click", createProtocolVersion);
         $("guidedIntakeButton").addEventListener("click", openGuidedIntake);

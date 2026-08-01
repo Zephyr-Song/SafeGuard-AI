@@ -169,6 +169,92 @@ def _add_label_paragraph(doc: Document, label: str, value: Any, *, after: float 
     return paragraph
 
 
+def _timestamp_at_or_after(value: Any, reference: Any) -> bool:
+    try:
+        current = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+        baseline = datetime.fromisoformat(str(reference or "").replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return False
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone.utc)
+    if baseline.tzinfo is None:
+        baseline = baseline.replace(tzinfo=timezone.utc)
+    return current >= baseline
+
+
+def _evidence_review_current(handoff: Dict[str, Any]) -> bool:
+    researcher_at = handoff.get("researcher_responded_at")
+    reviewed_at = handoff.get("evidence_reviewed_at")
+    return bool(
+        handoff.get("evidence_reviewed")
+        and (
+            not researcher_at
+            or _timestamp_at_or_after(reviewed_at, researcher_at)
+        )
+    )
+
+
+def _closure_record_status(handoff: Dict[str, Any]) -> str:
+    structured = bool(
+        handoff.get("advice_type")
+        and len(str(handoff.get("expert_advice") or "").strip()) >= 10
+        and len(str(handoff.get("expert_rationale") or "").strip()) >= 10
+        and len(str(handoff.get("responsible_actor") or "").strip()) >= 2
+        and len(str(handoff.get("closure_evidence") or "").strip()) >= 10
+    )
+    if handoff.get("status") == "resolved" and not structured:
+        return "Legacy resolved record; structured closure evidence is incomplete"
+    if handoff.get("researcher_responded_at") and not _evidence_review_current(handoff):
+        return "Evidence review required after the latest researcher response"
+    if structured and _evidence_review_current(handoff):
+        return "Complete structured expert record"
+    return "Incomplete; this handoff remains open"
+
+
+def _reviewed_evidence_text(handoff: Dict[str, Any]) -> str:
+    if not _evidence_review_current(handoff):
+        if handoff.get("researcher_responded_at"):
+            return "No current evidence review is recorded after the latest researcher response."
+        return "No reviewed protocol evidence was recorded."
+    passage_ids = [
+        str(item) for item in handoff.get("reviewed_passage_ids", []) if str(item).strip()
+    ]
+    if passage_ids:
+        return f"Protocol passages reviewed: {', '.join(passage_ids)}"
+    if handoff.get("evidence_gap_acknowledged"):
+        return "No exact passage was attached; the evidence gap was reviewed and acknowledged."
+    return "Evidence review was recorded, but no protocol passage identifier is available."
+
+
+def _add_structured_expert_record(document: Document, handoff: Dict[str, Any]) -> None:
+    _add_label_paragraph(
+        document,
+        "Closure record status",
+        _closure_record_status(handoff),
+    )
+    _add_label_paragraph(
+        document,
+        "Expert response type",
+        handoff.get("advice_type_label") or handoff.get("advice_type"),
+    )
+    _add_label_paragraph(document, "Responsible actor", handoff.get("responsible_actor"))
+    _add_label_paragraph(
+        document,
+        "Evidence sufficient to close",
+        handoff.get("closure_evidence"),
+    )
+    _add_label_paragraph(
+        document,
+        "Protocol evidence reviewed",
+        _reviewed_evidence_text(handoff),
+    )
+    _add_label_paragraph(
+        document,
+        "Evidence reviewed at",
+        handoff.get("evidence_reviewed_at"),
+    )
+
+
 def _configure_docx(
     document: Document,
     header_text: str = "SAFEBARS  /  ENCOUNTER STRESS-TEST REPORT",
@@ -378,6 +464,7 @@ def build_docx_report(session: Dict[str, Any]) -> bytes:
         _add_label_paragraph(document, "Recommended real-world owner", handoff.get("recommended_role_label", handoff.get("owner")))
         _add_label_paragraph(document, "Expert advice", handoff.get("expert_advice", ""))
         _add_label_paragraph(document, "Expert rationale", handoff.get("expert_rationale", ""), after=8)
+        _add_structured_expert_record(document, handoff)
         researcher_response = _add_label_paragraph(
             document,
             "Researcher response",
@@ -670,6 +757,12 @@ def build_pdf_report(session: Dict[str, Any]) -> bytes:
         story.append(_label_pdf("Recommended real-world owner", handoff.get("recommended_role_label", handoff.get("owner")), styles["body"]))
         story.append(_label_pdf("Expert advice", handoff.get("expert_advice", ""), styles["body"]))
         story.append(_label_pdf("Expert rationale", handoff.get("expert_rationale", ""), styles["body"]))
+        story.append(_label_pdf("Closure record status", _closure_record_status(handoff), styles["body"]))
+        story.append(_label_pdf("Expert response type", handoff.get("advice_type_label") or handoff.get("advice_type"), styles["body"]))
+        story.append(_label_pdf("Responsible actor", handoff.get("responsible_actor"), styles["body"]))
+        story.append(_label_pdf("Evidence sufficient to close", handoff.get("closure_evidence"), styles["body"]))
+        story.append(_label_pdf("Protocol evidence reviewed", _reviewed_evidence_text(handoff), styles["body"]))
+        story.append(_label_pdf("Evidence reviewed at", handoff.get("evidence_reviewed_at"), styles["body"]))
 
     story.append(PageBreak())
     story.append(Paragraph("Appendix A. Framework-grounded ethics map", styles["h1"]))
@@ -910,7 +1003,7 @@ def build_ethics_application_docx(session: Dict[str, Any]) -> bytes:
         _add_label_paragraph(document, "Researcher rationale", issue.get("decision_rationale"))
         _add_label_paragraph(document, "Revised text", issue.get("revised_text"))
 
-    document.add_heading(f"{next_section + 2}. Outstanding expert and stakeholder review", level=1)
+    document.add_heading(f"{next_section + 2}. Expert and stakeholder review record", level=1)
     if not session.get("handoffs"):
         document.add_paragraph("No handoffs have been generated yet.")
     for handoff in session.get("handoffs", []):
@@ -919,6 +1012,8 @@ def build_ethics_application_docx(session: Dict[str, Any]) -> bytes:
         _add_label_paragraph(document, "Recommended reviewer", handoff.get("recommended_role_label", handoff.get("owner")))
         _add_label_paragraph(document, "Why AI stopped", handoff.get("why_ai_cannot_resolve"))
         _add_label_paragraph(document, "Expert advice", handoff.get("expert_advice"))
+        _add_label_paragraph(document, "Expert rationale", handoff.get("expert_rationale"))
+        _add_structured_expert_record(document, handoff)
         _add_label_paragraph(document, "Researcher response", handoff.get("researcher_response"))
         _add_label_paragraph(document, "Linked protocol revision", handoff.get("researcher_revised_text"))
 
@@ -1106,15 +1201,25 @@ def build_research_design_docx(session: Dict[str, Any]) -> bytes:
         _add_label_paragraph(document, "Researcher decision prompt", tradeoff.get("prompt"))
         _add_label_paragraph(document, "Researcher rationale", deliberation.get("rationale"), after=8)
 
-    document.add_heading(f"{next_section + 1}. Expert dependencies and unresolved design questions", level=1)
-    unresolved = [item for item in session.get("handoffs", []) if item.get("status") != "resolved"]
-    if not unresolved:
-        document.add_paragraph("No unresolved expert or stakeholder handoffs are recorded.")
-    for handoff in unresolved:
-        document.add_heading(handoff.get("question", "Unresolved design question"), level=2)
+    document.add_heading(
+        f"{next_section + 1}. Expert dependencies and unresolved design questions / resolved review record",
+        level=1,
+    )
+    handoffs = session.get("handoffs", [])
+    if not handoffs:
+        document.add_paragraph("No expert or stakeholder handoffs are recorded.")
+    for handoff in handoffs:
+        document.add_heading(handoff.get("question", "Expert review question"), level=2)
+        _add_label_paragraph(
+            document,
+            "Workflow status",
+            handoff.get("status", "open"),
+        )
         _add_label_paragraph(document, "Recommended reviewer", handoff.get("recommended_role_label", handoff.get("owner")))
         _add_label_paragraph(document, "Why AI stopped", handoff.get("why_ai_cannot_resolve"))
         _add_label_paragraph(document, "Expert advice", handoff.get("expert_advice"))
+        _add_label_paragraph(document, "Expert rationale", handoff.get("expert_rationale"))
+        _add_structured_expert_record(document, handoff)
         _add_label_paragraph(document, "Researcher response", handoff.get("researcher_response"))
         _add_label_paragraph(document, "Linked protocol revision", handoff.get("researcher_revised_text"), after=8)
 
@@ -1173,6 +1278,7 @@ def build_expert_summary_docx(session: Dict[str, Any]) -> bytes:
         _add_label_paragraph(document, "Researcher rationale", issue.get("decision_rationale"))
         _add_label_paragraph(document, "Expert advice", handoff.get("expert_advice"))
         _add_label_paragraph(document, "Expert rationale", handoff.get("expert_rationale"), after=8)
+        _add_structured_expert_record(document, handoff)
         _add_label_paragraph(document, "Researcher response", handoff.get("researcher_response"))
         _add_label_paragraph(document, "Linked protocol revision", handoff.get("researcher_revised_text"), after=8)
 
@@ -1280,6 +1386,7 @@ def build_expert_portfolio_docx(sessions: List[Dict[str, Any]]) -> bytes:
             _add_label_paragraph(document, "Why AI stopped", handoff.get("why_ai_cannot_resolve"))
             _add_label_paragraph(document, "Expert advice", handoff.get("expert_advice"))
             _add_label_paragraph(document, "Expert rationale", handoff.get("expert_rationale"))
+            _add_structured_expert_record(document, handoff)
             _add_label_paragraph(document, "Researcher response", handoff.get("researcher_response"))
             _add_label_paragraph(document, "Linked protocol revision", handoff.get("researcher_revised_text"), after=8)
 

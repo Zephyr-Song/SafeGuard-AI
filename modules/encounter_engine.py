@@ -44,6 +44,24 @@ STUDY_LLM_TIMEOUT_SECONDS = 25
 STUDY_CHAT_MAX_TURNS = 12
 STUDY_CHAT_MAX_INPUT_CHARS = 2000
 STUDY_CHAT_MAX_OUTPUT_CHARS = 6000
+EXPERT_ADVICE_TYPES = {
+    "required_change": {
+        "label": "Required change",
+        "description": "A change that must be made before this handoff can be closed.",
+    },
+    "optional_recommendation": {
+        "label": "Optional recommendation",
+        "description": "A beneficial improvement that is not required for closure.",
+    },
+    "clarification_request": {
+        "label": "Clarification request",
+        "description": "Information or revised text the researcher must provide before judgment.",
+    },
+    "no_change_required": {
+        "label": "No change required",
+        "description": "The submitted evidence is sufficient for this specific handoff.",
+    },
+}
 STUDY_FINAL_ARTIFACT_MAX_CHARS = 20000
 STUDY_RATIONALE_MAX_CHARS = 4000
 STUDY_CONDITIONS = {"safebars_full", "general_chat"}
@@ -93,6 +111,9 @@ class EncounterEngine:
             "sample_project": SAMPLE_PROJECT,
             "ethics_frameworks": [FRAMEWORKS[key] | {"id": key} for key in FRAMEWORKS],
             "expert_roles": [EXPERT_ROLES[key] | {"id": key} for key in EXPERT_ROLES],
+            "expert_advice_types": [
+                EXPERT_ADVICE_TYPES[key] | {"id": key} for key in EXPERT_ADVICE_TYPES
+            ],
             "application_profiles": [
                 APPLICATION_PROFILES[key] | {"id": key} for key in APPLICATION_PROFILES
             ],
@@ -350,6 +371,46 @@ class EncounterEngine:
     @staticmethod
     def _parse_timestamp(value: str) -> datetime:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+    @staticmethod
+    def _timestamp_at_or_after(value: str, reference: str) -> bool:
+        """Compare ISO timestamps safely across Z/offset/precision variants."""
+        try:
+            current = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+            baseline = datetime.fromisoformat(str(reference or "").replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            return False
+        if current.tzinfo is None:
+            current = current.replace(tzinfo=timezone.utc)
+        if baseline.tzinfo is None:
+            baseline = baseline.replace(tzinfo=timezone.utc)
+        return current >= baseline
+
+    @staticmethod
+    def _timestamp_after(value: str, reference: str) -> bool:
+        try:
+            current = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+            baseline = datetime.fromisoformat(str(reference or "").replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            return False
+        if current.tzinfo is None:
+            current = current.replace(tzinfo=timezone.utc)
+        if baseline.tzinfo is None:
+            baseline = baseline.replace(tzinfo=timezone.utc)
+        return current > baseline
+
+    @staticmethod
+    def _latest_timestamp(values: Iterable[str]) -> str:
+        parsed_values = []
+        for value in values:
+            try:
+                parsed = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+            except (TypeError, ValueError):
+                continue
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            parsed_values.append((parsed, str(value)))
+        return max(parsed_values, default=(None, ""), key=lambda item: item[0])[1]
 
     @staticmethod
     def _study_event_payload(manifest: Dict[str, Any]) -> Dict[str, Any]:
@@ -807,6 +868,30 @@ class EncounterEngine:
         session = self.store.load(session_id)
         if session:
             session.setdefault("tradeoff_deliberations", {})
+            if not isinstance(session.get("handoffs"), list):
+                session["handoffs"] = []
+            handoff_defaults = {
+                "advice_type": "",
+                "advice_type_label": "",
+                "responsible_actor": "",
+                "closure_evidence": "",
+                "reviewed_passage_ids": [],
+                "evidence_gap_acknowledged": False,
+                "evidence_reviewed": False,
+                "evidence_reviewed_at": "",
+                "review_history": [],
+                "researcher_revision_history": [],
+            }
+            for handoff in session["handoffs"]:
+                for key, default in handoff_defaults.items():
+                    if key not in handoff or handoff[key] is None:
+                        handoff[key] = list(default) if isinstance(default, list) else default
+                if not isinstance(handoff.get("reviewed_passage_ids"), list):
+                    handoff["reviewed_passage_ids"] = []
+                if not isinstance(handoff.get("review_history"), list):
+                    handoff["review_history"] = []
+                if not isinstance(handoff.get("researcher_revision_history"), list):
+                    handoff["researcher_revision_history"] = []
             if not session.get("audit_plan"):
                 session["audit_plan"] = self._build_audit_plan(
                     session, session.get("selected_scenarios") or None
@@ -1178,8 +1263,12 @@ class EncounterEngine:
         )
         if not handoff:
             raise KeyError("Handoff not found.")
-        response = response.strip()
-        revised_text = revised_text.strip()
+        if handoff.get("status") == "resolved":
+            raise ValueError(
+                "This handoff is closed. An expert must reopen it before the researcher can add another response."
+            )
+        response = str(response or "").strip()
+        revised_text = str(revised_text or "").strip()
         if not response and not revised_text:
             raise ValueError("Add a response or revised protocol text before submitting.")
 
@@ -1195,6 +1284,13 @@ class EncounterEngine:
         handoff["researcher_responded_at"] = now
         handoff["status"] = "researcher_revised" if revised_text else "researcher_responded"
         handoff["resolved_at"] = ""
+        # A new researcher answer changes the evidence under review. Preserve the
+        # earlier review in history, but require the expert to inspect the latest
+        # material before another substantive action or closure.
+        handoff["reviewed_passage_ids"] = []
+        handoff["evidence_gap_acknowledged"] = False
+        handoff["evidence_reviewed"] = False
+        handoff["evidence_reviewed_at"] = ""
 
         issue = next(
             (item for item in session.get("issues", []) if item.get("id") == handoff.get("issue_id")),
@@ -1230,6 +1326,11 @@ class EncounterEngine:
         advice: str = "",
         rationale: str = "",
         redirect_role: str = "",
+        advice_type: str = "",
+        responsible_actor: str = "",
+        closure_evidence: str = "",
+        reviewed_passage_ids: Optional[List[str]] = None,
+        evidence_gap_acknowledged: bool = False,
     ) -> Optional[Dict[str, Any]]:
         session = self.get_session(session_id)
         if not session:
@@ -1245,8 +1346,142 @@ class EncounterEngine:
         )
         if not handoff:
             raise KeyError("Handoff not found.")
-        if action in {"advise", "request_clarification"} and not advice.strip():
-            raise ValueError("Add advice or a clarification request before saving this action.")
+        if handoff.get("status") == "resolved" and action != "reopen":
+            raise ValueError("This handoff is already closed. Reopen it before recording another expert action.")
+        if action == "reopen" and handoff.get("status") != "resolved":
+            raise ValueError("Only a resolved handoff can be reopened.")
+        if reviewed_passage_ids is not None and not isinstance(
+            reviewed_passage_ids, (list, tuple, set)
+        ):
+            raise ValueError("Reviewed evidence must be supplied as a list of protocol passage IDs.")
+        reviewer_name = str(reviewer_name or "").strip()
+        substantive_actions = {"advise", "request_clarification", "resolve"}
+        advice = str(advice or "").strip() or str(handoff.get("expert_advice") or "").strip()
+        rationale = str(rationale or "").strip() or str(handoff.get("expert_rationale") or "").strip()
+        advice_type = str(advice_type or "").strip() or str(handoff.get("advice_type") or "").strip()
+        responsible_actor = (
+            str(responsible_actor or "").strip()
+            or str(handoff.get("responsible_actor") or "").strip()
+        )
+        closure_evidence = (
+            str(closure_evidence or "").strip()
+            or str(handoff.get("closure_evidence") or "").strip()
+        )
+        if action == "request_clarification":
+            advice_type = "clarification_request"
+        issue = next(
+            (item for item in session.get("issues", []) if item.get("id") == handoff.get("issue_id")),
+            {},
+        )
+        required_passage_ids = {
+            str(item) for item in issue.get("source_passage_ids", []) if str(item).strip()
+        }
+        valid_passage_ids = {
+            str(item.get("id")) for item in session.get("passages", []) if item.get("id")
+        }
+        submitted_passage_ids = {
+            str(item) for item in (reviewed_passage_ids or []) if str(item).strip()
+        }
+        unknown_passage_ids = submitted_passage_ids - valid_passage_ids
+        if unknown_passage_ids:
+            raise ValueError("Reviewed evidence contains an unknown protocol passage ID.")
+        stored_passage_ids = {
+            str(item) for item in handoff.get("reviewed_passage_ids", []) if str(item).strip()
+        }
+        latest_researcher_evidence_at = str(handoff.get("researcher_responded_at") or "")
+        stored_review_at = str(handoff.get("evidence_reviewed_at") or "")
+        stored_evidence_is_current = not latest_researcher_evidence_at or (
+            bool(stored_review_at)
+            and self._timestamp_at_or_after(
+                stored_review_at, latest_researcher_evidence_at
+            )
+        )
+        effective_passage_ids = (
+            submitted_passage_ids
+            if submitted_passage_ids
+            else (stored_passage_ids if stored_evidence_is_current else set())
+        )
+        evidence_reviewed = bool(
+            required_passage_ids.intersection(effective_passage_ids)
+            if required_passage_ids
+            else (
+                evidence_gap_acknowledged
+                or (
+                    handoff.get("evidence_gap_acknowledged")
+                    and stored_evidence_is_current
+                )
+            )
+        )
+        if action in substantive_actions:
+            if advice_type not in EXPERT_ADVICE_TYPES:
+                raise ValueError("Classify the response as a required change, optional recommendation, clarification request, or no change required.")
+            if action == "advise" and advice_type == "clarification_request":
+                raise ValueError("Use Ask researcher when the response is a clarification request.")
+            if len(advice) < 10:
+                raise ValueError("Write a concrete expert instruction or conclusion before saving.")
+            if len(rationale) < 10:
+                raise ValueError("Explain the ethical rationale before saving.")
+            if len(responsible_actor) < 2:
+                raise ValueError("Name the person or role responsible for the next action.")
+            if len(closure_evidence) < 10:
+                raise ValueError("State what evidence would be sufficient to close this handoff.")
+            if not evidence_reviewed:
+                if required_passage_ids:
+                    raise ValueError("Open Evidence and review at least one cited protocol passage before saving this expert action.")
+                raise ValueError("This handoff has no cited passage. Review the evidence gap and acknowledge it before saving.")
+            if action == "resolve" and not required_passage_ids and not (
+                handoff.get("researcher_response")
+                or handoff.get("researcher_revised_text")
+                or handoff.get("researcher_revision_history")
+            ):
+                raise ValueError("No cited protocol passage supports closure. Ask the researcher for clarification or revised evidence first.")
+            if action == "resolve":
+                blocking_events = [
+                    item
+                    for item in handoff.get("review_history", [])
+                    if item.get("action") in {"advise", "request_clarification"}
+                    and (
+                        item.get("advice_type")
+                        in {"required_change", "clarification_request"}
+                        or item.get("action") == "request_clarification"
+                    )
+                ]
+                latest_blocking_request_at = self._latest_timestamp(
+                    str(item.get("timestamp") or "") for item in blocking_events
+                )
+                response_at = str(handoff.get("researcher_responded_at") or "")
+                if latest_blocking_request_at and (
+                    not response_at
+                    or not self._timestamp_after(
+                        response_at, latest_blocking_request_at
+                    )
+                ):
+                    raise ValueError(
+                        "The researcher has not responded to the latest required change or clarification request. Keep this handoff open."
+                    )
+            if action == "resolve" and advice_type in {"required_change", "clarification_request"}:
+                request_events = [
+                    item
+                    for item in handoff.get("review_history", [])
+                    if item.get("action") in {"advise", "request_clarification"}
+                    and (
+                        item.get("advice_type") == advice_type
+                        or (
+                            advice_type == "clarification_request"
+                            and item.get("action") == "request_clarification"
+                        )
+                    )
+                ]
+                latest_request_at = self._latest_timestamp(
+                    str(item.get("timestamp") or "") for item in request_events
+                )
+                response_at = str(handoff.get("researcher_responded_at") or "")
+                if not latest_request_at:
+                    raise ValueError("Send this required change or clarification request to the researcher before closing the handoff.")
+                if not response_at or not self._timestamp_after(
+                    response_at, latest_request_at
+                ):
+                    raise ValueError("The researcher has not responded to the latest required change or clarification request. Keep this handoff open.")
         if action == "redirect" and redirect_role not in EXPERT_ROLES:
             raise ValueError("Select a recognized role to receive the redirected handoff.")
 
@@ -1255,40 +1490,67 @@ class EncounterEngine:
             "action": action,
             "reviewer_role": reviewer_role,
             "reviewer_role_label": EXPERT_ROLES[reviewer_role]["label"],
-            "reviewer_name": reviewer_name.strip(),
-            "advice": advice.strip(),
-            "rationale": rationale.strip(),
+            "reviewer_name": reviewer_name,
             "timestamp": now,
         }
+        if action in substantive_actions:
+            event.update(
+                {
+                    "advice": advice,
+                    "rationale": rationale,
+                    "advice_type": advice_type,
+                    "advice_type_label": EXPERT_ADVICE_TYPES[advice_type]["label"],
+                    "responsible_actor": responsible_actor,
+                    "closure_evidence": closure_evidence,
+                    "reviewed_passage_ids": sorted(effective_passage_ids),
+                    "evidence_gap_acknowledged": bool(
+                        evidence_gap_acknowledged
+                        or handoff.get("evidence_gap_acknowledged")
+                    ),
+                    "evidence_reviewed": evidence_reviewed,
+                    "evidence_reviewed_at": now,
+                }
+            )
         handoff.setdefault("review_history", []).append(event)
         handoff["reviewer_role"] = reviewer_role
-        handoff["reviewer_name"] = reviewer_name.strip()
-        handoff["expert_advice"] = advice.strip() or handoff.get("expert_advice", "")
-        handoff["expert_rationale"] = rationale.strip() or handoff.get("expert_rationale", "")
+        handoff["reviewer_name"] = reviewer_name
+        if action in substantive_actions:
+            handoff["expert_advice"] = advice
+            handoff["expert_rationale"] = rationale
+            handoff["advice_type"] = advice_type
+            handoff["advice_type_label"] = EXPERT_ADVICE_TYPES[advice_type]["label"]
+            handoff["responsible_actor"] = responsible_actor
+            handoff["closure_evidence"] = closure_evidence
+            handoff["reviewed_passage_ids"] = sorted(effective_passage_ids)
+            handoff["evidence_gap_acknowledged"] = bool(
+                evidence_gap_acknowledged or handoff.get("evidence_gap_acknowledged")
+            )
+            handoff["evidence_reviewed"] = evidence_reviewed
+            handoff["evidence_reviewed_at"] = now
         handoff["reviewed_at"] = now
         if action in {"advise", "request_clarification", "resolve"} and not handoff.get("assigned_role"):
             handoff["assigned_role"] = reviewer_role
             handoff["assigned_role_label"] = EXPERT_ROLES[reviewer_role]["label"]
-            handoff["assigned_reviewer_name"] = reviewer_name.strip() or EXPERT_ROLES[reviewer_role]["label"]
+            handoff["assigned_reviewer_name"] = reviewer_name or EXPERT_ROLES[reviewer_role]["label"]
             handoff["assigned_at"] = now
         if action == "assign":
             handoff["assigned_role"] = reviewer_role
             handoff["assigned_role_label"] = EXPERT_ROLES[reviewer_role]["label"]
-            handoff["assigned_reviewer_name"] = reviewer_name.strip() or EXPERT_ROLES[reviewer_role]["label"]
+            handoff["assigned_reviewer_name"] = reviewer_name or EXPERT_ROLES[reviewer_role]["label"]
             handoff["assigned_at"] = now
             handoff["status"] = "assigned"
         elif action == "advise":
             if not handoff.get("assigned_role"):
                 handoff["assigned_role"] = reviewer_role
                 handoff["assigned_role_label"] = EXPERT_ROLES[reviewer_role]["label"]
-                handoff["assigned_reviewer_name"] = reviewer_name.strip() or EXPERT_ROLES[reviewer_role]["label"]
+                handoff["assigned_reviewer_name"] = reviewer_name or EXPERT_ROLES[reviewer_role]["label"]
                 handoff["assigned_at"] = now
             handoff["status"] = "advised"
         elif action == "request_clarification":
             if not handoff.get("assigned_role"):
                 handoff["assigned_role"] = reviewer_role
                 handoff["assigned_role_label"] = EXPERT_ROLES[reviewer_role]["label"]
-                handoff["assigned_reviewer_name"] = reviewer_name.strip() or EXPERT_ROLES[reviewer_role]["label"]
+                handoff["assigned_reviewer_name"] = reviewer_name or EXPERT_ROLES[reviewer_role]["label"]
                 handoff["assigned_at"] = now
             handoff["status"] = "needs_clarification"
         elif action == "redirect":
@@ -1309,12 +1571,27 @@ class EncounterEngine:
         elif action == "reopen":
             handoff["status"] = "open"
             handoff["resolved_at"] = ""
+            handoff["reviewed_passage_ids"] = []
+            handoff["evidence_gap_acknowledged"] = False
+            handoff["evidence_reviewed"] = False
+            handoff["evidence_reviewed_at"] = ""
 
         session["updated_at"] = now
         self._save(
             session,
             "expert_handoff_review",
-            {"handoff_id": handoff_id, "action": action, "reviewer_role": reviewer_role},
+            {
+                "handoff_id": handoff_id,
+                "action": action,
+                "reviewer_role": reviewer_role,
+                "advice_type": advice_type if action in substantive_actions else "",
+                "reviewed_passage_ids": sorted(effective_passage_ids)
+                if action in substantive_actions
+                else [],
+                "evidence_reviewed": evidence_reviewed
+                if action in substantive_actions
+                else False,
+            },
         )
         return session
 
@@ -1326,9 +1603,34 @@ class EncounterEngine:
         queue = []
         for handoff in session.get("handoffs", []):
             issue = issue_by_id.get(handoff.get("issue_id"), {})
+            researcher_evidence_at = str(handoff.get("researcher_responded_at") or "")
+            evidence_review_at = str(handoff.get("evidence_reviewed_at") or "")
+            evidence_review_current = bool(
+                handoff.get("evidence_reviewed")
+                and (
+                    not researcher_evidence_at
+                    or self._timestamp_at_or_after(
+                        evidence_review_at, researcher_evidence_at
+                    )
+                )
+            )
+            closure_record_complete = bool(
+                handoff.get("advice_type") in EXPERT_ADVICE_TYPES
+                and len(str(handoff.get("expert_advice") or "").strip()) >= 10
+                and len(str(handoff.get("expert_rationale") or "").strip()) >= 10
+                and len(str(handoff.get("responsible_actor") or "").strip()) >= 2
+                and len(str(handoff.get("closure_evidence") or "").strip()) >= 10
+                and evidence_review_current
+            )
             queue.append(
                 {
                     **handoff,
+                    "evidence_review_current": evidence_review_current,
+                    "closure_record_complete": closure_record_complete,
+                    "legacy_resolution": bool(
+                        handoff.get("status") == "resolved"
+                        and not closure_record_complete
+                    ),
                     "issue": {
                         "title": issue.get("title", "Unresolved protocol issue"),
                         "severity": issue.get("severity", "unknown"),
@@ -2007,6 +2309,9 @@ class EncounterEngine:
                     "owner", "recommended_role", "recommended_role_label", "recommended_role_scope",
                     "priority", "status", "reviewer_role", "reviewer_name", "expert_advice",
                     "expert_rationale", "reviewed_at", "resolved_at", "review_history",
+                    "advice_type", "advice_type_label", "responsible_actor", "closure_evidence",
+                    "reviewed_passage_ids", "evidence_gap_acknowledged", "evidence_reviewed",
+                    "evidence_reviewed_at",
                     "assigned_role", "assigned_role_label", "assigned_reviewer_name", "assigned_at",
                     "researcher_response", "researcher_revised_text", "researcher_responded_at",
                     "researcher_revision_history",
@@ -2049,6 +2354,14 @@ class EncounterEngine:
             "reviewer_name": "",
             "expert_advice": "",
             "expert_rationale": "",
+            "advice_type": "",
+            "advice_type_label": "",
+            "responsible_actor": "",
+            "closure_evidence": "",
+            "reviewed_passage_ids": [],
+            "evidence_gap_acknowledged": False,
+            "evidence_reviewed": False,
+            "evidence_reviewed_at": "",
             "reviewed_at": "",
             "resolved_at": "",
             "review_history": [],
