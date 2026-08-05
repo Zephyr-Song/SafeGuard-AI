@@ -159,30 +159,6 @@
         },
     ];
 
-    const GUIDED_EXAMPLE = {
-        title: "LLM feedback coach for student research ideas",
-        plan: `We plan to build an LLM-enabled web app that helps computer-science students develop early research ideas. Students paste a project pitch and the app generates novelty feedback, methodological suggestions, and a “readiness” label. It can compare the pitch with papers retrieved from a university library index.
-
-The app will be tested with undergraduate and master's students in project-design classes. Students can revise their pitch after reading the feedback. The research team will collect submitted pitches, generated feedback, revision histories, clicks, and a short usefulness survey. Instructors can view a dashboard showing readiness labels and common weaknesses across the class.
-
-We expect the tool to help students who have limited access to individual supervision. The LLM will not assign grades, but instructors may use its dashboard when deciding who needs support. Study data will be stored by the research team for analysis. We will compare the app with a general-purpose LLM chat condition.`,
-        commitments: [
-            "Students should retain authorship of their research ideas and be able to contest consequential AI feedback.",
-            "The app should broaden access to useful supervision without quietly increasing surveillance or unequal treatment.",
-            "AI assistance should not shift academic responsibility away from a named instructor or researcher.",
-        ],
-        answers: {
-            research_context: "Computer-science education in university project-design classes.",
-            intended_change: "Help students turn an early research idea into a clearer, more feasible project proposal when individual supervision is limited.",
-            direct_users: "Undergraduate and master’s students would use the app while preparing project pitches; instructors may later view class-level feedback.",
-            ai_role: "An LLM would retrieve related papers, generate novelty and method feedback, and attach a readiness label. It would advise rather than grade.",
-            data_materials: "Student project pitches, prompts, generated feedback, revision histories, clicks, and a short usefulness survey would be collected.",
-            affected_others: "Students who do not use the tool, classmates compared through the dashboard, and instructors whose attention may be directed by readiness labels could still be affected.",
-            value_commitment: "Students should retain authorship and be able to understand, reject, and contest consequential AI feedback.",
-            stop_condition: "Readiness labels begin shaping grades or access to supervision, or some student groups are repeatedly misclassified without an effective appeal route.",
-        },
-    };
-
     const INTAKE_QUESTIONS = [
         {
             id: "research_context",
@@ -368,7 +344,7 @@ We expect the tool to help students who have limited access to individual superv
     function cacheDom() {
         [
             "workspace", "apiStatus", "sessionLabel", "connectionBanner", "retryConnectionBtn", "resumeBtn",
-            "loadExampleBtn", "methodTopBtn", "showMethodBtn", "startOverBtn", "newMirrorBtn",
+            "methodTopBtn", "showMethodBtn", "startOverBtn", "newMirrorBtn",
             "planForm", "projectTitle", "researchPlan", "planWordCount", "planSignals", "signalRow",
             "commitmentList", "commitmentCount", "addCommitmentBtn", "planValidation", "buildMirrorBtn",
             "intakeQuestionCount", "intakeStageLabel", "intakeProgressFill", "intakeReflection",
@@ -2614,19 +2590,6 @@ We expect the tool to help students who have limited access to individual superv
         if (view === "diff") updateRevisionStats();
     }
 
-    function loadGuidedExample() {
-        if (state.session && !window.confirm("Start a new guided conversation with the example? Your saved session will remain on the server.")) return;
-        if (state.session) resetLocalState(false);
-        state.intakeAnswers = { ...GUIDED_EXAMPLE.answers };
-        state.intakeIndex = activeIntakeQuestions().length - 1;
-        state.intakeComplete = true;
-        if (dom.intakeOptionalContext) dom.intakeOptionalContext.value = "";
-        syncIntakePayload();
-        renderIntake();
-        navigateToStep(1, true);
-        toast("Guided example loaded", "The completed conversation trail can be edited before you build the mirror.");
-    }
-
     function resetLocalState(confirmFirst = true) {
         if (confirmFirst && state.session && !window.confirm("Start a new Ethical Mirror? The saved session will remain on the server, but this browser will stop tracking it.")) return;
         state.session = null;
@@ -2810,7 +2773,6 @@ We expect the tool to help students who have limited access to individual superv
             });
         });
 
-        dom.loadExampleBtn.addEventListener("click", loadGuidedExample);
         dom.startOverBtn.addEventListener("click", () => resetLocalState(true));
         dom.newMirrorBtn.addEventListener("click", () => resetLocalState(true));
         dom.retryConnectionBtn.addEventListener("click", async () => {
