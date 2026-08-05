@@ -384,7 +384,7 @@ We expect the tool to help students who have limited access to individual superv
             "revisedPlan", "originalPlanView", "planDiff", "revisionStats", "restoreOriginalBtn",
             "revisionSaveState", "saveRevisionBtn", "replayBtn", "metricChanges", "metricAddressed",
             "metricOpen", "metricActionLinked", "ledgerTimestamp", "ledgerList", "ledgerEmpty",
-            "downloadBundleBtn", "printLedgerBtn", "literatureDialog", "literatureList", "methodDialog",
+            "downloadBundleBtn", "exportApplicationBtn", "printLedgerBtn", "literatureDialog", "literatureList", "methodDialog",
             "boundaryDialog", "loadingLayer", "loadingEyebrow", "loadingTitle", "loadingDetail",
             "loadingSteps", "toastRegion",
         ].forEach((id) => {
@@ -1293,7 +1293,7 @@ We expect the tool to help students who have limited access to individual superv
         showLoading({
             eyebrow: "Building the mirror",
             title: "Tracing claims through possible futures…",
-            detail: "Bounded role probes examine the same plan separately while keeping literature evidence distinct from generated inference.",
+            detail: "Bounded role probes examine the same plan separately while keeping literature evidence distinct from generated inference. The first analysis after the service has been idle can take up to a minute while the engine warms up — this is normal, keep this tab open.",
         });
         try {
             const created = await api("/sessions", { method: "POST", body: payload });
@@ -1303,6 +1303,7 @@ We expect the tool to help students who have limited access to individual superv
             localStorage.removeItem(DRAFT_KEY);
             syncSessionIntoUi();
             advanceLoading(1);
+            advanceLoading(2);
             const analysed = await api(`/sessions/${encodeURIComponent(state.session.id)}/analyze`, {
                 method: "POST",
                 body: { use_llm: true },
@@ -1336,7 +1337,7 @@ We expect the tool to help students who have limited access to individual superv
         showLoading({
             eyebrow: "Re-running analysis",
             title: "Checking the current plan against the same lenses…",
-            detail: "Existing researcher responses remain visible; new model output does not silently overwrite them.",
+            detail: "Existing researcher responses remain visible; new model output does not silently overwrite them. The first analysis after the service has been idle can take up to a minute while the engine warms up — this is normal, keep this tab open.",
         });
         try {
             const result = await api(`/sessions/${encodeURIComponent(state.session.id)}/analyze`, {
@@ -1562,6 +1563,11 @@ We expect the tool to help students who have limited access to individual superv
                             </div>
                         ` : ""}
                     </div>
+                    ${lens.status === "claimed" ? `
+                    <p class="lens-reason-prompt" role="note">
+                        <strong>Claimed, not yet reasoned.</strong> Add one sentence on why you believe this is handled, or link the evidence — the committee draft will flag it as open otherwise.
+                    </p>
+` : ""}
                 </article>
             `;
         }).join("");
@@ -2475,6 +2481,37 @@ We expect the tool to help students who have limited access to individual superv
         toast("Study bundle downloaded", "The JSON preserves sources, model hypotheses, researcher choices, and unresolved questions separately.");
     }
 
+    async function exportCommitteeApplication() {
+        if (!state.session?.id) {
+            toast("Save the plan first", "Build a session before generating the application draft.", "error");
+            return;
+        }
+        setBusy(true);
+        try {
+            const resp = await fetch(`/api/safebars/mirror/sessions/${encodeURIComponent(state.session.id)}/export-application`, {
+                method: "POST",
+            });
+            if (!resp.ok) {
+                const payload = await resp.json().catch(() => ({}));
+                throw new Error(payload.error || `Export failed (${resp.status}).`);
+            }
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = url;
+            anchor.download = `ethics-application-${slug(state.session.title, state.session.id)}.docx`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            URL.revokeObjectURL(url);
+            toast("Ethics application draft downloaded", "A DOCX draft for your institution's ethics committee is ready. It is a draft, not an approval.");
+        } catch (error) {
+            toast("Could not generate the application", error.message, "error");
+        } finally {
+            setBusy(false);
+        }
+    }
+
     function updateProgress() {
         const hasSession = Boolean(state.session?.id);
         const hasAnalysis = Boolean(
@@ -2511,6 +2548,8 @@ We expect the tool to help students who have limited access to individual superv
             if (step === state.activeStep) button.setAttribute("aria-current", "step");
             else button.removeAttribute("aria-current");
         });
+        const lockHint = document.getElementById("step6LockHint");
+        if (lockHint) lockHint.hidden = Boolean(unlocked[6]);
     }
 
     function canNavigateTo(step) {
@@ -2734,6 +2773,9 @@ We expect the tool to help students who have limited access to individual superv
         dom.saveRevisionBtn.addEventListener("click", () => saveRevisions(false));
         dom.replayBtn.addEventListener("click", () => saveRevisions(true));
         dom.downloadBundleBtn.addEventListener("click", downloadBundle);
+        if (dom.exportApplicationBtn) {
+            dom.exportApplicationBtn.addEventListener("click", exportCommitteeApplication);
+        }
         dom.printLedgerBtn.addEventListener("click", () => window.print());
 
         dom.zoomOutBtn.addEventListener("click", () => {

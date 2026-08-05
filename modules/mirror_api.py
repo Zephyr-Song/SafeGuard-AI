@@ -152,3 +152,36 @@ def replay_session(session_id: str):
     if not session:
         return jsonify({"success": False, "error": "Session not found."}), 404
     return jsonify({"success": True, "session": session})
+
+
+@mirror_api.post("/sessions/<session_id>/export-application")
+def export_application(session_id: str):
+    """Return a DOCX ethics-application draft built from the Mirror session."""
+
+    from flask import Response
+
+    try:
+        session = mirror_engine.get_session(session_id)
+    except Exception as exc:
+        return _unexpected("load the Ethical Mirror session", exc)
+    if not session:
+        return jsonify({"success": False, "error": "Session not found."}), 404
+    try:
+        from .mirror_application import build_committee_application_docx
+
+        data = build_committee_application_docx(session)
+    except Exception as exc:
+        return _unexpected("build the ethics-application draft", exc)
+    safe_id = "".join(ch for ch in session_id if ch.isalnum() or ch in "-_") or "session"
+    return Response(
+        data,
+        mimetype=(
+            "application/vnd.openxmlformats-officedocument."
+            "wordprocessingml.document"
+        ),
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="ethics-application-{safe_id}.docx"'
+            )
+        },
+    )
