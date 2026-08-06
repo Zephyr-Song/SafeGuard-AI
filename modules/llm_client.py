@@ -159,6 +159,7 @@ class LLMClient:
         messages: List[Dict[str, str]],
         temperature: float = 0.4,
         timeout: int = 35,
+        max_tokens: int = 700,
     ) -> Dict[str, Any]:
         provider = self.providers.get(provider_id)
         if not provider:
@@ -180,7 +181,7 @@ class LLMClient:
             "model": provider.model,
             "messages": messages,
             "temperature": temperature,
-            "max_tokens": 700,
+            "max_tokens": max_tokens,
         }
         try:
             response = requests.post(

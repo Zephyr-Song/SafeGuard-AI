@@ -878,6 +878,7 @@ class MirrorEngine:
                     messages,
                     temperature=0.0,
                     timeout=timeout,
+                    max_tokens=3000,
                 )
             except Exception:
                 provider_attempts.append(
