@@ -416,6 +416,27 @@
         return `${text.slice(0, Math.max(0, max - 1)).trim()}…`;
     }
 
+    // Compact "Firstname et al. (year)" label for a literature source card.
+    // Avoids printing the full verbose venue (e.g. "ACM CHI Conference on
+    // Human Factors in Computing Systems") on every lens card; the full venue
+    // lives in the References section.
+    function compactCitation(source) {
+        if (!source) return "";
+        const authors = String(source.authors || "")
+            .split(/,| and /)
+            .map((part) => part.trim())
+            .filter(Boolean);
+        const year = source.year || "";
+        if (authors.length === 0) {
+            return source.title || source.venue || "source";
+        }
+        const family = authors[0].split(" ").pop();
+        if (authors.length === 1) {
+            return year ? `${family} (${year})` : family;
+        }
+        return year ? `${family} et al. (${year})` : `${family} et al.`;
+    }
+
     function titleCase(value) {
         return String(value || "")
             .replace(/[_-]+/g, " ")
@@ -1493,12 +1514,17 @@
         dom.lensEmpty.hidden = visible.length > 0;
         dom.lensGrid.innerHTML = visible.map((lens, index) => {
             const number = String(lenses.findIndex((item) => item.id === lens.id) + 1).padStart(2, "0");
-            const sourceLabel = lens.source_ids?.length
+            const sourceHtml = lens.source_ids?.length
                 ? lens.source_ids.map((sourceId) => {
                     const source = state.literature.find((item) => item.id === sourceId);
-                    return source ? firstValue(source.venue, source.citation, source.title) : sourceId;
+                    if (!source) return escapeHtml(sourceId);
+                    const label = compactCitation(source);
+                    const url = source.url || "";
+                    return url
+                        ? `<a href="${escapeAttr(url)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`
+                        : escapeHtml(label);
                 }).join(" · ")
-                : lens.source_label;
+                : escapeHtml(lens.source_label || "");
             const evidence = lens.evidence || (
                 lens.status === "missing"
                     ? "No matching plan passage was located. Absence is a question for review, not proof of a problem."
@@ -1515,7 +1541,7 @@
                         <p class="lens-card-summary">${escapeHtml(lens.description)}</p>
                         <p class="lens-evidence-preview">“${escapeHtml(shortText(evidence, 165))}”</p>
                         <span class="lens-source-row">
-                            <span>${escapeHtml(sourceLabel)}</span>
+                            <span>${sourceHtml}</span>
                             <span>Inspect ↓</span>
                         </span>
                     </button>
@@ -1539,11 +1565,6 @@
                             </div>
                         ` : ""}
                     </div>
-                    ${lens.status === "claimed" ? `
-                    <p class="lens-reason-prompt" role="note">
-                        <strong>Claimed, not yet reasoned.</strong> Add one sentence on why you believe this is handled, or link the evidence — the committee draft will flag it as open otherwise.
-                    </p>
-` : ""}
                 </article>
             `;
         }).join("");
