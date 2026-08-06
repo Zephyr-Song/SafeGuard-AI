@@ -850,7 +850,7 @@ class MirrorEngine:
         )
         # Lens assessment is a judgement task, not open generation, so prefer
         # determinism.  Reuse the same bounded timeout as role probes.
-        timeout = min(18, max(4, int(os.getenv("SAFEBARS_MIRROR_LLM_TIMEOUT", "18"))))
+        timeout = min(40, max(8, int(os.getenv("SAFEBARS_MIRROR_LLM_TIMEOUT", "30"))))
         messages = [
             {
                 "role": "system",
@@ -916,9 +916,11 @@ class MirrorEngine:
                     }
                 )
                 seen.add(lens_id)
-            # Require the full lens contract before accepting a provider, so a
-            # partial/malformed response cannot poison later failover attempts.
-            if seen != expected_ids:
+            # Accept a provider as long as it returns at least one valid lens
+            # assessment. A partial response still helps researchers (the
+            # remaining lenses keep their deterministic heuristic), and a single
+            # malformed lens must not discard the useful ones.
+            if not candidate_assessments:
                 saw_invalid_response = True
                 provider_attempts.append(
                     {"provider_id": candidate, "status": "invalid_response"}
@@ -929,7 +931,10 @@ class MirrorEngine:
             response = candidate_response
             assessments = candidate_assessments
             provider_attempts.append(
-                {"provider_id": candidate, "status": "used"}
+                {
+                    "provider_id": candidate,
+                    "status": "used_partial" if seen != expected_ids else "used",
+                }
             )
             break
         result["provider_attempts"] = provider_attempts
@@ -1933,6 +1938,7 @@ class MirrorEngine:
             "dissonance_edges",
             "dissonance_visualization",
             "analysis_mode",
+            "lens_assessment_mode",
         ):
             session[key] = bundle[key]
 
