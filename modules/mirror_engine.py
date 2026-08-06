@@ -649,10 +649,14 @@ class MirrorEngine:
     ) -> Dict[str, Any]:
         passages = self._build_passages(plan)
         lenses = self._assess_lenses(passages)
+        lens_llm = self._assess_lenses_with_llm(plan, lenses, bool(use_llm))
+        self._apply_llm_lens_states(lenses, lens_llm)
         scenarios = self._build_scenarios(plan, passages, lenses)
         analysis_mode = self._optional_llm_probe(plan, scenarios, bool(use_llm))
         self._apply_llm_role_probes(scenarios, analysis_mode)
         edges = self._build_dissonance_edges(commitments, passages, lenses, scenarios)
+        if lens_llm.get("llm_used"):
+            analysis_mode["llm_affects_evidence_states"] = True
         return {
             "passages": passages,
             "lenses": lenses,
@@ -661,6 +665,7 @@ class MirrorEngine:
             "dissonance_edges": edges,
             "dissonance_visualization": self._build_dissonance_visualization(edges),
             "analysis_mode": analysis_mode,
+            "lens_assessment_mode": lens_llm,
         }
 
     @staticmethod
@@ -751,6 +756,225 @@ class MirrorEngine:
             "claimed",
             "The plan mentions the topic, but does not yet connect it to a mechanism and actionable decision.",
         )
+
+    def _assess_lenses_with_llm(
+        self,
+        plan: str,
+        lenses: Sequence[Dict[str, Any]],
+        requested: bool,
+    ) -> Dict[str, Any]:
+        """Batch-classify all lens evidence states with one LLM call.
+
+        Mirrors the provider-selection / retry / JSON-parse pattern of
+        ``_optional_llm_probe``. On any failure (no provider, transport error,
+        malformed payload, missing lens ids) it returns ``llm_used=False`` so
+        the caller falls back to the deterministic keyword heuristic.
+        """
+        result: Dict[str, Any] = {
+            "llm_requested": requested,
+            "llm_used": False,
+            "llm_affects_evidence_states": False,
+            "llm_status": "not_requested",
+            "execution_model": "deterministic_keyword_fallback",
+            "lens_assessments": [],
+        }
+        if not requested:
+            return result
+        if not self._llm_feature_enabled:
+            result["llm_status"] = "disabled_by_server"
+            return result
+        client = self.llm_client
+        if not client or not getattr(client, "is_configured", lambda: False)():
+            result["llm_status"] = "not_configured"
+            return result
+        provider_id = (
+            self._preferred_llm_provider_id
+            or getattr(client, "active_provider_id", None)
+        )
+        if not provider_id:
+            result["llm_status"] = "not_configured"
+            return result
+        provider_ids = [provider_id]
+        configured_summaries = getattr(
+            client, "configured_provider_summaries", lambda: []
+        )()
+        for provider in configured_summaries:
+            candidate = provider.get("id") if isinstance(provider, dict) else None
+            if candidate and candidate not in provider_ids:
+                provider_ids.append(candidate)
+        max_attempts = min(
+            4,
+            max(1, int(os.getenv("SAFEBARS_MIRROR_LLM_PROVIDER_ATTEMPTS", "4"))),
+        )
+        provider_ids = provider_ids[:max_attempts]
+
+        lens_contracts = [
+            {
+                "lens_id": lens["id"],
+                "label": lens["label"],
+                "operational_definition": lens.get("operational_definition", ""),
+                "prompt": lens.get("prompt", ""),
+            }
+            for lens in lenses
+        ]
+        prompt = (
+            "You assess a research plan against named ethics lenses. For each "
+            "lens, judge how deeply the plan addresses it on this four-level "
+            "scale:\n"
+            "- missing: the plan does not address this lens at all\n"
+            "- claimed: the plan mentions the topic but gives no mechanism or "
+            "action\n"
+            "- reasoned: the plan gives a mechanism, trade-off, or specific "
+            "account beyond a label\n"
+            "- action_linked: the plan binds the concern to a concrete action "
+            "with a condition, owner, timing cue, or trigger\n\n"
+            "Return JSON only with this schema:\n"
+            '{"lens_assessments":[{"lens_id":"exact id supplied",'
+            '"state":"missing|claimed|reasoned|action_linked",'
+            '"rationale":"one sentence","quote":"short verbatim plan excerpt '
+            "or empty string\"}]}\n\n"
+            "Rules: state must be one of the four lowercase values; quote must "
+            "be copied verbatim from the plan or empty; do not invent content "
+            "not in the plan; do not assign an ethics score, approval, or moral "
+            "verdict; assess every supplied lens_id exactly once.\n\nLENSES:\n"
+            f"{json.dumps(lens_contracts, ensure_ascii=False)}\n\nPLAN:\n"
+            f"{plan[:7000]}"
+        )
+        # Lens classification is a judgement task, not generation, so prefer
+        # determinism.  Reuse the same bounded timeout as role probes.
+        timeout = min(18, max(4, int(os.getenv("SAFEBARS_MIRROR_LLM_TIMEOUT", "18"))))
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You classify evidence coverage in a research plan against "
+                    "named ethics lenses. Follow the JSON contract exactly. "
+                    "Never decide whether a project or person is ethical."
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ]
+        expected_ids = {lens["id"] for lens in lenses}
+        valid_states = {item[0] for item in EVIDENCE_STATES}
+        provider_attempts: List[Dict[str, str]] = []
+        saw_invalid_response = False
+        response: Dict[str, Any] = {}
+        assessments: List[Dict[str, str]] = []
+        for candidate in provider_ids:
+            try:
+                candidate_response = client.chat_with_provider_detailed(
+                    candidate,
+                    messages,
+                    temperature=0.0,
+                    timeout=timeout,
+                )
+            except Exception:
+                provider_attempts.append(
+                    {"provider_id": candidate, "status": "transport_error"}
+                )
+                continue
+            if not candidate_response.get("ok"):
+                provider_attempts.append(
+                    {"provider_id": candidate, "status": "provider_error"}
+                )
+                continue
+            candidate_payload = self._parse_role_probe_payload(
+                candidate_response.get("text", "")
+            )
+            candidate_assessments: List[Dict[str, str]] = []
+            seen = set()
+            for item in candidate_payload.get("lens_assessments", []):
+                if not isinstance(item, dict):
+                    continue
+                lens_id = _clean_text(item.get("lens_id"), 80)
+                if lens_id not in expected_ids or lens_id in seen:
+                    continue
+                state = _clean_text(item.get("state"), 40).lower().strip()
+                if state not in valid_states:
+                    continue
+                candidate_assessments.append(
+                    {
+                        "lens_id": lens_id,
+                        "state": state,
+                        "rationale": _clean_text(item.get("rationale"), 600),
+                        "quote": _clean_text(item.get("quote"), 600),
+                    }
+                )
+                seen.add(lens_id)
+            # Require the full lens contract before accepting a provider, so a
+            # partial/malformed response cannot poison later failover attempts.
+            if seen != expected_ids:
+                saw_invalid_response = True
+                provider_attempts.append(
+                    {"provider_id": candidate, "status": "invalid_response"}
+                )
+                continue
+            provider_id = candidate
+            self._preferred_llm_provider_id = candidate
+            response = candidate_response
+            assessments = candidate_assessments
+            provider_attempts.append(
+                {"provider_id": candidate, "status": "used"}
+            )
+            break
+        result["provider_attempts"] = provider_attempts
+        if not response.get("ok"):
+            result["llm_status"] = (
+                "fallback_after_invalid_response"
+                if saw_invalid_response
+                else "fallback_after_error"
+            )
+            return result
+        result.update(
+            {
+                "llm_used": True,
+                "llm_affects_evidence_states": True,
+                "llm_status": "lens_states_available",
+                "execution_model": "single_batched_call_temperature_zero",
+                "provider_id": provider_id,
+                "model": response.get("model"),
+                "lens_assessments": assessments,
+                "interpretation_boundary": EVIDENCE_STATE_NOTICE,
+            }
+        )
+        return result
+
+    @staticmethod
+    def _apply_llm_lens_states(
+        lenses: Sequence[Dict[str, Any]],
+        lens_llm: Dict[str, Any],
+    ) -> None:
+        """Merge LLM lens states in place, preserving the heuristic baseline.
+
+        Mirrors ``_apply_llm_role_probes``: when the LLM batch succeeded, the
+        original keyword-heuristic state is retained as ``heuristic_state`` and
+        the LLM judgement overwrites the live ``state``/``rationale`` fields so
+        downstream coverage, scenarios, and dissonance edges all reflect the
+        semantic judgement. The deterministic evidence list is left untouched.
+        """
+        if not lens_llm.get("llm_used"):
+            return
+        by_id = {
+            item["lens_id"]: item
+            for item in lens_llm.get("lens_assessments", [])
+            if isinstance(item, dict) and item.get("lens_id")
+        }
+        for lens in lenses:
+            ll = by_id.get(lens.get("id"))
+            if not ll:
+                continue
+            lens["heuristic_state"] = lens.get("state")
+            lens["heuristic_state_id"] = lens.get("state_id")
+            lens["heuristic_rationale"] = lens.get("rationale")
+            state_info = _STATE_BY_ID.get(ll["state"])
+            if not state_info:
+                continue
+            lens["state"] = state_info["label"]
+            lens["state_id"] = state_info["id"]
+            lens["state_rank"] = state_info["rank"]
+            if ll.get("rationale"):
+                lens["rationale"] = ll["rationale"]
+            lens["assessment_source"] = "llm"
 
     @staticmethod
     def _next_action(spec: Dict[str, Any], state_id: str) -> str:
