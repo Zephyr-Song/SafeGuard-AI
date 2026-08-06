@@ -1525,6 +1525,19 @@
                             <strong>Reflection prompt</strong>
                             <p>${escapeHtml(lens.next_action || lens.question)}</p>
                         </div>
+                        ${lens.concern ? `
+                        <div class="lens-detail-section lens-concern">
+                            <strong>Why this matters for your project</strong>
+                            <p>${escapeHtml(lens.concern)}</p>
+                            <p class="lens-ai-note">AI-generated reflection aid, grounded in your plan — not an ethical verdict. Verify against your own context.</p>
+                        </div>
+                        ` : ""}
+                        ${lens.reflection_question ? `
+                        <div class="lens-detail-section lens-reflect">
+                            <strong>Ask yourself</strong>
+                            <p>${escapeHtml(lens.reflection_question)}</p>
+                        </div>
+                        ` : ""}
                         ${lens.boundary ? `
                             <div class="lens-detail-section">
                                 <strong>Interpretation boundary</strong>

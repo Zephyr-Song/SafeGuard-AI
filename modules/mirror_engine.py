@@ -831,25 +831,36 @@ class MirrorEngine:
             "Return JSON only with this schema:\n"
             '{"lens_assessments":[{"lens_id":"exact id supplied",'
             '"state":"missing|claimed|reasoned|action_linked",'
-            '"rationale":"one sentence","quote":"short verbatim plan excerpt '
-            "or empty string\"}]}\n\n"
+            '"rationale":"one sentence",'
+            '"quote":"short verbatim plan excerpt or empty string",'
+            '"concern":"for missing/claimed lenses, one or two sentences stating '
+            "the concrete ethical risk the plan's gap creates in THIS project, "
+            'grounded in the plan; for reasoned/action_linked lenses, what still '
+            'deserves verification; empty only if genuinely nothing to add",'
+            '"reflection_question":"one open question the researcher should ask '
+            'themselves about this lens"}]}\n\n'
             "Rules: state must be one of the four lowercase values; quote must "
-            "be copied verbatim from the plan or empty; do not invent content "
-            "not in the plan; do not assign an ethics score, approval, or moral "
-            "verdict; assess every supplied lens_id exactly once.\n\nLENSES:\n"
+            "be copied verbatim from the plan or empty; concern and "
+            "reflection_question must be grounded in the plan and its gaps, not "
+            "generic restatements; do not invent facts or stakeholders not "
+            "implied by the plan; do not assign an ethics score, approval, or "
+            "moral verdict; assess every supplied lens_id exactly once.\n\nLENSES:\n"
             f"{json.dumps(lens_contracts, ensure_ascii=False)}\n\nPLAN:\n"
             f"{plan[:7000]}"
         )
-        # Lens classification is a judgement task, not generation, so prefer
+        # Lens assessment is a judgement task, not open generation, so prefer
         # determinism.  Reuse the same bounded timeout as role probes.
         timeout = min(18, max(4, int(os.getenv("SAFEBARS_MIRROR_LLM_TIMEOUT", "18"))))
         messages = [
             {
                 "role": "system",
                 "content": (
-                    "You classify evidence coverage in a research plan against "
-                    "named ethics lenses. Follow the JSON contract exactly. "
-                    "Never decide whether a project or person is ethical."
+                    "You help a researcher recognize the ethical considerations "
+                    "in their own plan. You classify evidence coverage against "
+                    "named ethics lenses AND articulate the specific ethical risk "
+                    "the plan's gaps or choices create for this project. Follow "
+                    "the JSON contract exactly. Never decide whether a project or "
+                    "person is ethical; never invent facts not implied by the plan."
                 ),
             },
             {"role": "user", "content": prompt},
@@ -898,6 +909,10 @@ class MirrorEngine:
                         "state": state,
                         "rationale": _clean_text(item.get("rationale"), 600),
                         "quote": _clean_text(item.get("quote"), 600),
+                        "concern": _clean_text(item.get("concern"), 600),
+                        "reflection_question": _clean_text(
+                            item.get("reflection_question"), 600
+                        ),
                     }
                 )
                 seen.add(lens_id)
@@ -974,6 +989,10 @@ class MirrorEngine:
             lens["state_rank"] = state_info["rank"]
             if ll.get("rationale"):
                 lens["rationale"] = ll["rationale"]
+            if ll.get("concern"):
+                lens["concern"] = ll["concern"]
+            if ll.get("reflection_question"):
+                lens["reflection_question"] = ll["reflection_question"]
             lens["assessment_source"] = "llm"
 
     @staticmethod

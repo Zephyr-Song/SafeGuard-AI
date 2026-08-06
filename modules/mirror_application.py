@@ -211,6 +211,16 @@ def build_committee_application_docx(session: Dict[str, Any]) -> bytes:
                 document, "Literature source(s)",
                 ", ".join(_text(s) for s in source_ids),
             )
+        concern = lens.get("concern")
+        if concern:
+            _label_paragraph(
+                document, "Why this matters for your project", _text(concern),
+            )
+        reflection_question = lens.get("reflection_question")
+        if reflection_question:
+            _label_paragraph(
+                document, "Ask yourself", _text(reflection_question),
+            )
         if lens.get("status") in WEAK_LENS_STATUSES:
             blank = document.add_paragraph()
             _set_run(blank.add_run("Researcher note (to complete): "), bold=True)
