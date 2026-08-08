@@ -354,6 +354,7 @@
             "intakeComplete", "intakeOptionalContext", "intakeBuildActions",
             "reanalyzeBtn", "coverageHeadline", "coverageTrack", "coverageLabels", "lensAllCount",
             "lensGrid", "lensEmpty", "literatureCount", "openLiteratureBtn", "roleFilter",
+            "deepAuditPanel", "deepAuditBody", "deepAuditBadge",
             "scenarioSort", "scenarioList", "scenarioStage", "boundaryDetailsBtn", "dissonanceGraph",
             "graphViewport", "graphWrap", "graphTooltip", "graphEmpty", "pathInspector", "zoomOutBtn",
             "fitGraphBtn", "zoomInBtn", "tensionCount", "tensionList", "resolutionPanel",
@@ -1460,6 +1461,7 @@
 
     function renderAll() {
         renderLenses();
+        renderDeepAudit();
         renderScenarios();
         renderGraph();
         renderTensions();
@@ -1557,6 +1559,165 @@
                 button.setAttribute("aria-expanded", String(open));
             });
         });
+    }
+
+    function renderDeepAudit() {
+        const da = state.session?.deep_audit;
+        if (!da || !Object.keys(da).length) {
+            dom.deepAuditPanel.hidden = true;
+            return;
+        }
+        dom.deepAuditPanel.hidden = false;
+        const counts = da.counts || {};
+        const total = (counts.domain_flags || 0) + (counts.internal_contradictions || 0)
+            + (counts.additional_dissonance_edges || 0) + (counts.prioritized_gaps || 0)
+            + (counts.analogues || 0) + (counts.patterns || 0);
+        dom.deepAuditBadge.textContent = total ? `${total} cues` : "";
+        dom.deepAuditBadge.className = "deep-audit-badge" + (da.domain_flags?.is_high_risk ? " is-high" : "");
+
+        const parts = [];
+
+        // 1) High-risk domain flags + injected checklist (#3)
+        const domains = da.domain_flags?.matched_domains || [];
+        if (domains.length) {
+            const items = domains.map((d) => `
+                <li class="da-domain da-sev-${escapeAttr(d.severity)}">
+                    <span class="da-domain-label">${escapeHtml(d.label)}</span>
+                    <span class="da-sev-pill">${escapeHtml(d.severity)}</span>
+                    <span class="da-terms">${escapeHtml((d.matched_terms || []).slice(0, 6).join(", "))}</span>
+                </li>`).join("");
+            const checklist = (da.domain_flags.injected_checklist || []).map((c) => `
+                <li class="da-check">
+                    <strong>${escapeHtml(c.title)}</strong>
+                    <span class="da-reg">${escapeHtml(c.regulation || "")}</span>
+                    <p>${escapeHtml(c.detail)}</p>
+                </li>`).join("");
+            parts.push(`
+                <div class="da-section" data-da="domains">
+                    <h3>Detected high-risk domains <span class="da-tag">auto-injected checklist</span></h3>
+                    <ul class="da-domain-list">${items}</ul>
+                    ${checklist ? `<p class="da-sub">Before launch, resolve each item:</p><ul class="da-check-list">${checklist}</ul>` : ""}
+                </div>`);
+        }
+
+        // 2) Internal contradictions (#1)
+        const ctr = da.internal_contradictions || [];
+        if (ctr.length) {
+            const rows = ctr.map((c) => `
+                <div class="da-card da-cntr">
+                    <div class="da-card-head"><span class="da-id">${escapeHtml(c.id)}</span><span class="da-sev-pill high">contradiction</span></div>
+                    <p class="da-quote">“${escapeHtml(shortText(c.commitment_text, 200))}”</p>
+                    <p class="da-vs">↳ mechanism: “${escapeHtml(shortText(c.mechanism_quote, 200))}”</p>
+                    <p>${escapeHtml(c.explanation)}</p>
+                    <p class="da-action">→ ${escapeHtml(c.suggested_action)}</p>
+                </div>`).join("");
+            parts.push(`
+                <div class="da-section" data-da="contradictions">
+                    <h3>Internal contradictions the plan states <span class="da-tag warn">${ctr.length}</span></h3>
+                    ${rows}
+                </div>`);
+        }
+
+        // 3) Severity-weighted gaps (#4)
+        const gaps = da.severity_weighted_gaps?.prioritized_gaps || [];
+        if (gaps.length) {
+            const rows = gaps.map((g) => `
+                <li class="da-gap da-sev-${escapeAttr(g.severity)}">
+                    <span class="da-lens">${escapeHtml(g.label)}</span>
+                    <span class="da-sev-pill ${escapeAttr(g.severity)}">${escapeHtml(g.severity)}</span>
+                    ${g.reasons.length ? `<span class="da-reason">${escapeHtml(g.reasons[0])}</span>` : ""}
+                </li>`).join("");
+            parts.push(`
+                <div class="da-section" data-da="severity">
+                    <h3>Severity-weighted coverage gaps <span class="da-tag">prioritise these</span></h3>
+                    <ul class="da-gap-list">${rows}</ul>
+                </div>`);
+        }
+
+        // 4) Additional dissonance edges (#5)
+        const edges = da.additional_dissonance_edges || [];
+        if (edges.length) {
+            const rows = edges.map((e) => `
+                <div class="da-card da-edge da-sev-${escapeAttr(e.severity || "elevated")}">
+                    <div class="da-card-head"><span class="da-id">${escapeHtml(e.id)}</span><span class="da-sev-pill ${escapeAttr(e.severity || "elevated")}">${escapeHtml(e.rule)}</span></div>
+                    <p>${escapeHtml(e.tension)}</p>
+                    <p class="da-basis">${escapeHtml(e.attention_basis)}</p>
+                </div>`).join("");
+            parts.push(`
+                <div class="da-section" data-da="extra-edges">
+                    <h3>Discovery tensions <span class="da-tag warn">${edges.length}</span></h3>
+                    ${rows}
+                </div>`);
+        }
+
+        // 5) Forced reflection (#6)
+        const fr = da.forced_reflection || {};
+        const frKeys = Object.keys(fr);
+        if (frKeys.length) {
+            const lensLabel = (id) => {
+                const l = state.session?.lenses?.find((x) => x.id === id);
+                return l ? l.label : id;
+            };
+            const rows = frKeys.map((id) => `
+                <li class="da-reflect">
+                    <strong>${escapeHtml(lensLabel(id))}</strong>
+                    <ul>${fr[id].map((q) => `<li>${escapeHtml(q)}</li>`).join("")}</ul>
+                </li>`).join("");
+            parts.push(`
+                <div class="da-section" data-da="reflection">
+                    <h3>Ask yourself before moving on <span class="da-tag">${frKeys.length} lenses</span></h3>
+                    <ul class="da-reflect-list">${rows}</ul>
+                </div>`);
+        }
+
+        // 6) Real-case analogues (#2)
+        const analogues = da.analogues || [];
+        if (analogues.length) {
+            const rows = analogues.map((a) => `
+                <li class="da-analogue">
+                    <a href="${escapeAttr(a.source_url)}" target="_blank" rel="noopener">${escapeHtml(a.title)} (${a.year})</a>
+                    <span class="da-src">${escapeHtml(a.source_name)}</span>
+                    <p>${escapeHtml(a.lesson)}</p>
+                </li>`).join("");
+            parts.push(`
+                <div class="da-section" data-da="analogues">
+                    <h3>Real systems that went wrong here <span class="da-tag">read these</span></h3>
+                    <ul class="da-analogue-list">${rows}</ul>
+                </div>`);
+        }
+
+        // 7) Curated patterns (#7)
+        const patterns = da.patterns || [];
+        if (patterns.length) {
+            const rows = patterns.map((p) => `
+                <li class="da-pattern">
+                    <strong>${escapeHtml(p.pattern)}</strong>
+                    <p class="da-missed">Usually missed: ${escapeHtml(p.usually_missed)}</p>
+                    <p class="da-prompt">→ ${escapeHtml(p.prompt)}</p>
+                    <span class="da-hint">${escapeHtml(p.hint_source)}</span>
+                </li>`).join("");
+            parts.push(`
+                <div class="da-section" data-da="patterns">
+                    <h3>Patterns researchers like you often miss <span class="da-tag warn">${patterns.length}</span></h3>
+                    <ul class="da-pattern-list">${rows}</ul>
+                </div>`);
+        }
+
+        // 8) Real-evidence bridge (#8)
+        const bridge = da.real_evidence_bridge;
+        if (bridge) {
+            const types = (bridge.evidence_types || []).map((t) => `
+                <li class="da-evtype"><strong>${escapeHtml(t.label)}</strong><p>${escapeHtml(t.description)}</p></li>`).join("");
+            parts.push(`
+                <div class="da-section" data-da="evidence">
+                    <h3>Turn synthetic probes into real evidence <span class="da-tag">${bridge.open_edge_count || 0} open</span></h3>
+                    <p class="da-sub">${escapeHtml(bridge.notice)}</p>
+                    <ul class="da-evtype-list">${types}</ul>
+                </div>`);
+        }
+
+        parts.push(`<p class="da-foot">${escapeHtml(da.notice || "")}</p>`);
+        dom.deepAuditBody.innerHTML = parts.join("");
     }
 
     function renderScenarios() {

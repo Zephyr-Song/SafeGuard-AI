@@ -14,10 +14,13 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import hashlib
 import json
+import logging
 import os
 import re
 import secrets
 import threading
+
+logger = logging.getLogger(__name__)
 
 from .mirror_literature import (
     EVIDENCE_STATE_NOTICE,
@@ -27,6 +30,7 @@ from .mirror_literature import (
     literature_by_id,
     literature_registry,
 )
+from .mirror_audit import run_deep_audit
 from .mirror_store import MirrorStore, utc_now
 
 
@@ -418,6 +422,7 @@ class MirrorEngine:
             "scenarios": [],
             "dissonance_edges": [],
             "dissonance_visualization": {},
+            "deep_audit": {},
             "revisions": [],
             "pending_revision_id": None,
             "replay_history": [],
@@ -438,7 +443,7 @@ class MirrorEngine:
                 "plan_fingerprint": self._fingerprint(plan),
             },
         )
-        bundle = self._analyze(plan, commitments, use_llm=False)
+        bundle = self._analyze(plan, commitments, use_llm=False, intake_answers=intake_answers)
         self._apply_bundle(session, bundle)
         self._append_ledger(
             session,
@@ -473,6 +478,7 @@ class MirrorEngine:
                 session["research_plan"],
                 session["value_commitments"],
                 use_llm=bool(use_llm),
+                intake_answers=session.get("intake_answers"),
             )
             self._apply_bundle(session, bundle)
             self._append_ledger(
@@ -581,6 +587,7 @@ class MirrorEngine:
                 candidate_plan,
                 session["value_commitments"],
                 use_llm=bool(use_llm),
+                intake_answers=session.get("intake_answers"),
             )
             self._apply_resolution_statuses(
                 bundle["dissonance_edges"],
@@ -646,6 +653,7 @@ class MirrorEngine:
         plan: str,
         commitments: Sequence[str],
         use_llm: bool = False,
+        intake_answers: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         passages = self._build_passages(plan)
         lenses = self._assess_lenses(passages)
@@ -657,6 +665,25 @@ class MirrorEngine:
         edges = self._build_dissonance_edges(commitments, passages, lenses, scenarios)
         if lens_llm.get("llm_used"):
             analysis_mode["llm_affects_evidence_states"] = True
+        # Deep-audit layer: discovery cues beyond the researcher's own plan.
+        # Kept deterministic in the analyze path so it never consumes the LLM
+        # budget reserved for lens/role probing; an optional LLM contradiction
+        # scan remains available via run_deep_audit(use_llm=True).
+        try:
+            deep_audit = run_deep_audit(
+                plan,
+                commitments,
+                passages,
+                lenses,
+                scenarios,
+                intake_answers=intake_answers,
+                use_llm=False,
+                llm_client=self.llm_client,
+                dissonance_edges=edges,
+            )
+        except Exception as exc:  # deep audit must never break core analysis
+            logger.warning("deep audit failed: %s", exc)
+            deep_audit = {}
         return {
             "passages": passages,
             "lenses": lenses,
@@ -666,6 +693,7 @@ class MirrorEngine:
             "dissonance_visualization": self._build_dissonance_visualization(edges),
             "analysis_mode": analysis_mode,
             "lens_assessment_mode": lens_llm,
+            "deep_audit": deep_audit,
         }
 
     @staticmethod
@@ -1940,6 +1968,7 @@ class MirrorEngine:
             "dissonance_visualization",
             "analysis_mode",
             "lens_assessment_mode",
+            "deep_audit",
         ):
             session[key] = bundle[key]
 
@@ -1952,6 +1981,7 @@ class MirrorEngine:
             "scenario_count": len(session.get("scenarios", [])),
             "edge_count": len(session.get("dissonance_edges", [])),
             "llm_status": session.get("analysis_mode", {}).get("llm_status"),
+            "deep_audit": session.get("deep_audit", {}).get("counts"),
             "not_an_ethics_score": True,
         }
 
