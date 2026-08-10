@@ -14,7 +14,7 @@ services:
       - key: SAFEBARS_REQUIRE_ROLE_AUTH
         value: "1"
       - key: SAFEBARS_LLM_PROVIDER
-        value: aliyun_bailian
+        value: tencent_hunyuan
       - key: SAFEBARS_V2_DB_PATH
         value: /tmp/safebars_v2.db
       - key: SAFEBARS_MIRROR_DB
