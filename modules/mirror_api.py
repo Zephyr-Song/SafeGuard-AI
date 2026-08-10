@@ -148,8 +148,22 @@ def guide_turn():
             "coverage": coverage,
             "structured": structured,
             "llm_available": mirror_guide.llm_available(),
+            "llm_error": llm_error,
         }
     )
+
+
+@mirror_api.get("/guide/debug-llm")
+def debug_llm():
+    """Non-sensitive LLM wiring diagnostics (no API key is exposed)."""
+    llm = mirror_engine.llm_client
+    return jsonify({
+        "is_configured": bool(llm and llm.is_configured()),
+        "provider_ids": list(llm.providers.keys()) if llm else [],
+        "active_provider_id": getattr(llm, "active_provider_id", None),
+        "feature_enabled": mirror_engine._llm_feature_enabled,
+        "guide_llm_available": mirror_guide.llm_available(),
+    })
 
 
 @mirror_api.post("/sessions")
