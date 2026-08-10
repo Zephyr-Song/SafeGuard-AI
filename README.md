@@ -1,3 +1,5 @@
+
+
 # SafeBARS
 
 > **Agentic ethics-preparation workspace for sensitive human-facing research.**
@@ -291,6 +293,7 @@ ethics-design parameters.
 ```bash
 python -m venv .venv && source .venv/bin/activate   # or: .venv\Scripts\activate
 pip install -r requirements.txt
+# Ensure .env is configured (see Configuration & security) before starting
 python app.py
 ```
 
