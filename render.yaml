@@ -28,7 +28,7 @@ services:
       - key: BAILIAN_API_KEY
         sync: false
       - key: BAILIAN_BASE_URL
-        value: https://ws-rpz6r7sem6fuiceu.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+        value: https://dashscope.aliyuncs.com/compatible-mode/v1
       - key: BAILIAN_MODEL
         value: glm-5.2
       - key: TENCENT_API_KEY
