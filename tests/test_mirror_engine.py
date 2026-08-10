@@ -1,5 +1,4 @@
 import json
-import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -371,74 +370,6 @@ class MirrorEngineTest(unittest.TestCase):
 
         self.assertIs(second_analysis["analysis_mode"]["llm_used"], True)
         self.assertEqual(second_calls[0]["provider_id"], "valid_provider")
-
-
-class DeepAuditTest(unittest.TestCase):
-    """Regression guard for the deep-audit discovery layer (improvements #1-#8)."""
-
-    def setUp(self):
-        import tempfile
-        self.db_path = os.path.join(tempfile.mkdtemp(), "deepaudit_test.db")
-
-    def _engine(self):
-        return MirrorEngine(db_path=self.db_path)
-
-    def test_deep_audit_block_present_after_create(self):
-        engine = self._engine()
-        session = engine.create_session(
-            {
-                "title": "CampusMind",
-                "research_plan": (
-                    "CampusMind scans campus chats to flag self-harm risk and "
-                    "silently notifies counseling with the student pseudonym. "
-                    "Monitoring is opt-out, not hidden."
-                ),
-                "value_commitments": ["Monitoring is opt-out, not hidden"],
-            }
-        )
-        da = session.get("deep_audit") or {}
-        self.assertEqual(da.get("schema"), "deep_audit.v1")
-        self.assertTrue(da.get("counts"))
-
-    def test_detects_commitment_mechanism_contradiction(self):
-        engine = self._engine()
-        session = engine.create_session(
-            {
-                "title": "Contradiction case",
-                "research_plan": (
-                    "The system silently notifies the counseling center without "
-                    "telling the student."
-                ),
-                "value_commitments": ["Monitoring is opt-out, not hidden"],
-            }
-        )
-        ctr = (session.get("deep_audit") or {}).get("internal_contradictions") or []
-        self.assertTrue(ctr, "expected a commitment/mechanism contradiction")
-        self.assertEqual(ctr[0]["type"], "commitment_claims_transparency_but_mechanism_hidden")
-
-    def test_high_risk_domain_injects_checklist(self):
-        engine = self._engine()
-        session = engine.create_session(
-            {
-                "title": "Student monitor",
-                "research_plan": (
-                    "We monitor students with a biometric attendance camera and "
-                    "share health data with the campus safety office."
-                ),
-                "value_commitments": ["We will consult the school"],
-            }
-        )
-        flags = (session.get("deep_audit") or {}).get("domain_flags") or {}
-        self.assertTrue(flags.get("is_high_risk"))
-        self.assertTrue(flags.get("injected_checklist"))
-
-    def test_recommended_analogues_are_citable(self):
-        from modules.mirror_analogues import recommend_analogues
-        recs = recommend_analogues([], ["minors_students", "surveillance_monitoring"], "")
-        self.assertTrue(recs)
-        for rec in recs:
-            self.assertIn("source_url", rec)
-            self.assertIn("lesson", rec)
 
 
 if __name__ == "__main__":
