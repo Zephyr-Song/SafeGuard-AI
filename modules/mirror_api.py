@@ -161,6 +161,36 @@ def debug_llm():
     })
 
 
+@mirror_api.get("/guide/probe-providers")
+def probe_providers():
+    """Ping every configured provider once to expose reachability (no key leaked).
+
+    Each provider gets a trivial prompt with a short timeout so the deployment
+    can report which Chinese LLM endpoints are reachable from its region.
+    """
+    llm = mirror_engine.llm_client
+    if not llm or not llm.is_configured():
+        return jsonify({"success": True, "probed": False, "results": []})
+    probe_msg = [{"role": "user", "content": "Reply with the single word: ok"}]
+    results = []
+    for pid in llm.providers:
+        det = llm.chat_with_provider_detailed(pid, probe_msg, temperature=0.0, timeout=12)
+        results.append({
+            "provider": pid,
+            "ok": bool(det.get("ok")),
+            "error_type": det.get("error_type"),
+            "status_code": det.get("status_code"),
+            "model": det.get("model"),
+        })
+    reachable = [r["provider"] for r in results if r["ok"]]
+    return jsonify({
+        "success": True,
+        "probed": True,
+        "results": results,
+        "reachable": reachable,
+    })
+
+
 @mirror_api.post("/sessions")
 def create_session():
     payload, error = _json_object()
