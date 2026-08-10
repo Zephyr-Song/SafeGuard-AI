@@ -115,6 +115,19 @@ def guide_turn():
             if message:
                 history = list(history) + [{"role": "user", "content": message}]
             reply = mirror_guide.reply(history)
+            llm_error = None
+            if reply is None and mirror_guide.llm_available() and mirror_guide.llm is not None:
+                prov_id = getattr(mirror_guide.llm, "active_provider_id", None)
+                if prov_id:
+                    det = mirror_guide.llm.chat_with_provider_detailed(
+                        prov_id, mirror_guide._messages(history)
+                    )
+                    llm_error = {
+                        "provider": prov_id,
+                        "error_type": det.get("error_type"),
+                        "status_code": det.get("status_code"),
+                        "error": det.get("error"),
+                    }
             if reply is None:
                 reply = (
                     "The AI guide isn't connected to a language model on this deployment. "
