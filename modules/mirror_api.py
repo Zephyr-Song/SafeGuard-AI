@@ -98,6 +98,7 @@ def guide_turn():
     if not isinstance(history, list):
         history = []
 
+    llm_error = None
     try:
         if action == "start":
             reply = mirror_guide.start()
@@ -114,25 +115,19 @@ def guide_turn():
             message = (payload.get("message") or "").strip()
             if message:
                 history = list(history) + [{"role": "user", "content": message}]
-            reply = mirror_guide.reply(history)
-            llm_error = None
-            if reply is None and mirror_guide.llm_available() and mirror_guide.llm is not None:
-                prov_id = getattr(mirror_guide.llm, "active_provider_id", None)
-                if prov_id:
-                    det = mirror_guide.llm.chat_with_provider_detailed(
-                        prov_id, mirror_guide._messages(history)
-                    )
-                    llm_error = {
-                        "provider": prov_id,
-                        "error_type": det.get("error_type"),
-                        "status_code": det.get("status_code"),
-                        "error": det.get("error"),
-                    }
+            reply, llm_error = mirror_guide.reply_detailed(history)
             if reply is None:
-                reply = (
-                    "The AI guide isn't connected to a language model on this deployment. "
-                    "Switch to the 'Guided questions' tab for the full structured walkthrough."
-                )
+                if mirror_guide.llm_available():
+                    reply = (
+                        "I'm having trouble reaching the language model right now. You can "
+                        "keep writing your thoughts here, or switch to the 'Guided questions' "
+                        "tab to continue. Nothing you've shared is lost."
+                    )
+                else:
+                    reply = (
+                        "The AI guide isn't connected to a language model on this deployment. "
+                        "Switch to the 'Guided questions' tab for the full structured walkthrough."
+                    )
             history = list(history) + [{"role": "assistant", "content": reply}]
             structured = None
     except Exception as exc:

@@ -18,6 +18,8 @@ class _StubClient:
 
     def __init__(self, reply: str = "Tell me more about who is affected."):
         self._reply = reply
+        self.active_provider_id = "stub"
+        self.providers = {"stub": object()}
 
     def is_configured(self) -> bool:
         return True
@@ -25,6 +27,17 @@ class _StubClient:
     def chat(self, messages, temperature=0.4):
         # Echo a canned reply so conversation flow is testable.
         return self._reply
+
+    def chat_with_provider_detailed(self, provider_id, messages, temperature=0.4, **_kw):
+        return {
+            "ok": True,
+            "text": self._reply,
+            "error": "",
+            "status_code": 200,
+            "error_type": "",
+            "model": "stub",
+            "usage": {},
+        }
 
 
 def test_no_llm_returns_fallback_opener():
@@ -36,7 +49,10 @@ def test_no_llm_returns_fallback_opener():
 
 def test_reply_without_llm_is_none():
     guide = MirrorGuide(None)
-    assert guide.reply([{"role": "user", "content": "hi"}]) is None
+    # With no client the detailed call short-circuits to (None, None) and the
+    # public reply() returns the graceful fallback string, never raising.
+    assert guide.reply_detailed([{"role": "user", "content": "hi"}]) == (None, None)
+    assert guide.reply([{"role": "user", "content": "hi"}])
 
 
 def test_reply_with_llm_returns_text():

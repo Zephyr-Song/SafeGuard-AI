@@ -158,23 +158,54 @@ class MirrorGuide:
             )
         return opener
 
+    def _chat_first_available(self, messages, temperature):
+        """Try the active provider, then every other configured provider in turn.
+
+        Returns ``(text, error_dict)``. On success ``error_dict`` is ``None``. On
+        total failure ``text`` is ``None`` and ``error_dict`` describes the *last*
+        attempt. Only the provider id, an error type, and a short public-safe
+        message are exposed — never the API key or a raw response body.
+        """
+
+        if not self.llm_available():
+            return None, None
+        order = [self.llm.active_provider_id] + [
+            p for p in self.llm.providers if p != self.llm.active_provider_id
+        ]
+        last_error = None
+        for pid in order:
+            det = self.llm.chat_with_provider_detailed(pid, messages, temperature=temperature)
+            if det.get("ok"):
+                text = (det.get("text") or "").strip()
+                if text:
+                    return text, None
+            last_error = {
+                "provider": pid,
+                "error_type": det.get("error_type"),
+                "status_code": det.get("status_code"),
+                "error": det.get("error"),
+            }
+        return None, last_error
+
     def reply(self, history: List[Dict[str, str]]) -> Optional[str]:
         """Produce the next assistant turn given the running history."""
 
+        text, _error = self.reply_detailed(history)
+        if text:
+            return text
+        return (
+            "I'm having trouble reaching the language model right now. You can keep "
+            "writing your thoughts here, or switch to the 'Guided questions' tab to "
+            "continue. Nothing you've shared is lost."
+        )
+
+    def reply_detailed(self, history: List[Dict[str, str]], temperature: float = 0.6):
+        """Like :meth:`reply` but also returns the last provider error for diagnostics."""
+
         if not self.llm_available():
-            return None
+            return None, None
         messages = self._messages(history)
-        try:
-            text = self.llm.chat(messages, temperature=0.6)
-        except Exception:
-            text = None
-        if not text:
-            return (
-                "I'm having trouble reaching the language model right now. You can keep "
-                "writing your thoughts here, or switch to the 'Guided questions' tab to "
-                "continue. Nothing you've shared is lost."
-            )
-        return text.strip()
+        return self._chat_first_available(messages, temperature)
 
     # ------------------------------------------------------------------
     # Structured extraction (finalize)
@@ -202,7 +233,7 @@ class MirrorGuide:
                 ),
             },
         ]
-        raw = self.llm.chat(messages, temperature=0.2)
+        raw, _error = self._chat_first_available(messages, 0.2)
         parsed = self._parse_finalize(raw)
         if parsed is None:
             return fallback
