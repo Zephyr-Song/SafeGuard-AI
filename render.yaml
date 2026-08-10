@@ -13,6 +13,8 @@ services:
         value: "0"
       - key: SAFEBARS_REQUIRE_ROLE_AUTH
         value: "1"
+      - key: SAFEBARS_LLM_PROVIDER
+        value: aliyun_bailian
       - key: SAFEBARS_V2_DB_PATH
         value: /tmp/safebars_v2.db
       - key: SAFEBARS_MIRROR_DB
@@ -28,7 +30,7 @@ services:
       - key: BAILIAN_BASE_URL
         value: https://ws-rpz6r7sem6fuiceu.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
       - key: BAILIAN_MODEL
-        value: qwen-plus
+        value: glm-5.2
       - key: TENCENT_API_KEY
         sync: false
       - key: TENCENT_BASE_URL

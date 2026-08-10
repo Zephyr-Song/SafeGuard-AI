@@ -127,6 +127,10 @@ class MirrorGuide:
 
     def __init__(self, llm_client: Any = None):
         self.llm = llm_client
+        # Remembers the most recently working provider so we don't keep probing
+        # providers that are currently failing (e.g. rate-limited) on every
+        # single message — see _chat_first_available.
+        self._last_ok_provider = None
 
     # ------------------------------------------------------------------
     # Availability
@@ -169,15 +173,22 @@ class MirrorGuide:
 
         if not self.llm_available():
             return None, None
-        order = [self.llm.active_provider_id] + [
-            p for p in self.llm.providers if p != self.llm.active_provider_id
-        ]
+        active = self.llm.active_provider_id
+        last_ok = getattr(self, "_last_ok_provider", None)
+        rest = [p for p in self.llm.providers if p != active]
+        if last_ok and last_ok != active and last_ok in self.llm.providers:
+            # Try the most recently working provider next so a currently-failing
+            # provider (e.g. a rate-limited one) is skipped instead of probed on
+            # every message.
+            rest = [last_ok] + [p for p in rest if p != last_ok]
+        order = [active] + rest
         last_error = None
         for pid in order:
             det = self.llm.chat_with_provider_detailed(pid, messages, temperature=temperature)
             if det.get("ok"):
                 text = (det.get("text") or "").strip()
                 if text:
+                    self._last_ok_provider = pid
                     return text, None
             last_error = {
                 "provider": pid,
