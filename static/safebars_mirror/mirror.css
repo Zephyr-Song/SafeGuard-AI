@@ -4258,3 +4258,205 @@ a.quiet-button {
     line-height: 1.5;
 }
 
+
+/* ------------------------------------------------------------------
+   Entry-mode switch + conversational AI guide (LLM differentiator)
+   ------------------------------------------------------------------ */
+.mode-switch {
+    display: flex;
+    gap: 10px;
+    margin: 0 0 20px;
+    flex-wrap: wrap;
+}
+
+.mode-tab {
+    flex: 1 1 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 14px 16px;
+    border: 1px solid var(--hairline, #d9d3c4);
+    border-radius: 14px;
+    background: var(--surface-2, #faf8f2);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.mode-tab strong {
+    font-size: 15px;
+    color: var(--ink, #1f2a24);
+}
+
+.mode-tab span {
+    font-size: 12.5px;
+    color: var(--ink-soft, #6c7a70);
+}
+
+.mode-tab.is-active {
+    border-color: var(--forest, #3f6b5a);
+    box-shadow: 0 0 0 2px rgba(63, 107, 90, .15);
+    background: #fff;
+}
+
+.mode-tab:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+/* Guide chat panel */
+.guide-chat {
+    display: flex;
+    flex-direction: column;
+    min-height: 610px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.guide-chat-head {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid var(--hairline, #ece6d8);
+}
+
+.guide-chat-head h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    color: var(--ink, #1f2a24);
+}
+
+.guide-chat-sub {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--ink-soft, #6c7a70);
+    line-height: 1.55;
+}
+
+.guide-coverage {
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--hairline, #ece6d8);
+    background: var(--surface-2, #faf8f2);
+}
+
+.guide-coverage-label {
+    display: block;
+    font-size: 11.5px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--ink-soft, #8a9389);
+    margin-bottom: 8px;
+}
+
+.guide-coverage-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.cov-chip {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--hairline, #e2dccd);
+    color: var(--ink-soft, #98a09a);
+    opacity: .65;
+}
+
+.cov-chip.is-on {
+    background: rgba(63, 107, 90, .12);
+    border-color: var(--forest, #3f6b5a);
+    color: var(--forest, #2f5346);
+    opacity: 1;
+    font-weight: 600;
+}
+
+.guide-messages {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 460px;
+}
+
+.guide-msg {
+    display: flex;
+    max-width: 88%;
+}
+
+.guide-msg--assistant {
+    align-self: flex-start;
+}
+
+.guide-msg--user {
+    align-self: flex-end;
+    justify-content: flex-end;
+}
+
+.guide-bubble {
+    padding: 11px 15px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.guide-msg--assistant .guide-bubble {
+    background: var(--surface-2, #f3f1ea);
+    color: var(--ink, #25302a);
+    border-bottom-left-radius: 4px;
+}
+
+.guide-msg--user .guide-bubble {
+    background: var(--forest, #3f6b5a);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+.guide-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    padding: 14px 24px;
+    border-top: 1px solid var(--hairline, #ece6d8);
+}
+
+.guide-input-row textarea {
+    flex: 1 1 auto;
+    resize: none;
+    border: 1px solid var(--hairline, #d9d3c4);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 14px;
+    background: #fff;
+    color: var(--ink, #25302a);
+}
+
+.guide-input-row textarea:focus {
+    outline: none;
+    border-color: var(--forest, #3f6b5a);
+    box-shadow: 0 0 0 2px rgba(63, 107, 90, .15);
+}
+
+.guide-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 24px 20px;
+}
+
+.guide-actions .primary-button[disabled] {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 880px) {
+    .mode-tab { flex-basis: 100%; }
+    .guide-chat, .intake-conversation, .intake-trail-panel { min-height: 0; }
+}

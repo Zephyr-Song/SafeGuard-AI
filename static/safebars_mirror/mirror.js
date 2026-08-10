@@ -337,6 +337,7 @@
         intakeIndex: 0,
         intakeAnswers: {},
         intakeComplete: false,
+        guide: { history: [], active: false },
     };
 
     const dom = {};
@@ -352,6 +353,9 @@
             "intakeTextInput", "intakeInputGuide", "intakeCharCount", "intakeBackBtn",
             "intakeSkipBtn", "intakeNextBtn", "intakeAnsweredCount", "intakeTrail",
             "intakeComplete", "intakeOptionalContext", "intakeBuildActions",
+            "intakeModeSwitch", "modeAiBtn", "modeScriptBtn", "intakePanel", "aiGuidePanel",
+            "guideMessages", "guideInput", "guideSendBtn", "guideResetBtn", "guideBuildBtn",
+            "guideCoverage", "guideCoverageChips", "guideValidation",
             "reanalyzeBtn", "coverageHeadline", "coverageTrack", "coverageLabels", "lensAllCount",
             "lensGrid", "lensEmpty", "literatureCount", "openLiteratureBtn", "roleFilter",
             "scenarioSort", "scenarioList", "scenarioStage", "boundaryDetailsBtn", "dissonanceGraph",
@@ -1301,6 +1305,193 @@
             hideLoading();
             setBusy(false);
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Conversational AI guide (the LLM differentiator vs the pre-LLM form)
+    // ------------------------------------------------------------------
+    function guideEnabled() {
+        return Boolean(state.config && state.config.llm && state.config.llm.enabled_by_server);
+    }
+
+    function setGuideMode(mode) {
+        const ai = mode === "ai" && guideEnabled();
+        dom.modeAiBtn?.setAttribute("aria-selected", String(ai));
+        dom.modeScriptBtn?.setAttribute("aria-selected", String(!ai));
+        dom.modeAiBtn?.classList.toggle("is-active", ai);
+        dom.modeScriptBtn?.classList.toggle("is-active", !ai);
+        if (dom.aiGuidePanel) dom.aiGuidePanel.hidden = !ai;
+        if (dom.intakePanel) dom.intakePanel.hidden = ai;
+        state.guide.active = ai;
+        if (ai && state.guide.history.length === 0) {
+            startGuide();
+        } else if (ai) {
+            renderGuideHistory();
+        }
+    }
+
+    function appendGuideMessage(role, text) {
+        const wrap = document.createElement("div");
+        wrap.className = `guide-msg guide-msg--${role}`;
+        const bubble = document.createElement("div");
+        bubble.className = "guide-bubble";
+        bubble.textContent = text;
+        wrap.appendChild(bubble);
+        dom.guideMessages.appendChild(wrap);
+        dom.guideMessages.scrollTop = dom.guideMessages.scrollHeight;
+    }
+
+    function renderGuideHistory() {
+        if (!dom.guideMessages) return;
+        dom.guideMessages.innerHTML = "";
+        (state.guide.history || []).forEach((m) => {
+            if (m.role === "user" || m.role === "assistant") appendGuideMessage(m.role, m.content);
+        });
+        dom.guideMessages.scrollTop = dom.guideMessages.scrollHeight;
+    }
+
+    function renderGuideCoverage(coverage) {
+        if (!coverage || !dom.guideCoverageChips) return;
+        const labels = {
+            intended_benefit: "Intended benefit",
+            lifecycle_integration: "Lifecycle",
+            benefit_harm_assumptions: "Benefit–harm",
+            affected_parties_distribution: "Affected parties",
+            downstream_use_misuse_scale: "Downstream/misuse",
+            perspective_participation: "Participation",
+            responsibility_oversight_contestability: "Oversight",
+            evidence_analogues_horizon: "Prior cases",
+            mitigation_design_commitment: "Mitigation",
+            monitoring_learning_redress: "Redress",
+        };
+        const dims = coverage.dimensions || {};
+        dom.guideCoverageChips.innerHTML = Object.keys(dims).map((id) => {
+            const on = dims[id];
+            return `<span class="cov-chip ${on ? "is-on" : ""}">${labels[id] || id}</span>`;
+        }).join("");
+        dom.guideCoverage.hidden = Object.keys(dims).length === 0;
+        if (coverage.ready_hint) dom.guideBuildBtn.disabled = false;
+    }
+
+    async function startGuide() {
+        state.guide.history = [];
+        if (dom.guideMessages) dom.guideMessages.innerHTML = "";
+        if (dom.guideBuildBtn) dom.guideBuildBtn.disabled = true;
+        if (dom.guideValidation) dom.guideValidation.textContent = "";
+        renderGuideCoverage({ dimensions: {} });
+        try {
+            const data = await api("/guide", { method: "POST", body: { action: "start" } });
+            if (data && data.history) {
+                state.guide.history = data.history;
+                renderGuideHistory();
+            }
+        } catch (err) {
+            appendGuideMessage("assistant", "I couldn't reach the guide service just now. Please retry in a moment.");
+        }
+    }
+
+    async function sendGuide() {
+        const text = dom.guideInput.value.trim();
+        if (!text) return;
+        dom.guideInput.value = "";
+        appendGuideMessage("user", text);
+        state.guide.history.push({ role: "user", content: text });
+        if (dom.guideSendBtn) dom.guideSendBtn.disabled = true;
+        try {
+            const data = await api("/guide", {
+                method: "POST",
+                body: { action: "reply", message: text, history: state.guide.history },
+            });
+            if (data && data.reply) {
+                appendGuideMessage("assistant", data.reply);
+                state.guide.history = data.history || state.guide.history;
+            }
+            renderGuideCoverage(data && data.coverage);
+        } catch (err) {
+            appendGuideMessage("assistant", "The guide paused for a moment. Try sending that again.");
+        } finally {
+            if (dom.guideSendBtn) dom.guideSendBtn.disabled = false;
+            dom.guideInput.focus();
+        }
+    }
+
+    async function buildFromGuide() {
+        if (!state.guide.history.length) return;
+        if (dom.guideValidation) dom.guideValidation.textContent = "";
+        setBusy(true);
+        showLoading({
+            eyebrow: "Building the mirror",
+            title: "Turning the conversation into a plan…",
+            detail: "The mirror will contrast what you said with literature-grounded scenarios. The first analysis after the service has been idle can take up to a minute while the engine warms up — this is normal.",
+        });
+        try {
+            const data = await api("/guide", {
+                method: "POST",
+                body: { action: "finalize", history: state.guide.history },
+            });
+            const structured = (data && data.structured) || null;
+            if (!structured || !structured.research_plan) {
+                throw new Error("The guide couldn't summarise the conversation. Talk a little more, then try again.");
+            }
+            await buildMirrorFromGuide(structured);
+        } catch (error) {
+            if (dom.guideValidation) dom.guideValidation.textContent = error.message;
+            toast("Could not build the mirror", error.message, "error");
+        } finally {
+            hideLoading();
+            setBusy(false);
+        }
+    }
+
+    async function buildMirrorFromGuide(structured) {
+        dom.projectTitle.value = (structured.title || "Research idea from conversation").trim();
+        dom.researchPlan.value = (structured.research_plan || "").trim();
+        setCommitments(structured.value_commitments && structured.value_commitments.length
+            ? structured.value_commitments : [""]);
+        const title = dom.projectTitle.value.trim();
+        const plan = dom.researchPlan.value.trim();
+        const commitments = getCommitments();
+        const errors = [];
+        if (!title) errors.push("Add a short title for the plan.");
+        if (plan.split(/\s+/).filter(Boolean).length < 20) errors.push("The mirrored plan is too short — talk a little more first.");
+        if (commitments.length < 1) errors.push("State at least one value commitment.");
+        if (commitments.some((c) => c.length < 12)) errors.push("Make the commitment specific enough to examine.");
+        if (dom.guideValidation) dom.guideValidation.textContent = errors[0] || "";
+        if (errors.length) return;
+
+        const payload = { title, research_plan: plan, value_commitments: commitments };
+        showLoading({
+            eyebrow: "Building the mirror",
+            title: "Tracing claims through possible futures…",
+            detail: "Bounded role probes examine the same plan separately while keeping literature evidence distinct from generated inference.",
+        });
+        const created = await api("/sessions", { method: "POST", body: payload });
+        state.session = normaliseSession(unwrapSession(created));
+        if (!state.session.id) throw new Error("The server created a response without a session identifier.");
+        localStorage.setItem(STORAGE_KEY, state.session.id);
+        localStorage.removeItem(DRAFT_KEY);
+        syncSessionIntoUi();
+        advanceLoading(1);
+        advanceLoading(2);
+        const analysed = await api(`/sessions/${encodeURIComponent(state.session.id)}/analyze`, {
+            method: "POST",
+            body: { use_llm: true },
+        });
+        advanceLoading(3);
+        state.session = normaliseSession(unwrapSession(analysed), state.session);
+        state.session.analyzed_at = state.session.analyzed_at || new Date().toISOString();
+        syncSessionIntoUi();
+        renderAll();
+        navigateToStep(2, true);
+        const probeMode = state.session.analysis_mode?.llm_used
+            ? `${state.session.analysis_mode.role_probe_count || state.session.scenarios.length} model-enriched bounded role probes`
+            : `${state.session.scenarios.length} deterministic bounded fallback probes`;
+        toast("Consequence map ready", `${probeMode} and ${state.session.dissonance_edges.length} inspectable tension paths were generated.`);
+    }
+
+    function resetGuide() {
+        renderGuideCoverage({ dimensions: {} });
+        startGuide();
     }
 
     async function runAnalysis() {
@@ -2651,6 +2842,17 @@
     function bindEvents() {
         dom.planForm.addEventListener("submit", createAndAnalyse);
         dom.intakeNextBtn.addEventListener("click", saveCurrentIntakeAnswer);
+        dom.modeAiBtn?.addEventListener("click", () => setGuideMode("ai"));
+        dom.modeScriptBtn?.addEventListener("click", () => setGuideMode("script"));
+        dom.guideSendBtn?.addEventListener("click", sendGuide);
+        dom.guideResetBtn?.addEventListener("click", resetGuide);
+        dom.guideBuildBtn?.addEventListener("click", buildFromGuide);
+        dom.guideInput?.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendGuide();
+            }
+        });
         dom.intakeBackBtn.addEventListener("click", () => {
             if (state.intakeIndex <= 0) return;
             state.intakeIndex -= 1;
@@ -2802,6 +3004,18 @@
         renderAll();
         updateProgress();
         await loadConfiguration();
+        // Choose the entry mode based on whether an LLM is wired up. When no
+        // provider is configured we fall back to the original structured
+        // questionnaire so the site still works end to end.
+        if (guideEnabled()) {
+            setGuideMode("ai");
+        } else {
+            if (dom.modeAiBtn) {
+                dom.modeAiBtn.disabled = true;
+                dom.modeAiBtn.title = "No language model is configured on this deployment.";
+            }
+            setGuideMode("script");
+        }
         const querySession = new URLSearchParams(window.location.search).get("session");
         const savedSession = querySession || localStorage.getItem(STORAGE_KEY);
         if (savedSession) {

@@ -7,6 +7,7 @@ from typing import Any, Dict, Tuple
 from flask import Blueprint, current_app, jsonify, request
 
 from .mirror_engine import MirrorEngine
+from .mirror_guide import MirrorGuide, guide_dimensions
 from .mirror_literature import (
     EVIDENCE_STATE_NOTICE,
     LENS_SYNTHESIS_NOTICE,
@@ -20,6 +21,7 @@ mirror_api = Blueprint(
     url_prefix="/api/safebars/mirror",
 )
 mirror_engine = MirrorEngine()
+mirror_guide = MirrorGuide(mirror_engine.llm_client)
 
 
 def _json_object() -> Tuple[Dict[str, Any], Any]:
@@ -64,6 +66,75 @@ def get_literature():
             "literature": mirror_engine.literature(),
             "lens_synthesis_notice": LENS_SYNTHESIS_NOTICE,
             "interpretation_boundary": EVIDENCE_STATE_NOTICE,
+        }
+    )
+
+
+@mirror_api.get("/guide/dimensions")
+def get_guide_dimensions():
+    """Return the ethical dimensions the conversational guide weaves through."""
+
+    return jsonify({"success": True, "dimensions": guide_dimensions()})
+
+
+@mirror_api.post("/guide")
+@rate_limit(max_requests=40, window_seconds=120, scope="mirror_guide")
+def guide_turn():
+    """Run one conversational-guide turn.
+
+    Body:
+      {"action": "start" | "reply" | "finalize",
+       "message": str,            # user text for "reply"
+       "history": [{"role","content"}, ...]}  # front end owns history
+    Returns the updated history, the next assistant reply, a coverage map, and
+    (for "finalize") a structured research plan + value commitments.
+    """
+
+    payload, error = _json_object()
+    if error:
+        return error
+    action = (payload.get("action") or "reply").lower()
+    history = payload.get("history") or []
+    if not isinstance(history, list):
+        history = []
+
+    try:
+        if action == "start":
+            reply = mirror_guide.start()
+            history = [{"role": "assistant", "content": reply}]
+            structured = None
+        elif action == "finalize":
+            structured = mirror_guide.finalize(history)
+            reply = (
+                "Here's the plan I'll hand to the mirror. Review it on the next step — "
+                "you can revise anything before building the consequence map."
+            )
+            history = list(history) + [{"role": "assistant", "content": reply}]
+        else:  # reply
+            message = (payload.get("message") or "").strip()
+            if message:
+                history = list(history) + [{"role": "user", "content": message}]
+            reply = mirror_guide.reply(history)
+            if reply is None:
+                reply = (
+                    "The AI guide isn't connected to a language model on this deployment. "
+                    "Switch to the 'Guided questions' tab for the full structured walkthrough."
+                )
+            history = list(history) + [{"role": "assistant", "content": reply}]
+            structured = None
+    except Exception as exc:
+        return _unexpected("run the conversational guide", exc)
+
+    coverage = mirror_guide.track_coverage(history)
+    return jsonify(
+        {
+            "success": True,
+            "action": action,
+            "reply": reply,
+            "history": history,
+            "coverage": coverage,
+            "structured": structured,
+            "llm_available": mirror_guide.llm_available(),
         }
     )
 

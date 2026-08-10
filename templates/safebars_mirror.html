@@ -134,7 +134,19 @@
                         </div>
                     </div>
 
+                    <div class="mode-switch" id="intakeModeSwitch" role="tablist" aria-label="Choose how to begin">
+                        <button type="button" class="mode-tab is-active" id="modeAiBtn" role="tab" aria-selected="true" data-mode="ai">
+                            <strong>AI conversation</strong>
+                            <span>Talk it through with the mirror</span>
+                        </button>
+                        <button type="button" class="mode-tab" id="modeScriptBtn" role="tab" aria-selected="false" data-mode="script">
+                            <strong>Guided questions</strong>
+                            <span>The original structured walkthrough</span>
+                        </button>
+                    </div>
+
                     <form id="planForm" class="guided-intake-layout" novalidate>
+                        <div id="intakePanel">
                         <article class="surface intake-conversation" aria-labelledby="intakePrompt">
                             <div class="intake-progress">
                                 <div>
@@ -184,6 +196,43 @@
                                 <div class="validation-message" id="planValidation" role="alert"></div>
                             </div>
                         </article>
+                        </div>
+
+                        <div id="aiGuidePanel" hidden>
+                            <article class="surface guide-chat" aria-labelledby="guideTitle">
+                                <div class="guide-chat-head">
+                                    <div class="mirror-avatar" aria-hidden="true"><span></span><span></span><span></span></div>
+                                    <div>
+                                        <h2 id="guideTitle">The mirror is listening.</h2>
+                                        <p class="guide-chat-sub">Talk through your idea. I'll ask one question at a time and gently surface what's worth examining. Your words become the plan.</p>
+                                    </div>
+                                </div>
+
+                                <div class="guide-coverage" id="guideCoverage" hidden>
+                                    <span class="guide-coverage-label">Ethical threads we've touched:</span>
+                                    <div class="guide-coverage-chips" id="guideCoverageChips"></div>
+                                </div>
+
+                                <div class="guide-messages" id="guideMessages" aria-live="polite"></div>
+
+                                <div class="guide-input-row">
+                                    <textarea id="guideInput" rows="2" maxlength="2000" placeholder="Share your idea, or reply to the mirror…"></textarea>
+                                    <button class="primary-button" id="guideSendBtn" type="button">
+                                        <span>Send</span>
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+                                    </button>
+                                </div>
+
+                                <div class="guide-actions">
+                                    <button class="quiet-button" id="guideResetBtn" type="button">Start over</button>
+                                    <button class="primary-button" id="guideBuildBtn" type="button" disabled>
+                                        <span>Generate my Ethical Mirror</span>
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+                                    </button>
+                                </div>
+                                <div class="validation-message" id="guideValidation" role="alert"></div>
+                            </article>
+                        </div>
 
                         <aside class="surface intake-trail-panel">
                             <div class="card-heading">
