@@ -18,6 +18,7 @@ import os
 import re
 import secrets
 import threading
+import time
 
 from .mirror_literature import (
     EVIDENCE_STATE_NOTICE,
@@ -495,6 +496,7 @@ class MirrorEngine:
         session_id: str,
         revised_plan: str,
         resolutions: Optional[Any] = None,
+        self_discovery: Optional[Any] = None,
     ) -> Optional[Dict[str, Any]]:
         revised = _clean_text(revised_plan, MAX_PLAN_CHARS)
         if len(revised) < 20:
@@ -535,6 +537,8 @@ class MirrorEngine:
             }
             session.setdefault("revisions", []).append(revision)
             session["pending_revision_id"] = revision_id
+            if self_discovery is not None:
+                session["self_discovery"] = self_discovery
             self._append_ledger(
                 session,
                 "revision_added",
@@ -652,6 +656,11 @@ class MirrorEngine:
         lens_llm = self._assess_lenses_with_llm(plan, lenses, bool(use_llm))
         self._apply_llm_lens_states(lenses, lens_llm)
         scenarios = self._build_scenarios(plan, passages, lenses)
+        # Optional gap between the two LLM calls so free/rate-limited tiers
+        # are not hit with a burst (default 0 keeps production latency intact).
+        _call_gap = float(os.getenv("SAFEBARS_MIRROR_LLM_CALL_GAP", "0") or "0")
+        if _call_gap > 0:
+            time.sleep(_call_gap)
         analysis_mode = self._optional_llm_probe(plan, scenarios, bool(use_llm))
         self._apply_llm_role_probes(scenarios, analysis_mode)
         edges = self._build_dissonance_edges(commitments, passages, lenses, scenarios)
@@ -1694,10 +1703,11 @@ class MirrorEngine:
             f"{plan[:7000]}\n\nROLE CONTRACTS:\n"
             f"{json.dumps(role_contract, ensure_ascii=False)}"
         )
-        # Five role probes are requested in one bounded call.  Some configured
-        # providers need slightly longer than a chat-style single sentence, so
-        # use the existing hard cap as the default instead of timing out early.
-        timeout = min(18, max(4, int(os.getenv("SAFEBARS_MIRROR_LLM_TIMEOUT", "18"))))
+        # Five role probes are requested in one bounded call.  Slower providers
+        # (e.g. larger models on free tiers) need more than a chat-style timeout,
+        # so allow the shared env timeout up to 60s instead of failing silently
+        # and dropping the role-probe enrichment.
+        timeout = min(60, max(4, int(os.getenv("SAFEBARS_MIRROR_LLM_TIMEOUT", "30"))))
         messages = [
             {
                 "role": "system",
@@ -1722,6 +1732,7 @@ class MirrorEngine:
                     messages,
                     temperature=0.2,
                     timeout=timeout,
+                    max_tokens=2000,
                 )
             except Exception:
                 provider_attempts.append(

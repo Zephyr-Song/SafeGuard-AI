@@ -247,6 +247,7 @@ def add_revision(session_id: str):
             session_id,
             revised_plan=payload.get("revised_plan", ""),
             resolutions=payload.get("resolutions", []),
+            self_discovery=payload.get("self_discovery"),
         )
     except ValueError as exc:
         return jsonify({"success": False, "error": str(exc)}), 400

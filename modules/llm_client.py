@@ -4,6 +4,7 @@ Small OpenAI-compatible LLM client for optional SafeBARS responses.
 
 from dataclasses import dataclass, asdict
 import os
+import time
 from typing import List, Dict, Optional, Any
 
 import requests
@@ -183,14 +184,64 @@ class LLMClient:
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
-        try:
-            response = requests.post(
-                f"{provider.base_url}/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=timeout,
-            )
-            if response.status_code != 200:
+        # DashScope qwen3 models require enable_thinking=false for non-streaming calls.
+        if "qwen3" in (provider.model or ""):
+            payload["enable_thinking"] = False
+        last_error = None
+        max_retries = 3
+        for attempt in range(max_retries + 1):
+            try:
+                response = requests.post(
+                    f"{provider.base_url}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=timeout,
+                )
+                if response.status_code == 200:
+                    response_payload = response.json()
+                    text = response_payload["choices"][0]["message"]["content"]
+                    # An empty completion is almost never intended and is usually
+                    # a transient provider hiccup (throttling / truncated stream).
+                    # Treat it as retryable so callers transparently recover.
+                    if not text or not text.strip():
+                        last_error = {
+                            "ok": False,
+                            "text": "",
+                            "error": "Provider returned HTTP 200 with empty content.",
+                            "status_code": 200,
+                            "error_type": "empty_response",
+                            "model": provider.model,
+                            "usage": {},
+                        }
+                        if attempt < max_retries:
+                            time.sleep(min(20, 1.5 * (2 ** attempt)))
+                            continue
+                        return last_error
+                    return {
+                        "ok": True,
+                        "text": text,
+                        "error": "",
+                        "status_code": response.status_code,
+                        "error_type": "",
+                        "model": response_payload.get("model") or provider.model,
+                        "usage": response_payload.get("usage") or {},
+                    }
+                # Retryable: rate-limit / gateway / server errors.
+                if response.status_code in (429, 500, 502, 503, 504):
+                    last_error = {
+                        "ok": False,
+                        "text": "",
+                        "error": self._short_error_body(response.text),
+                        "status_code": response.status_code,
+                        "error_type": "http_error",
+                        "model": provider.model,
+                        "usage": {},
+                    }
+                    if attempt < max_retries:
+                        time.sleep(min(20, 1.5 * (2 ** attempt)))
+                        continue
+                    return last_error
+                # Non-retryable (e.g. 400/401/403 bad request or auth).
                 return {
                     "ok": False,
                     "text": "",
@@ -200,47 +251,36 @@ class LLMClient:
                     "model": provider.model,
                     "usage": {},
                 }
-            response_payload = response.json()
-            text = response_payload["choices"][0]["message"]["content"]
-            return {
-                "ok": True,
-                "text": text,
-                "error": "",
-                "status_code": response.status_code,
-                "error_type": "",
-                "model": response_payload.get("model") or provider.model,
-                "usage": response_payload.get("usage") or {},
-            }
-        except requests.Timeout:
-            return {
-                "ok": False,
-                "text": "",
-                "error": f"Request timed out while contacting {provider.base_url}.",
-                "status_code": None,
-                "error_type": "timeout",
-                "model": provider.model,
-                "usage": {},
-            }
-        except RequestException as exc:
-            return {
-                "ok": False,
-                "text": "",
-                "error": str(exc)[:500],
-                "status_code": None,
-                "error_type": "connection_error",
-                "model": provider.model,
-                "usage": {},
-            }
-        except Exception as exc:
-            return {
-                "ok": False,
-                "text": "",
-                "error": str(exc)[:500],
-                "status_code": None,
-                "error_type": "parse_or_unknown_error",
-                "model": provider.model,
-                "usage": {},
-            }
+            except requests.Timeout:
+                last_error = {
+                    "ok": False, "text": "",
+                    "error": f"Request timed out while contacting {provider.base_url}.",
+                    "status_code": None, "error_type": "timeout",
+                    "model": provider.model, "usage": {},
+                }
+            except RequestException as exc:
+                last_error = {
+                    "ok": False, "text": "",
+                    "error": str(exc)[:500],
+                    "status_code": None, "error_type": "connection_error",
+                    "model": provider.model, "usage": {},
+                }
+            except Exception as exc:
+                last_error = {
+                    "ok": False, "text": "",
+                    "error": str(exc)[:500],
+                    "status_code": None, "error_type": "parse_or_unknown_error",
+                    "model": provider.model, "usage": {},
+                }
+            if attempt < max_retries:
+                time.sleep(min(20, 1.5 * (2 ** attempt)))
+                continue
+            return last_error
+        return last_error or {
+            "ok": False, "text": "", "error": "unknown error",
+            "status_code": None, "error_type": "unknown",
+            "model": provider.model, "usage": {},
+        }
 
     def _short_error_body(self, text: str) -> str:
         if not text:

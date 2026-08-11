@@ -459,6 +459,77 @@
                         </aside>
                     </div>
 
+                    <section class="multimodal-views" id="mmPanel" hidden aria-labelledby="mmTitle">
+                        <div class="mm-heading">
+                            <div>
+                                <p class="eyebrow">Multimodal mirror</p>
+                                <h2 id="mmTitle">See your design through three views—then notice what you missed.</h2>
+                                <p class="step-lead">The mirror does not tell you what is wrong. It renders the people and futures your plan touches so you can discover the gap yourself.</p>
+                            </div>
+                        </div>
+
+                        <article class="discovery-card surface" id="discoveryCard" hidden>
+                            <div class="discovery-head">
+                                <span class="discovery-mark" aria-hidden="true">?</span>
+                                <div>
+                                    <p class="eyebrow">Self-discovery</p>
+                                    <h3 id="discoveryQuestion">…</h3>
+                                </div>
+                            </div>
+                            <div class="discovery-options" id="discoveryOptions" hidden>
+                                <p class="discovery-prompt">Did you anticipate this group before the mirror showed it?</p>
+                                <label class="disc-opt"><input type="radio" name="disc" value="anticipated"> Yes, I had considered them</label>
+                                <label class="disc-opt"><input type="radio" name="disc" value="not"> No — this is new to me</label>
+                            </div>
+                            <div class="discovery-reveal" id="discoveryReveal" hidden></div>
+                            <div class="discovery-realize" id="discoveryRealize" hidden>
+                                <label for="realizeText">What did you realize that you had NOT considered before?</label>
+                                <textarea id="realizeText" rows="3" maxlength="800" placeholder="e.g., I never thought the silent counselor notification would also affect non-consenting peers…"></textarea>
+                                <div class="discovery-actions">
+                                    <button class="primary-button" id="saveDiscoveryBtn" type="button">Save my reflection</button>
+                                    <span class="discovery-saved" id="discoverySaved" hidden>✓ Saved to this session</span>
+                                </div>
+                            </div>
+                        </article>
+
+                        <div class="mm-tabs" role="tablist" aria-label="Multimodal mirror views">
+                            <button class="mm-tab is-active" type="button" data-mm-view="stake" role="tab" aria-selected="true">Stakeholder map</button>
+                            <button class="mm-tab" type="button" data-mm-view="heat" role="tab" aria-selected="false">Value heatmap</button>
+                            <button class="mm-tab" type="button" data-mm-view="tree" role="tab" aria-selected="false">Branch tree</button>
+                        </div>
+
+                        <div class="mm-view" data-mm-panel="stake">
+                            <div class="mm-view-head">
+                                <h3>① Stakeholder map</h3>
+                                <p>Green = groups your plan already names. Red (pulsing) = groups the mirror infers you have not yet accounted for.</p>
+                            </div>
+                            <svg id="stakeMap" viewBox="0 0 360 320" role="img" aria-label="Stakeholder map around your design"></svg>
+                            <div class="mm-legend">
+                                <span><i class="mm-dot" style="background:#3f9e6f"></i> Named in plan</span>
+                                <span><i class="mm-dot" style="background:#cf5448"></i> Inferred, needs attention</span>
+                                <span><i class="mm-dot" style="background:#e0a23b"></i> Inferred, lower priority</span>
+                            </div>
+                        </div>
+
+                        <div class="mm-view" data-mm-panel="heat" hidden>
+                            <div class="mm-view-head">
+                                <h3>② Value-conflict heatmap</h3>
+                                <p>Each ethics lens × its evidence coverage. Redder cells mean the concern is named but not yet reasoned through.</p>
+                            </div>
+                            <div id="heatmap"></div>
+                        </div>
+
+                        <div class="mm-view" data-mm-panel="tree" hidden>
+                            <div class="mm-view-head">
+                                <h3>③ Scenario branch tree</h3>
+                                <p>Each tension as a fork: the design as built versus the design with a safeguard you add.</p>
+                            </div>
+                            <svg id="branchTree" viewBox="0 0 720 270" role="img" aria-label="Scenario branch tree"></svg>
+                        </div>
+
+                        <div class="mm-delta" id="mmDelta" hidden></div>
+                    </section>
+
                     <div class="step-footer">
                         <button class="back-button" type="button" data-go-step="3">Back to scenarios</button>
                         <button class="primary-button" type="button" data-go-step="5">
@@ -715,5 +786,6 @@
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
     <script src="{{ url_for('static', filename='safebars_mirror/mirror.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='safebars_mirror/mirror_multimodal.js') }}" defer></script>
 </body>
 </html>

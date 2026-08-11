@@ -4479,3 +4479,86 @@ a.quiet-button {
     .mode-tab { flex-basis: 100%; }
     .guide-chat, .intake-conversation, .intake-trail-panel { min-height: 0; }
 }
+
+/* ===== Multimodal mirror views (additive layer) ===== */
+.multimodal-views {
+    margin-top: 28px;
+    border-top: 1px dashed #cdd8d2;
+    padding-top: 22px;
+}
+.mm-heading { margin-bottom: 16px; }
+.mm-heading h2 { font-size: 18px; margin: 2px 0 6px; color: #173f37; }
+.mm-heading .step-lead { margin: 0; color: #5a6a63; font-size: 13px; max-width: 720px; }
+
+.mm-tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    background: #eef3f0;
+    border-radius: 12px;
+    margin: 4px 0 16px;
+    flex-wrap: wrap;
+}
+.mm-tab {
+    border: 0;
+    background: transparent;
+    padding: 8px 14px;
+    border-radius: 9px;
+    font: inherit;
+    font-size: 13px;
+    color: #4a5a53;
+    cursor: pointer;
+}
+.mm-tab.is-active { background: #173f37; color: #fff; }
+.mm-view { animation: mmFade .25s ease; }
+@keyframes mmFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.mm-view-head { margin-bottom: 12px; }
+.mm-view-head h3 { font-size: 15px; margin: 0 0 4px; color: #173f37; }
+.mm-view-head p { margin: 0; font-size: 12.5px; color: #5a6a63; max-width: 680px; }
+
+#stakeMap, #branchTree { width: 100%; height: auto; background: #fbfdfc; border: 1px solid #e1e9e4; border-radius: 12px; }
+.mm-legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: #4a5a53; }
+.mm-legend .mm-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+/* Value-conflict heatmap */
+.hm-grid { border-collapse: separate; border-spacing: 4px; width: 100%; max-width: 720px; }
+.hm-grid th { font-size: 11px; font-weight: 600; color: #5a6a63; text-align: center; padding: 4px; }
+.hm-grid th:first-child { text-align: left; }
+.hm-lens { font-size: 12.5px; color: #25302a; text-align: left; padding-right: 10px; max-width: 220px; }
+.hm-cell { width: 56px; height: 30px; border-radius: 8px; text-align: center; vertical-align: middle; }
+.hm-cell.is-faint { background: #eef3f0; }
+.hm-cell.is-active { box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+.hm-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.9); }
+.mm-empty { color: #82928d; font-size: 13px; }
+
+/* Self-discovery card */
+.discovery-card { padding: 18px 20px; margin: 6px 0 18px; border-left: 3px solid #cf5448; }
+.discovery-head { display: flex; gap: 12px; align-items: flex-start; }
+.discovery-mark {
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
+    background: #cf5448; color: #fff; font-weight: 700; font-size: 16px;
+    display: grid; place-items: center;
+}
+.discovery-head h3 { margin: 0; font-size: 14px; line-height: 1.5; color: #25302a; }
+.discovery-options { margin-top: 14px; }
+.discovery-prompt { font-size: 13px; color: #4a5a53; margin: 0 0 8px; }
+.disc-opt { display: block; font-size: 13px; color: #25302a; padding: 7px 10px; border: 1px solid #dce4df; border-radius: 9px; margin-bottom: 8px; cursor: pointer; }
+.disc-opt:has(input:checked) { border-color: #173f37; background: #eef3f0; }
+.discovery-gap { font-size: 13px; line-height: 1.6; color: #25302a; background: #fbf3f1; border: 1px solid #f0d6cf; border-radius: 10px; padding: 12px 14px; }
+.discovery-note { display: block; margin-top: 8px; font-size: 12px; color: #8a6a62; }
+.discovery-realize { margin-top: 14px; }
+.discovery-realize label { display: block; font-size: 13px; font-weight: 600; color: #25302a; margin-bottom: 6px; }
+.discovery-realize textarea {
+    width: 100%; border: 1px solid #dce4df; border-radius: 10px; padding: 10px 12px;
+    font: inherit; font-size: 13px; resize: vertical; color: #25302a;
+}
+.discovery-realize textarea:focus { outline: none; border-color: #3f6b5a; box-shadow: 0 0 0 2px rgba(63,107,90,.15); }
+.discovery-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.discovery-saved { color: #3f9e6f; font-size: 13px; font-weight: 600; }
+
+/* Before/after delta */
+.mm-delta { margin-top: 18px; }
+.mm-delta-card { display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline; padding: 14px 18px; border: 1px solid #cfe6d8; background: #f3faf5; border-radius: 12px; }
+.mm-delta-card strong { color: #173f37; font-size: 14px; flex-basis: 100%; }
+.mm-delta-card span { font-size: 13px; color: #25302a; }
+.mm-delta-card small { flex-basis: 100%; color: #5a6a63; font-size: 12px; }

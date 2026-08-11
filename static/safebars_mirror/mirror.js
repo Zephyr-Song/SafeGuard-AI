@@ -340,6 +340,19 @@
         guide: { history: [], active: false },
     };
 
+    // Thin global bridge so additive modules (e.g. the multimodal mirror views)
+    // can read the live session and react to step navigation without forking
+    // this file. Kept minimal and defensive.
+    window.SafeBarsMirror = {
+        get session() { return state.session; },
+        get condition() {
+            const c = new URLSearchParams(location.search).get("cond");
+            return c === "text" ? "text" : "multimodal";
+        },
+        selfDiscovery: null,
+        onStep: null,
+    };
+
     const dom = {};
 
     function cacheDom() {
@@ -2422,7 +2435,7 @@
         try {
             const saved = await api(`/sessions/${encodeURIComponent(state.session.id)}/revisions`, {
                 method: "POST",
-                body: { revised_plan: revisedPlan, resolutions },
+                body: { revised_plan: revisedPlan, resolutions, self_discovery: window.SafeBarsMirror?.selfDiscovery || null },
             });
             state.session = normaliseSession(unwrapSession(saved), state.session);
             state.session.revised_plan = revisedPlan;
@@ -2781,6 +2794,7 @@
             updateRevisionStats();
         }
         if (target === 6) renderLedger();
+        if (typeof window.SafeBarsMirror?.onStep === "function") window.SafeBarsMirror.onStep(target);
         document.querySelector(`[data-step-panel="${target}"]`)?.scrollIntoView({ block: "start" });
         dom.workspace.focus({ preventScroll: true });
     }
