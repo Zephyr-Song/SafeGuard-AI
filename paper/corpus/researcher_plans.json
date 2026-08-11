@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0",
+  "description": "Corpus of realistic HCI/AI research plans with embedded ethical tensions, used to evaluate the SafeBARS ethical-mirror across LLM engine variants and as material for simulated-researcher (participant) responses. Each plan is a short design narrative a graduate researcher might submit; 'commitments' are the safeguards the researcher claims to adopt.",
+  "plans": [
+    {
+      "id": "P01_campusmind",
+      "title": "CampusMind — campus mental-health chatbot",
+      "plan": "CampusMind is a conversational agent for university students to reflect on stress and low mood. Students log in with their campus single sign-on. The bot asks daily check-in questions and offers coping suggestions drawn from a CBT library. When the bot detects signs of severe distress it sends a notification to the student's assigned counselor. Students can turn notifications off in settings. We will pilot with 200 students over one semester and measure engagement and self-reported wellbeing. The model is a fine-tuned Qwen chat model hosted on a university server. We store conversation logs for two years to improve the model.",
+      "commitments": [
+        "Counselors are notified only with student consent for high-risk cases.",
+        "Conversation data is anonymized before model training."
+      ]
+    },
+    {
+      "id": "P02_studybuddy",
+      "title": "StudyBuddy — adaptive AI tutor",
+      "plan": "StudyBuddy is an AI tutoring app for high-school students preparing for exams. It tracks which questions a student answers slowly or incorrectly and builds a personal weakness profile. The app then schedules extra practice and sends weekly progress reports to parents. We use the weakness profile to recommend paid tutoring packages. The system uses a foundation model with retrieval over the school's textbook corpus. We will deploy to three partner schools and evaluate test-score gains. Student activity is profiled to personalize ads in a companion app.",
+      "commitments": [
+        "Parent reports contain only aggregate progress, not individual wrong answers.",
+        "We obtain school-wide consent through the institution."
+      ]
+    },
+    {
+      "id": "P03_fittrack",
+      "title": "FitTrack — workplace wellness gamification",
+      "plan": "FitTrack is a wellness app employers offer to staff. It collects step count, sleep, and self-reported mood via wearable integration and awards points and leaderboards. Low-activity employees get gentle nudges. Managers see a team dashboard of aggregate participation. We run a 12-week trial with a logistics company and measure absenteeism. The model predicts burnout risk from mood and sleep patterns. Employees who opt in share data with HR for a wellness stipend.",
+      "commitments": [
+        "Manager dashboards show only team-level aggregates, never individuals.",
+        "Participation is voluntary and does not affect performance review."
+      ]
+    },
+    {
+      "id": "P04_echovote",
+      "title": "EchoVote — participatory budgeting assistant",
+      "plan": "EchoVote helps residents of a city district propose and rank local spending ideas. It uses sentiment analysis on free-text comments to summarize community mood and surfaces trending concerns to the council. The assistant translates between languages and suggests phrasing to make proposals clearer. We pilot in one district with 5,000 residents. A foundation model ranks proposals by predicted support. Comments are public by default to maximize transparency.",
+      "commitments": [
+        "All ranking is transparent and the model rationale is shown to users.",
+        "Minority-language comments are weighted to avoid dominance by the majority."
+      ]
+    },
+    {
+      "id": "P05_carecompanion",
+      "title": "CareCompanion — elder independent-living monitor",
+      "plan": "CareCompanion is a sensor suite and voice agent for older adults living alone. It detects falls, missed medication, and unusual inactivity, and alerts a family caregiver or clinic. The voice agent holds daily conversational check-ins and reminds the person to take medication. We trial with 60 participants aged 75+ over six months and measure hospitalization avoidance. Audio is processed on-device but transcripts are uploaded for the agent to personalize reminders. Caregivers can listen to selected audio clips.",
+      "commitments": [
+        "The adult gives explicit consent and can disable any sensor at any time.",
+        "Only clinically relevant clips are shared with caregivers, not whole days."
+      ]
+    },
+    {
+      "id": "P06_recruitai",
+      "title": "RecruitAI — AI hiring screener",
+      "plan": "RecruitAI screens job applicants from video interviews and CVs. It scores communication, culture fit, and role readiness using a vision-and-language model, and ranks candidates for recruiters. We train on the company's past hires. Recruiters see the top 50 ranked candidates with the model's rationale. We deploy as a paid SaaS to 20 firms and measure time-to-hire. Applicants receive an automated summary of their strengths. The training set is mostly from one demographic group.",
+      "commitments": [
+        "We provide applicants a plain-language explanation of their score.",
+        "Recruiters make the final decision and can override the model."
+      ]
+    }
+  ]
+}

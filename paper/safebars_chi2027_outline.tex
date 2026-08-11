@@ -1,0 +1,204 @@
+% ============================================================================
+% SafeBARS — Ethical Mirror (LLM-extended) — CHI 2027 draft outline + Related Work
+% Format: ACM acmart (CHI template). Drop into Overleaf; verify track/length with PCS.
+% TODO before submission: verify all author names + the SafeBARS'23 citation on ACM DL.
+% Multi-model evaluation will use Aliyun Bailian (Qwen-Turbo / Qwen-Plus / Qwen-Max /
+% Qwen-Long) as the model-variation source, driven by modules/multi_model_eval.py.
+% ============================================================================
+\documentclass[manuscript,screen]{acmart}
+
+\title{SafeBARS Re-Mirrored: An LLM-Extended Ethical Mirror That Resists Sycophancy}
+% TODO: finalize title; add authors / affiliations
+
+\begin{abstract}
+% TODO (fill after study): SafeBARS (CHI'23) introduced the "ethical mirror" that
+% surfaces tensions between a system's design and ethical considerations. We extend it
+% with LLM multi-role ethics probes and a deterministic deep-audit layer that catches
+% risks researchers did not write down. Across N researcher plans and K model variants,
+% we find that ... (RQ answers). Unlike companion agents that optimize for rapport, our
+% mirror is deliberately non-sycophantic to preserve critical distance.
+\end{abstract}
+
+\begin{document}
+\maketitle
+
+% ---------------------------------------------------------------------------
+\section{Introduction}
+% OUTLINE (bullets to expand into prose):
+% - Ethical reflection is hard; researchers miss tensions they did not articulate.
+% - SafeBARS (CHI'23) = pre-LLM mirror; relies on curated exercises, only reflects written content.
+% - LLMs enable (a) multi-role ethics probes and (b) nuanced generation — but also risk sycophancy.
+% - We contribute: LLM-extended mirror + deterministic deep-audit + deliberately non-sycophantic design.
+% - Research questions (see \S4). Expected contribution to HCI ethics-tooling.
+% - NOTE for Erick meeting: tool is deployed & working; this paper closes the evaluation loop.
+
+% ---------------------------------------------------------------------------
+\section{Related Work}
+Recent CHI research has rapidly advanced LLM-based conversational agents across four
+dimensions directly relevant to our work. \citep{vibecheck26} show that an agent's
+personality expression follows an inverted-U: moderate expression aligned with the user
+yields the best outcomes, with extraversion and emotional stability most influential on
+trust and adoption. \citep{recallbot26} demonstrate that agentic memory (a Me/We dual
+memory) combined with reciprocal self-disclosure and user control deepens human--chatbot
+relationships over a two-week deployment. \citep{hearinsilence26} find that context-aware
+pacing---choosing among immediate, silence, and acknowledgment strategies---reads as more
+humane listening and promotes self-disclosure and affective trust. Most directly related,
+\citep{perspectra26} show that letting users choose and invite expert agents, visualized as
+a forum, enhances critical thinking and produces more structured, interdisciplinary
+revisions than a single group chat.
+
+These papers share one goal: optimizing the agent to build rapport, trust, and intimacy.
+Our work starts from the CHI'23 SafeBARS ethical mirror \citep{safebars23}---a pre-LLM tool
+that surfaces tensions between a system's design and ethical considerations and asks
+researchers to respond. We inject LLMs into this mirror, but \emph{invert} the objective:
+a critical reflection tool must resist sycophancy and preserve critical distance rather
+than maximize trust or liking. We therefore borrow the \emph{mechanisms} these papers
+establish---user-selectable multiple perspectives \citep{perspectra26}, transparent memory
+and user control \citep{recallbot26}, deliberately designed persona \citep{vibecheck26},
+and paced guidance \citep{hearinsilence26}---while rejecting their \emph{aim}. To our
+knowledge, no reflection tool has (a) used LLM multi-role ethics probes to extend SafeBARS,
+nor (b) added a deterministic deep-audit layer that surfaces risks researchers did not
+write down---addressing the known limit that reflection prompts only reflect what is
+already articulated.
+
+% ---------------------------------------------------------------------------
+\section{SafeBARS: The Ethical Mirror, Extended}
+% OUTLINE:
+% - Architecture: Flask backend + LLM providers (Zhipu / Bailian-Qwen / Hunyuan / DeepSeek / OpenAI).
+% - Multi-role ethics probes: LLM generates tensions across ethics lenses (privacy, fairness,
+%   transparency, accountability, autonomy, ...); researchers choose which "expert" lenses to enable
+%   (mirrors \citep{perspectra26} user control).
+% - Deterministic deep-audit layer (offline, no LLM budget): contradiction detection, high-risk
+%   domain injection, severity gaps, missing evidence bridges. Addresses "only reflects written content."
+% - Deliberately non-sycophantic persona + paced guidance (draws on \citep{vibecheck26},
+%   \citep{hearinsilence26}) but tuned for ethical审慎, not companionship.
+% - Deployed & publicly usable (URL). End-to-end: submit plan -> tension map + suggested revisions
+%   -> researcher responds -> exports ethics-committee application (.docx).
+
+% ---------------------------------------------------------------------------
+\section{Research Questions}
+% Modeled on the "does X improve Y" structure of the four anchor papers.
+\begin{itemize}
+  \item \textbf{RQ1 (cf. \citep{perspectra26}):} Do multi-role ethics probes surface more
+    ethical tensions than a single-lens or no-mirror baseline? (Metric: tension count, lens coverage.)
+  \item \textbf{RQ2 (cf. \citep{vibecheck26}):} Does a deliberately non-sycophantic mirror keep
+    researchers appropriately skeptical rather than blindly adopting AI suggestions?
+    (Metric: contest rate and critical-distance score from the simulation.)
+  \item \textbf{RQ3 (cf. \citep{recallbot26}, \citep{hearinsilence26}):} Does retained context +
+    paced guidance improve the quality of researchers' revisions? (Metric: revision-quality rubric.)
+  \item \textbf{RQ4 (our deep-audit increment):} Does the deterministic deep-audit layer catch risks
+    that LLM-only generation misses? (Metric: internal-contradiction detection rate, unwritten-risk count.)
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+\section{Method}
+\subsection{Computational Simulation: LLM Variants as Simulated Researchers}
+We evaluate SafeBARS with a \emph{computational simulation} in which different LLM
+variants stand in for researchers. This probes how the mirror behaves across model
+capabilities without recruiting human participants, and we report it as a simulation
+with its limits made explicit (see \S\ref{sec:limits}).
+
+\noindent\textbf{Corpus.} We authored six realistic HCI/AI research plans (e.g., a campus
+mental-health chatbot, an AI hiring screener), each embedding multiple ethical tensions
+and a set of researcher-stated commitments. The corpus ships with the paper
+(\texttt{paper/corpus/researcher\_plans.json}).
+
+\noindent\textbf{Conditions.} For each plan we run the SafeBARS mirror engine with one of
+four Aliyun Bailian Qwen variants as the \emph{engine} (Qwen-Turbo, Qwen-Plus,
+Qwen-Max, Qwen-Long), isolating model-capability effects within a single provider
+family. The same variant is then prompted, \emph{in the role of the researcher}, to
+respond to every tension the mirror surfaced---choosing among revise / add-safeguard /
+contest-with-evidence / consult-stakeholders and giving a rationale. Treating each
+variant as a distinct ``participant'' yields a within-corpus comparison of how
+different models engage the mirror.
+
+\noindent\textbf{Measures.} (1)~\emph{Engine richness}: number of dissonance edges
+(tensions), lens-coverage states, bounded role probes (multi-expert lenses, cf.
+\citep{perspectra26}), and suggested revisions. (2)~\emph{Researcher engagement}: an
+independent judge model scores each response on recognition, appropriateness,
+evidence, and \emph{critical distance}---the tendency to contest weak suggestions or
+consult people rather than accept the mirror. We report a \emph{contest rate}
+(share of tensions met with contest-with-evidence or consult-stakeholders) as a proxy
+for critical distance. The judge uses a fixed rubric; when no API key is available the
+pipeline falls back to a deterministic keyword rubric so the method is fully
+reproducible offline. All scripts are released (\texttt{modules/multi\_model\_eval.py}).
+
+\noindent\textbf{Analysis.} We compare variants on the above measures---does model
+choice significantly affect tension coverage and critical-distance behavior?---and
+report effect sizes. RQ1--RQ3 are addressed through this simulation; RQ4 (deep-audit)
+is characterized deterministically.
+
+\subsection{Why a Simulation, and Its Limits}
+\label{sec:whysim}
+This evaluation does \emph{not} substitute for a study with human participants.
+LLM-simulated researchers approximate but do not reproduce human moral reasoning,
+surprise, or accountability. We therefore position the simulation as a
+system/behavior characterization and a design probe, and we flag a human pilot
+(mirror vs no-mirror, within-subjects) as \emph{required future work} before any claim
+about effects on real researchers. All human-outcome claims in this paper are
+explicitly scoped accordingly.
+
+% ---------------------------------------------------------------------------
+\section{Expected Contributions}
+% - (1) LLM multi-role ethics probes extending CHI'23 SafeBARS.
+% - (2) Deterministic deep-audit layer catching unwritten risks (novel vs reflection-tool baselines).
+% - (3) A deliberately non-sycophantic critical mirror — design rationale informed by, and intentionally
+%   opposing, the rapport-optimizing agenda of \citep{vibecheck26,recallbot26,hearinsilence26,perspectra26}.
+
+% ---------------------------------------------------------------------------
+\section{Limitations and Future Work}
+\label{sec:limits}
+\begin{itemize}
+  \item The multi-model evaluation uses one provider family (Bailian/Qwen); a
+        cross-provider follow-up is needed to generalize the capability-effect claim.
+  \item The evaluation is a \emph{computational simulation}, not a study with human
+        participants. LLM-simulated researchers do not stand in for real moral
+        reasoning; a human pilot (mirror vs no-mirror, within-subjects) remains
+        required future work before any human-outcome claim (see \S\ref{sec:whysim}).
+  \item LLM-as-judge validity: we disclose the rubric and use a deterministic fallback,
+        but human ratings would triangulate the engagement scores.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+\section{Conclusion}
+% TODO after results.
+
+% ============================================================================
+\begin{thebibliography}{9}
+% VERIFY all author names + SafeBARS'23 citation against ACM DL before submission.
+\bibitem[SafeBARS(2023)]{safebars23}
+TODO: SafeBARS CHI'23 authors.
+\newblock SafeBARS: ... (ethical mirror).
+\newblock In \emph{Proc. CHI '23}.
+\newblock \url{https://doi.org/VERIFY}
+
+\bibitem[Rahman and Desai(2026)]{vibecheck26}
+S. Rahman and S. Desai.
+\newblock Vibe Check: Understanding the Effects of LLM-Based Conversational Agents'
+Personality and Alignment on User Perceptions in Goal-Oriented Tasks.
+\newblock In \emph{Proc. CHI '26}.
+\newblock \url{https://doi.org/10.1145/3772318.3790388}
+
+\bibitem[Jiang et al.(2026)]{recallbot26}
+Y. Jiang et al.
+\newblock RECALLbot: Designing Agentic Memory and Reciprocal Disclosure for
+Human-Chatbot Relationships.
+\newblock In \emph{Proc. CHI '26}.
+\newblock \url{https://doi.org/10.1145/3772318.3790714}
+
+\bibitem[Jiang et al.(2026)]{hearinsilence26}
+X. Jiang et al.
+\newblock Hear You in Silence: Designing for Active Listening in Human Interaction
+with Conversational Agents Using Context-Aware Pacing.
+\newblock In \emph{Proc. CHI '26}.
+\newblock \url{https://doi.org/10.1145/3772318.3791238}
+
+\bibitem[Liu et al.(2026)]{perspectra26}
+Y. Liu et al.
+\newblock Perspectra: Choosing Your Experts Enhances Critical Thinking in Multi-Agent
+Research Ideation.
+\newblock In \emph{Proc. CHI '26}.
+\newblock \url{https://doi.org/10.1145/3772318.3791560}
+\end{thebibliography}
+
+\end{document}

@@ -16,3 +16,6 @@ research/chi2027/screenshots/
 tests/evaluation/results.json
 .wrangler/
 cloudflare-pages/.wrangler/
+
+# research eval run outputs
+paper/results/
