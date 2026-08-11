@@ -273,12 +273,13 @@ class MirrorGuide:
         total = len(covered)
         touched = sum(1 for v in covered.values() if v)
         uncovered = [dim for dim, ok in covered.items() if not ok]
+        user_turns = sum(1 for m in history if m.get("role") == "user")
         return {
             "dimensions": covered,
             "covered_count": touched,
             "total": total,
             "uncovered": uncovered,
-            "ready_hint": touched >= 4,
+            "ready_hint": touched >= 2 or user_turns >= 4,
         }
 
     def _normalise_commitments(self, commitments: Any) -> List[str]:

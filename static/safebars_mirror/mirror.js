@@ -2848,7 +2848,7 @@
         dom.guideResetBtn?.addEventListener("click", resetGuide);
         dom.guideBuildBtn?.addEventListener("click", buildFromGuide);
         dom.guideInput?.addEventListener("keydown", (event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
                 event.preventDefault();
                 sendGuide();
             }
