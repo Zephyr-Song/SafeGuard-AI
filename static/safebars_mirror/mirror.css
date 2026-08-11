@@ -2301,6 +2301,14 @@ textarea::placeholder {
     font-size: 19px;
 }
 
+.queue-hint {
+    margin: 7px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+    max-width: 36ch;
+}
+
 .tension-list {
     display: grid;
     max-height: 760px;

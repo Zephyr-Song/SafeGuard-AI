@@ -473,20 +473,9 @@
                         <div>
                             <p class="eyebrow">Step 5 · Revision sandbox</p>
                             <h1 id="step5Title">Change the design—or explain why the argument does not hold.</h1>
-                            <p class="step-lead">SafeBARS offers four legitimate responses. You retain authorship and may contest an AI-generated concern with evidence.</p>
+                            <p class="step-lead">The mirror surfaced tensions between your plan and each ethics lens. For every one, choose a reasoned response—revise, add a safeguard, contest with evidence, or consult the people affected. You stay the author; the tool only holds the space for that reflection.</p>
                         </div>
                         <span class="autosave-state" id="revisionSaveState">Not yet saved</span>
-                    </div>
-
-                    <div class="mode-switch" id="revisionModeSwitch" role="tablist" aria-label="How to respond to tensions">
-                        <button type="button" class="mode-tab is-active" id="revisionManualBtn" role="tab" aria-selected="true" data-mode="manual">
-                            <strong>Manual sandbox</strong>
-                            <span>Respond to each tension by hand</span>
-                        </button>
-                        <button type="button" class="mode-tab" id="revisionAiBtn" role="tab" aria-selected="false" data-mode="ai">
-                            <strong>AI conversation</strong>
-                            <span>Talk it through, then auto-generate</span>
-                        </button>
                     </div>
 
                     <div class="revision-layout" id="manualRevisionLayout">
@@ -494,7 +483,8 @@
                             <div class="queue-heading">
                                 <div>
                                     <p class="eyebrow">Tension queue</p>
-                                    <h2>Choose an argument</h2>
+                                    <h2>Choose how to respond</h2>
+                                    <p class="queue-hint">Each item is a tension the mirror found between your plan and an ethics lens. Open one and record your reasoned answer—revision, safeguard, contest, or consult.</p>
                                 </div>
                                 <span class="count-badge" id="tensionCount">0</span>
                             </div>
@@ -557,38 +547,6 @@
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
                             </button>
                         </div>
-                    </div>
-
-                    <div class="revision-guide" id="resolutionGuidePanel" hidden>
-                        <article class="surface guide-chat" aria-labelledby="resGuideTitle">
-                            <div class="guide-chat-head">
-                                <div class="mirror-avatar" aria-hidden="true"><span></span><span></span><span></span></div>
-                                <div>
-                                    <h2 id="resGuideTitle">Let's resolve the tensions—together.</h2>
-                                    <p class="guide-chat-sub">I'll walk through each tension the mirror found. Tell me how you'd like to respond, in your own words. When we're done, I'll draft the revised plan and generate your ethics report.</p>
-                                </div>
-                            </div>
-
-                            <div class="guide-messages" id="resolutionGuideMessages" aria-live="polite"></div>
-
-                            <div class="guide-input-row">
-                                <textarea id="resolutionGuideInput" rows="2" maxlength="2000" placeholder="Share how you'd handle this tension…"></textarea>
-                                <button class="primary-button" id="resolutionGuideSendBtn" type="button">
-                                    <span>Send</span>
-                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
-                                </button>
-                            </div>
-
-                            <div class="guide-actions">
-                                <button class="quiet-button" id="resolutionGuideResetBtn" type="button">Start over</button>
-                                <button class="primary-button" id="resolutionGuideBuildBtn" type="button" disabled>
-                                    <span>Generate ethics report</span>
-                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
-                                </button>
-                            </div>
-                        </article>
-
-                        <div class="revision-guide-result surface" id="resolutionGuideResult" hidden></div>
                     </div>
 
                     <div class="step-footer">

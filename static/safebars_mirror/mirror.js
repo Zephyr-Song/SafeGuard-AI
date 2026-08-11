@@ -18,22 +18,22 @@
         revise_design: {
             label: "Revise the design",
             icon: "↺",
-            help: "Change a feature, data flow, user journey, or deployment assumption.",
+            help: "Redesign the feature, data flow, or deployment so the concern is structurally less likely. State what changes and why it reduces the harm.",
         },
         add_safeguard: {
             label: "Add a safeguard",
             icon: "＋",
-            help: "Add human review, evaluation, fallback, monitoring, or a stopping rule.",
+            help: "Keep the design but add human review, an evaluation, a fallback, monitoring, or a stop condition—so the risk stays visible and accountable.",
         },
         contest_with_evidence: {
             label: "Contest with evidence",
             icon: "≠",
-            help: "Explain why this generated argument does not fit—and cite what supports you.",
+            help: "Disagree with the mirror: show why this tension does not apply to your context and cite the evidence (a method, result, or constraint) that supports you.",
         },
         consult_stakeholders: {
             label: "Consult real people",
             icon: "◎",
-            help: "Leave the question open for affected people or an accountable expert.",
+            help: "Defer the call: name the affected people or an accountable expert who should decide before you proceed, and record what you will ask them.",
         },
     };
 
@@ -338,7 +338,6 @@
         intakeAnswers: {},
         intakeComplete: false,
         guide: { history: [], active: false },
-        resolutionGuide: { history: [], active: false, started: false },
     };
 
     const dom = {};
@@ -368,10 +367,7 @@
             "downloadBundleBtn", "exportApplicationBtn", "printLedgerBtn", "literatureDialog", "literatureList", "methodDialog",
             "boundaryDialog", "loadingLayer", "loadingEyebrow", "loadingTitle", "loadingDetail",
             "loadingSteps", "toastRegion",
-            "revisionModeSwitch", "revisionManualBtn", "revisionAiBtn",
             "manualRevisionLayout", "manualSaveBar",
-            "resolutionGuidePanel", "resolutionGuideMessages", "resolutionGuideInput",
-            "resolutionGuideSendBtn", "resolutionGuideResetBtn", "resolutionGuideBuildBtn", "resolutionGuideResult",
         ].forEach((id) => {
             dom[id] = document.getElementById(id);
         });
@@ -2233,7 +2229,7 @@
                     <div><small>Possible consequence</small><strong>${escapeHtml(edge.consequence)}</strong></div>
                 </div>
                 <h2>How will you respond?</h2>
-                <p>None of the four choices is automatically “correct.” Your rationale and next action are the research evidence.</p>
+                <p>Every tension deserves a reasoned answer—but no answer is automatically “right.” Pick the response that fits this concern, then record <em>why</em> and <em>what would prove it worked</em>. Your rationale and next action are the research evidence the ethics review will read.</p>
                 <div class="resolution-options" role="radiogroup" aria-label="Resolution for selected tension">
                     ${Object.entries(RESOLUTION_TYPES).map(([key, option]) => `
                         <label class="resolution-option">
@@ -2395,139 +2391,6 @@
             }));
     }
 
-    // ------------------------------------------------------------------
-    // Step 5 — conversational resolution guide (AI conversation mode)
-    // ------------------------------------------------------------------
-    function setRevisionMode(mode) {
-        state.resolutionGuide.active = mode === "ai";
-        dom.revisionManualBtn?.classList.toggle("is-active", mode === "manual");
-        dom.revisionManualBtn?.setAttribute("aria-selected", String(mode === "manual"));
-        dom.revisionAiBtn?.classList.toggle("is-active", mode === "ai");
-        dom.revisionAiBtn?.setAttribute("aria-selected", String(mode === "ai"));
-        if (dom.manualRevisionLayout) dom.manualRevisionLayout.hidden = mode === "ai";
-        if (dom.manualSaveBar) dom.manualSaveBar.hidden = mode === "ai";
-        if (dom.resolutionGuidePanel) dom.resolutionGuidePanel.hidden = mode === "manual";
-        if (mode === "ai" && !state.resolutionGuide.started) resolutionGuideStart();
-    }
-
-    function appendResolutionGuideMessage(role, text) {
-        if (!dom.resolutionGuideMessages) return;
-        const wrap = document.createElement("div");
-        wrap.className = `guide-msg guide-msg--${role}`;
-        const bubble = document.createElement("div");
-        bubble.className = "guide-bubble";
-        bubble.textContent = text;
-        wrap.appendChild(bubble);
-        dom.resolutionGuideMessages.appendChild(wrap);
-        dom.resolutionGuideMessages.scrollTop = dom.resolutionGuideMessages.scrollHeight;
-    }
-
-    async function resolutionGuideStart() {
-        if (!state.session?.id) {
-            toast("No saved session", "Build the consequence map before using the guide.", "error");
-            return;
-        }
-        state.resolutionGuide.history = [];
-        state.resolutionGuide.started = true;
-        if (dom.resolutionGuideMessages) dom.resolutionGuideMessages.innerHTML = "";
-        if (dom.resolutionGuideResult) dom.resolutionGuideResult.hidden = true;
-        if (dom.resolutionGuideBuildBtn) dom.resolutionGuideBuildBtn.disabled = false;
-        try {
-            const data = await api(`/sessions/${encodeURIComponent(state.session.id)}/guide-resolution`, {
-                method: "POST",
-                body: { action: "start" },
-            });
-            state.resolutionGuide.history = data.history || [];
-            appendResolutionGuideMessage("assistant", data.reply || "");
-        } catch (error) {
-            toast("Could not start the guide", error.message, "error");
-        }
-    }
-
-    async function resolutionGuideSend() {
-        const text = (dom.resolutionGuideInput?.value || "").trim();
-        if (!text) return;
-        appendResolutionGuideMessage("user", text);
-        state.resolutionGuide.history.push({ role: "user", content: text });
-        if (dom.resolutionGuideInput) dom.resolutionGuideInput.value = "";
-        setBusy(true);
-        try {
-            const data = await api(`/sessions/${encodeURIComponent(state.session.id)}/guide-resolution`, {
-                method: "POST",
-                body: { action: "reply", history: state.resolutionGuide.history, message: text },
-            });
-            state.resolutionGuide.history = data.history || state.resolutionGuide.history;
-            appendResolutionGuideMessage("assistant", data.reply || "");
-        } catch (error) {
-            toast("Could not send", error.message, "error");
-        } finally {
-            setBusy(false);
-        }
-    }
-
-    async function resolutionGuideFinalize() {
-        if (!state.session?.id) {
-            toast("No saved session", "Build the consequence map first.", "error");
-            return;
-        }
-        if (!state.resolutionGuide.started) {
-            toast("Start the conversation first", "Use the guide to discuss the tensions, then generate.", "error");
-            return;
-        }
-        setBusy(true);
-        showLoading({
-            eyebrow: "Generating your ethics report",
-            title: "Drafting the revised plan and resolutions…",
-            detail: "The guide summarises your conversation into structured resolutions, saves them, and builds the DOCX.",
-        });
-        try {
-            const data = await api(`/sessions/${encodeURIComponent(state.session.id)}/guide-resolution`, {
-                method: "POST",
-                body: { action: "finalize", history: state.resolutionGuide.history },
-            });
-            state.session = normaliseSession(unwrapSession(data), state.session);
-            const blob = await apiBlob(`/sessions/${encodeURIComponent(state.session.id)}/export-application`);
-            downloadBlob(blob, `ethics-application-${state.session.id}.docx`);
-            showResolutionResult(data.parsed);
-            toast("Ethics report generated", "Your revised plan and resolutions were saved; the DOCX downloaded.", "success");
-        } catch (error) {
-            toast("Could not generate the report", error.message, "error");
-        } finally {
-            setBusy(false);
-            hideLoading();
-        }
-    }
-
-    function showResolutionResult(parsed) {
-        if (!dom.resolutionGuideResult) return;
-        const res = (parsed?.resolutions || []);
-        dom.resolutionGuideResult.hidden = false;
-        dom.resolutionGuideResult.innerHTML = `
-            <h3>Report ready</h3>
-            <p>Your revised plan and ${res.length} tension response(s) were saved. The ethics-committee application (DOCX) has been downloaded.</p>
-            <ul>${res.map((r) => `<li><strong>${escapeHtml(r.edge_id || "")}</strong> — ${escapeHtml(r.resolution_type || "")}</li>`).join("")}</ul>`;
-    }
-
-    async function apiBlob(path) {
-        const response = await fetch(`${API_ROOT}${path}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({}),
-        });
-        if (!response.ok) throw new Error(`Export failed (${response.status}).`);
-        return await response.blob();
-    }
-
-    function downloadBlob(blob, filename) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
 
     async function saveRevisions(andReplay = false) {
         if (!state.session?.id) {
@@ -3113,25 +2976,6 @@
         if (dom.exportApplicationBtn) {
             dom.exportApplicationBtn.addEventListener("click", exportCommitteeApplication);
         }
-        // Step 5 conversational resolution guide
-        if (dom.revisionManualBtn) dom.revisionManualBtn.addEventListener("click", () => setRevisionMode("manual"));
-        if (dom.revisionAiBtn) dom.revisionAiBtn.addEventListener("click", () => setRevisionMode("ai"));
-        if (dom.resolutionGuideSendBtn) dom.resolutionGuideSendBtn.addEventListener("click", resolutionGuideSend);
-        if (dom.resolutionGuideInput) dom.resolutionGuideInput.addEventListener("keydown", (event) => {
-            if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
-                event.preventDefault();
-                resolutionGuideSend();
-            }
-        });
-        if (dom.resolutionGuideResetBtn) dom.resolutionGuideResetBtn.addEventListener("click", () => {
-            state.resolutionGuide.history = [];
-            state.resolutionGuide.started = false;
-            if (dom.resolutionGuideMessages) dom.resolutionGuideMessages.innerHTML = "";
-            if (dom.resolutionGuideBuildBtn) dom.resolutionGuideBuildBtn.disabled = true;
-            if (dom.resolutionGuideResult) dom.resolutionGuideResult.hidden = true;
-            resolutionGuideStart();
-        });
-        if (dom.resolutionGuideBuildBtn) dom.resolutionGuideBuildBtn.addEventListener("click", resolutionGuideFinalize);
         dom.printLedgerBtn.addEventListener("click", () => window.print());
 
         dom.zoomOutBtn.addEventListener("click", () => {
