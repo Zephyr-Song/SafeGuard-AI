@@ -418,6 +418,17 @@ a {
     box-shadow: 0 0 0 4px var(--coral-soft);
 }
 
+.api-status.is-connecting i {
+    background: var(--amber);
+    box-shadow: 0 0 0 4px var(--amber-soft);
+    animation: status-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
 .context-divider {
     width: 1px;
     height: 17px;

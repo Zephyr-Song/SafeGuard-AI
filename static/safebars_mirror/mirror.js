@@ -791,6 +791,14 @@
         return session;
     }
 
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    // Free-tier backend (Render) cold-starts: a request right after idle can hit
+    // 502/503/504 or a network timeout for 20-60s. Retry transient failures with
+    // backoff so the page recovers on its own instead of showing a false alarm.
+    const API_MAX_ATTEMPTS = 5;
+    const API_BACKOFF_MS = [3000, 6000, 12000, 20000];
+    const TRANSIENT_STATUS = new Set([502, 503, 504]);
+
     async function api(path, options = {}) {
         const request = {
             method: options.method || "GET",
@@ -804,40 +812,64 @@
         if (options.body !== undefined) {
             request.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
         }
-        let response;
-        try {
-            response = await fetch(`${API_ROOT}${path}`, request);
-        } catch (error) {
-            setConnection(false);
-            const networkError = new Error("SafeBARS could not reach the analysis service.");
-            networkError.cause = error;
-            throw networkError;
+        for (let attempt = 0; attempt < API_MAX_ATTEMPTS; attempt++) {
+            try {
+                const response = await fetch(`${API_ROOT}${path}`, request);
+                const contentType = response.headers.get("content-type") || "";
+                let payload = null;
+                try {
+                    payload = contentType.includes("application/json")
+                        ? await response.json()
+                        : { message: await response.text() };
+                } catch {
+                    payload = {};
+                }
+                // Cold-start proxy errors: retry with backoff before giving up.
+                if (TRANSIENT_STATUS.has(response.status) && attempt < API_MAX_ATTEMPTS - 1) {
+                    setConnecting();
+                    await delay(API_BACKOFF_MS[attempt] || 20000);
+                    continue;
+                }
+                if (!response.ok || payload?.success === false) {
+                    const message = firstValue(payload?.error, payload?.message, `Request failed (${response.status}).`);
+                    const error = new Error(typeof message === "object" ? firstValue(message.message, message.detail, "Request failed.") : message);
+                    error.status = response.status;
+                    error.payload = payload;
+                    if (response.status >= 500) setConnection(false);
+                    throw error;
+                }
+                setConnection(true);
+                return payload || {};
+            } catch (error) {
+                // Network failure (e.g. cold-start timeout) — retry if attempts remain.
+                if (attempt < API_MAX_ATTEMPTS - 1) {
+                    setConnecting();
+                    await delay(API_BACKOFF_MS[attempt] || 20000);
+                    continue;
+                }
+                setConnection(false);
+                const networkError = new Error("SafeBARS could not reach the analysis service.");
+                networkError.cause = error;
+                throw networkError;
+            }
         }
-        let payload = null;
-        const contentType = response.headers.get("content-type") || "";
-        try {
-            payload = contentType.includes("application/json")
-                ? await response.json()
-                : { message: await response.text() };
-        } catch {
-            payload = {};
-        }
-        if (!response.ok || payload?.success === false) {
-            const message = firstValue(payload?.error, payload?.message, `Request failed (${response.status}).`);
-            const error = new Error(typeof message === "object" ? firstValue(message.message, message.detail, "Request failed.") : message);
-            error.status = response.status;
-            error.payload = payload;
-            if (response.status >= 500) setConnection(false);
-            throw error;
-        }
-        setConnection(true);
-        return payload || {};
+    }
+
+    // Neutral "still trying" state shown during cold-start retries — pill goes
+    // amber + "Reconnecting…" but the alarming banner stays hidden.
+    function setConnecting() {
+        state.lastConnectionOk = false;
+        dom.apiStatus.classList.remove("is-online", "is-offline");
+        dom.apiStatus.classList.add("is-connecting");
+        dom.apiStatus.querySelector("span").textContent = "Reconnecting…";
+        dom.connectionBanner.hidden = true;
     }
 
     function setConnection(online) {
         state.lastConnectionOk = Boolean(online);
         dom.apiStatus.classList.toggle("is-online", online);
         dom.apiStatus.classList.toggle("is-offline", !online);
+        dom.apiStatus.classList.remove("is-connecting");
         dom.apiStatus.querySelector("span").textContent = online ? "Service ready" : "Service unavailable";
         dom.connectionBanner.hidden = online;
     }
