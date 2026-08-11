@@ -4569,3 +4569,26 @@ a.quiet-button {
 .realize-bridge h2 { margin: 0 0 8px; color: #173f37; font-size: 16px; }
 .realize-bridge #realizeBridgeText { margin: 0 0 8px; color: #25302a; font-size: 14px; line-height: 1.5; }
 .realize-bridge-note { margin: 0; color: #5a6a63; font-size: 12px; font-style: italic; }
+
+/* ---- Self-discovery items (disc split / prescribe / withhold) ---- */
+#discoveryList { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+.disc-item {
+    border: 1px solid #d9e2dd;
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: #f4f8f6;
+}
+.disc-item[data-style="prescribe"] { border-left: 4px solid #cf5448; }
+.disc-item[data-style="withhold"] { border-left: 4px solid #5aa9d8; }
+.disc-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    padding: 2px 9px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+}
+.disc-prescribe { background: #fbe6e2; color: #a83a2c; }
+.disc-withhold { background: #e6f1f9; color: #2f6f9c; }
+.disc-q { margin: 0 0 10px; font-size: 14px; line-height: 1.5; color: #25302a; }

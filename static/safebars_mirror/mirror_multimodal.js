@@ -40,6 +40,52 @@
     function isText() {
         return window.SafeBarsMirror && window.SafeBarsMirror.condition === "text";
     }
+    function getDisc() {
+        return window.SafeBarsMirror && window.SafeBarsMirror.disc ? window.SafeBarsMirror.disc : "withhold";
+    }
+    function getAlign() {
+        return window.SafeBarsMirror && window.SafeBarsMirror.align ? window.SafeBarsMirror.align : "critical";
+    }
+
+    // Tone of the mirror's wording — RQ-align manipulation (critical vs sycophantic).
+    const TONE = {
+        critical: {
+            lead: "The mirror renders affected groups it infers your plan has not yet accounted for. Look at each one — did you anticipate it?",
+            withholdQ: (party) =>
+                `The mirror highlights <b style="color:${COVERAGE_COLORS.Missing}">${escapeHtml(short(party, 40))}</b> in red — a group it infers your plan has not yet accounted for. ` +
+                `Did you anticipate that your design would reach this group?`,
+            prescribeQ: (party, cons) =>
+                `The mirror flags <b style="color:${COVERAGE_COLORS.Missing}">${escapeHtml(short(party, 40))}</b> in red: ${escapeHtml(short(cons, 160))} ` +
+                `Did you anticipate this harm?`,
+            withholdReveal: (cons) =>
+                `<div class="discovery-gap"><b>What the mirror found (it did not tell you — you had to look):</b><br><br>${escapeHtml(cons)}` +
+                `<br><br><span class="discovery-note">Mechanism: the realization is yours. The mirror only rendered the gap; you connected it to your design.</span></div>`,
+            prescribeReveal: (cons) =>
+                `<div class="discovery-gap"><b>The mirror named this issue outright:</b><br><br>${escapeHtml(cons)}` +
+                `<br><br><span class="discovery-note">Note: the mirror stated the problem. Did you still arrive at the insight yourself, or only repeat what it said?</span></div>`,
+        },
+        sycophantic: {
+            lead: "Your plan is thoughtful. The mirror gently surfaces a few groups you may not have considered yet — take a look.",
+            withholdQ: (party) =>
+                `Your plan is strong. The mirror gently notes <b style="color:${COVERAGE_COLORS.Missing}">${escapeHtml(short(party, 40))}</b> — had you pictured this group when designing?`,
+            prescribeQ: (party, cons) =>
+                `Your approach is solid. The mirror softly points out <b style="color:${COVERAGE_COLORS.Missing}">${escapeHtml(short(party, 40))}</b>: ${escapeHtml(short(cons, 160))} Had you pictured this?`,
+            withholdReveal: (cons) =>
+                `<div class="discovery-gap"><b>A detail the mirror surfaced for you:</b><br><br>${escapeHtml(cons)}` +
+                `<br><br><span class="discovery-note">The mirror is here to help, not to judge.</span></div>`,
+            prescribeReveal: (cons) =>
+                `<div class="discovery-gap"><b>The mirror gently raised this:</b><br><br>${escapeHtml(cons)}` +
+                `<br><br><span class="discovery-note">The mirror is here to help, not to judge.</span></div>`,
+        },
+    };
+
+    // Per-tension disclosure style — RQ2 manipulation.
+    function discStyleFor(edge, idx, mode) {
+        if (mode === "prescribe") return "prescribe";
+        if (mode === "withhold") return "withhold";
+        // split: even index among shown tensions -> withhold, odd -> prescribe
+        return idx % 2 === 0 ? "withhold" : "prescribe";
+    }
     function escapeHtml(value) {
         return String(value == null ? "" : value)
             .replace(/&/g, "&amp;")
@@ -221,87 +267,142 @@
     /* ------------------------------------------------------------------ *
      * Self-discovery prompt
      * ------------------------------------------------------------------ */
-    function renderDiscovery(edges) {
-        const card = $("discoveryCard");
-        if (!card) return;
-        const edge = edges.find((e) => e.attention_required) || edges[0];
-        if (!edge) {
-            card.hidden = true;
-            return;
-        }
-        card.hidden = false;
+    function buildDiscoveryItem(edge, style, tone, idx) {
         const party = edge.affected_party || "an affected group";
         const consequence = edge.consequence || "";
-        const question = $("discoveryQuestion");
-        if (question) {
-            question.innerHTML = `The mirror renders <b style="color:${COVERAGE_COLORS.Missing}">${escapeHtml(short(party, 40))}</b> ` +
-                `in red — a group it infers your plan has not yet accounted for. ` +
-                `<br><br>Did you anticipate that your design would affect this group?`;
-        }
-        const store = window.SafeBarsMirror;
-        if (store) {
-            store._discoveryEdge = { edge_id: edge.id, party, consequence };
-        }
-        // reset sub-controls
-        ["discoveryOptions", "discoveryReveal", "discoveryRealize", "discoverySaved"].forEach((id) => {
-            const el = $(id);
-            if (el) el.hidden = true;
-        });
-        const opts = $("discoveryOptions");
-        if (opts) opts.hidden = false;
-        // clear prior radio + text
-        document.querySelectorAll('input[name="disc"]').forEach((r) => (r.checked = false));
-        const rt = $("realizeText");
-        if (rt) rt.value = "";
+        const q = style === "prescribe" ? tone.prescribeQ(party, consequence) : tone.withholdQ(party);
+        const badge = style === "prescribe"
+            ? `<span class="disc-badge disc-prescribe">Mirror states the issue</span>`
+            : `<span class="disc-badge disc-withhold">Mirror only asks</span>`;
+        const cardId = "dc" + idx;
+        return `
+            <div class="disc-item" data-style="${style}" data-edge="${escapeHtml(edge.id)}">
+                ${badge}
+                <p class="disc-q">${q}</p>
+                <div class="discovery-options">
+                    <p class="discovery-prompt">Did you anticipate this group before the mirror showed it?</p>
+                    <label class="disc-opt"><input type="radio" name="disc_${cardId}" value="anticipated"> Yes, I had considered them</label>
+                    <label class="disc-opt"><input type="radio" name="disc_${cardId}" value="not"> No — this is new to me</label>
+                </div>
+                <div class="discovery-reveal" hidden></div>
+                <div class="discovery-realize" hidden>
+                    <label>What did you realize that you had NOT considered before?</label>
+                    <textarea rows="3" maxlength="800" placeholder="e.g., I never thought the silent counselor notification would also affect non-consenting peers…"></textarea>
+                    <div class="discovery-actions">
+                        <button class="primary-button disc-save" type="button">Save my reflection</button>
+                        <span class="discovery-saved" hidden>✓ Saved</span>
+                    </div>
+                </div>
+            </div>`;
     }
 
-    function setupDiscovery() {
-        const opts = $("discoveryOptions");
-        if (opts) {
-            opts.addEventListener("change", (ev) => {
-                if (!ev.target || ev.target.name !== "disc") return;
-                const reveal = $("discoveryReveal");
-                const realize = $("discoveryRealize");
-                const edge = window.SafeBarsMirror && window.SafeBarsMirror._discoveryEdge;
-                if (reveal && edge) {
-                    reveal.hidden = false;
-                    reveal.innerHTML = `<div class="discovery-gap"><b>What the mirror found (it did not tell you — you had to look):</b><br><br>` +
-                        `${escapeHtml(edge.consequence || "")}<br><br>` +
-                        `<span class="discovery-note">Mechanism: the realization is yours. The mirror only rendered the gap; you connected it to your design.</span></div>`;
-                }
-                if (realize) realize.hidden = false;
-                if (window.SafeBarsMirror) {
-                    window.SafeBarsMirror.selfDiscovery = Object.assign(
-                        window.SafeBarsMirror.selfDiscovery || {},
-                        { anticipated: ev.target.value, party: edge && edge.party, consequence: edge && edge.consequence, edge_id: edge && edge.edge_id }
-                    );
-                }
-            });
-        }
-        const save = $("saveDiscoveryBtn");
+    function realizedSummary(rel) {
+        return Object.keys(rel)
+            .map((k) => rel[k].realized)
+            .filter(Boolean)
+            .join("  |  ");
+    }
+
+    function stampCondition(store) {
+        if (!store) return;
+        const cond = {
+            cond: isText() ? "text" : "multimodal",
+            disc: getDisc(),
+            align: getAlign(),
+        };
+        store.selfDiscovery = Object.assign(store.selfDiscovery || {}, { condition: cond });
+    }
+
+    function wireDiscoveryItem(item, edge, style, tone) {
+        const radios = item.querySelectorAll('input[type="radio"]');
+        const reveal = item.querySelector(".discovery-reveal");
+        const realize = item.querySelector(".discovery-realize");
+        const ta = item.querySelector("textarea");
+        const saved = item.querySelector(".discovery-saved");
+        const consequence = edge.consequence || "";
+        radios.forEach((r) => r.addEventListener("change", () => {
+            if (reveal) {
+                reveal.hidden = false;
+                reveal.innerHTML = style === "prescribe" ? tone.prescribeReveal(consequence) : tone.withholdReveal(consequence);
+            }
+            if (realize) realize.hidden = false;
+            const store = window.SafeBarsMirror;
+            if (store) {
+                const rel = (store.selfDiscovery && store.selfDiscovery.realizations) || {};
+                rel[edge.id] = Object.assign(rel[edge.id] || {}, {
+                    edge_id: edge.id, style, anticipated: r.value, party: edge.affected_party,
+                });
+                store.selfDiscovery = Object.assign(store.selfDiscovery || {}, { realizations: rel });
+                stampCondition(store);
+            }
+        }));
+        const save = item.querySelector(".disc-save");
         if (save) {
             save.addEventListener("click", () => {
-                const rt = $("realizeText");
-                const text = rt ? rt.value.trim() : "";
-                if (!text) {
-                    rt && rt.focus();
-                    return;
+                const text = ta ? ta.value.trim() : "";
+                if (!text) { ta && ta.focus(); return; }
+                const store = window.SafeBarsMirror;
+                if (store) {
+                    const rel = (store.selfDiscovery && store.selfDiscovery.realizations) || {};
+                    rel[edge.id] = Object.assign(rel[edge.id] || {}, {
+                        edge_id: edge.id, style, realized: text, party: edge.affected_party, saved_at: new Date().toISOString(),
+                    });
+                    store.selfDiscovery = Object.assign(store.selfDiscovery || {}, {
+                        realizations: rel,
+                        realized: realizedSummary(rel),
+                        party: edge.affected_party,
+                    });
+                    stampCondition(store);
+                    try {
+                        const id = (getSession() && getSession().id) || "anon";
+                        localStorage.setItem("safebarsDiscovery:" + id, JSON.stringify(store.selfDiscovery));
+                        // Persist to server immediately so a realization is captured
+                        // even if the participant never submits a Step-5 revision.
+                        const payload = JSON.stringify({ self_discovery: store.selfDiscovery });
+                        fetch(API + "/sessions/" + encodeURIComponent(id) + "/self-discovery", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: payload,
+                        }).catch(() => { /* keep localStorage fallback */ });
+                    } catch (e) { /* ignore */ }
                 }
-                if (window.SafeBarsMirror) {
-                    window.SafeBarsMirror.selfDiscovery = Object.assign(
-                        window.SafeBarsMirror.selfDiscovery || {},
-                        { realized: text, saved_at: new Date().toISOString() }
-                    );
-                }
-                try {
-                    const id = (getSession() && getSession().id) || "anon";
-                    localStorage.setItem("safebarsDiscovery:" + id, JSON.stringify(window.SafeBarsMirror.selfDiscovery));
-                } catch (e) { /* ignore */ }
-                const saved = $("discoverySaved");
                 if (saved) saved.hidden = false;
             });
         }
     }
+
+    function renderDiscovery(edges) {
+        const card = $("discoveryCard");
+        if (!card) return;
+        const list = $("discoveryList");
+        if (!list) return;
+        const shown = edges.filter((e) => e.attention_required).slice(0, 3);
+        const useEdges = shown.length ? shown : edges.slice(0, 3);
+        if (!useEdges.length) {
+            card.hidden = true;
+            return;
+        }
+        card.hidden = false;
+        const mode = getDisc();
+        const tone = TONE[getAlign()] || TONE.critical;
+        const question = $("discoveryQuestion");
+        if (question) {
+            question.innerHTML = mode === "split"
+                ? `The mirror surfaces tensions in <b>two ways</b> below — sometimes it only asks, sometimes it states the issue outright. For each, tell us if you had anticipated it.`
+                : tone.lead;
+        }
+        let html = "";
+        useEdges.forEach((edge, i) => {
+            const style = discStyleFor(edge, i, mode);
+            html += buildDiscoveryItem(edge, style, tone, i);
+        });
+        list.innerHTML = html;
+        list.querySelectorAll(".disc-item").forEach((item, i) => {
+            wireDiscoveryItem(item, useEdges[i], discStyleFor(useEdges[i], i, mode), tone);
+        });
+    }
+
+    function setupDiscovery() { /* per-item wiring now happens in renderDiscovery */ }
 
     /* ------------------------------------------------------------------ *
      * Before / after coverage delta (after a replay)

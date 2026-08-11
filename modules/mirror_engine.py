@@ -559,6 +559,45 @@ class MirrorEngine:
             )
             return session
 
+    def save_self_discovery(
+        self,
+        session_id: str,
+        data: Optional[Any] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Persist the Step-4 self-discovery reflection independent of revision submit.
+
+        Guarantees the participant's realization is captured server-side even if
+        they never reach / complete Step 5. Merges into any existing
+        self_discovery so repeated saves accumulate (e.g. per-tension realizations)."""
+        if data is None:
+            return self.get_session(session_id)
+        with self._lock:
+            session = self.get_session(session_id)
+            if not session:
+                return None
+            existing = session.get("self_discovery") or {}
+            if isinstance(data, dict):
+                # Merge realizations so split-mode per-tension saves accumulate.
+                merged = dict(existing)
+                for k, v in data.items():
+                    if k == "realizations" and isinstance(v, dict) and isinstance(merged.get("realizations"), dict):
+                        merged["realizations"] = {**merged.get("realizations", {}), **v}
+                    else:
+                        merged[k] = v
+                session["self_discovery"] = merged
+            else:
+                session["self_discovery"] = data
+            self._append_ledger(
+                session,
+                "self_discovery_saved",
+                "researcher",
+                {"has_realized": bool((session["self_discovery"] or {}).get("realized"))},
+            )
+            self._touch(session)
+            self.store.save(session)
+            self.store.log(session["id"], "self_discovery_saved", {"has_realized": True})
+            return session
+
     def replay_session(
         self,
         session_id: str,

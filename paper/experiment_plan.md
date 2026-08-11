@@ -59,11 +59,13 @@
 
 ## 3. 实验设计（Study 1，回答 RQ1–RQ4，是论文主力）
 
-### 3.1 设计
+> **完整可运行工具集已另立文件 `paper/study1_protocol.md`**（v1.0，2026-08-11）：含 RQ→假设→因变量→分析主表、英文知情同意书、被试逐步脚本、完整 7 构念后测量表 + 操纵检验 + 开放题、2 编码者质性编码方案（self-discovery 归属 / 心智改变 / 修订质量 rubric，IRR 目标 ≥.70）、量化分析计划（模型/效应量/预注册）、Pilot 手册（8/12–8/25）、数据伦理。实验使能代码（`?disc=split` / `?align=`）已于 2026-08-11 实现并部署，详见 `paper/pilot_runbook.md` 与 `paper/analysis_plan.py`。本 §3 只保留决策摘要。
+
+### 3.1 设计（决策摘要）
 - **主效应（pre-registered）**：2（模态：多模态镜 vs 文字镜[Taheri 式，同样引擎输出但以文字列表/对话呈现，无可视化]）**between-subjects**。→ **操纵已实现**：多模态条件用线上默认链接；文字对照臂用同一站点 `?cond=text`（关闭 Step 4 三视图 + 自发现面板，保留基线文字/卡片界面），无需维护两套代码。
-- **机制对比（RQ2）**：2（处方：镜直接陈述问题 vs 镜保留问题只提问）within 或 between——测"自发现"归属。
-- **对齐操控（RQ，来自 Vibe Check）**：2（对齐：批判/非谄媚 vs 谄媚/附和）between——测信任 vs 批判距离。
-- 可行时做 **2×2（模态 × 对齐）**；若 N 小则塌缩到主效应（模态）。
+- **机制对比（RQ2）**：张力层面 **within** 设计——同一会话内一半张力 `withhold`（只提问）、一半 `prescribe`（直接陈述），由 `?disc=split` 分配（**已实现 2026-08-11**：`mirror_multimodal.js` 的 `discStyleFor` + 多卡渲染，偶数张力 withhold / 奇数 prescribe；`?disc=withhold`(默认)/`?disc=prescribe`/`?disc=split` 三态）。样本不翻倍。N 不足时降级为跨被试探索或仅 pilot 质性。
+- **对齐操控（RQ-align，来自 Vibe Check）**：2（对齐：批判/非谄媚 vs 谄媚/附和）between，由 `?align=critical|sycophantic` 控制（**已实现 2026-08-11**：`TONE` 文案映射，批判=直指盲区、谄媚=先肯定再软性提示；`?align=` 默认 `critical`）。可行时做 **2×2（模态 × 对齐）**；若 N 小则塌缩到主效应（模态）。
+- **预注册**：OSF 注册主假设 H1/H3/H4 与主要 DV（self-discovery 行为率、Δ群体数、拥有感）；RQ2 / RQ-align 标 exploratory。
 
 ### 3.2 被试
 - **Pilot**：8–12 位朋友（SURF 指导）+ XJTLU 学生，做可行性 + 题项校准。
@@ -103,7 +105,7 @@
 
 | 时间 | 任务 |
 |---|---|
-| 8/11（已完成） | ✅ 多模态自发现层（3 视图 + 自发现提问 + 前后重渲染）**已移植并部署**到 Step 4；`?cond=text` 文本对照臂 + `self_discovery` 采集已就位。下一步：加 RECALLbot 记忆 + Hear You in Silence 节奏 + Vibe Check 对齐开关 |
+| 8/11（已完成） | ✅ 多模态自发现层（3 视图 + 自发现提问 + 前后重渲染 + realize→fix 桥接）**已移植并部署**到 Step 4；`?cond=text` 文本对照臂 + `self_discovery` 采集已就位。✅ **Study 1 实验设计全就绪**：`study1_protocol.md` v1.0（知情同意/脚本/7 构念问卷/编码方案/分析计划/Pilot 手册）+ `.docx` 面件 + `pilot_runbook.md` + `analysis_plan.py`（可跑 DV 提取）+ `osf_preregistration.md` 草稿。✅ **全部实验使能代码已实现并部署**：`?disc=split`（RQ2 within，半张力 prescribe/半 withhold）、`?align=critical|sycophantic`（RQ-align 文案基调）。下一步（可选增强，非实验必需）：RECALLbot 跨会话记忆 + Hear You in Silence 顿悟后节奏 |
 | 8/12–8/25 | 加 RECALLbot 跨会话记忆 + Hear You in Silence 顿悟后节奏 + Vibe Check 对齐开关；朋友 pilot 前自查 |
 | 8/26–9/1 | 朋友 pilot（8–12），校准题项与流程，修 bug |
 | 9/2–9/7 | Prolific 收数据（需先过 XJTLU 伦理审批）+ 编码 |

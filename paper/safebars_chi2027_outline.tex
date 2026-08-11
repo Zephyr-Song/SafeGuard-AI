@@ -1,22 +1,43 @@
 % ============================================================================
-% SafeBARS — Ethical Mirror (LLM-extended) — CHI 2027 draft outline + Related Work
+% SafeBARS — Multimodal Ethical Mirror — CHI 2027 draft outline + Related Work
 % Format: ACM acmart (CHI template). Drop into Overleaf; verify track/length with PCS.
 % TODO before submission: verify all author names + the SafeBARS'23 citation on ACM DL.
-% Multi-model evaluation will use Aliyun Bailian (Qwen-Turbo / Qwen-Plus / Qwen-Max /
-% Qwen-Long) as the model-variation source, driven by modules/multi_model_eval.py.
+% This version reframes the paper around the teacher's explicit requirement:
+%   (1) MULTIMODAL interaction (Taheri et al. CHI'26 named text-only as a limitation),
+%   (2) USER SELF-DISCOVERY of blind spots (not AI telling them),
+%   (3) evidence the app CHANGES THE USER'S MIND (not just generates a report).
+% ANCHORED ON THE LIVE DEPLOYED SYSTEM: https://safebars-ai.pages.dev/safebars/mirror
+%   (Flask + LLM; 9 ethics lenses w/ coverage states; bounded role-probe agents
+%    [Perspectra-like]; scenarios; ethics-guided tension queue; deterministic
+%    deep-audit). The multimodal self-discovery layer is ported from the prototype
+%    into this live site (stakeholder map / value-conflict heatmap / scenario branch
+%    tree + "did you anticipate this group?" + before/after re-render).
+% DESIGN REFINEMENTS INFORMED BY 4 CHI'26 PAPERS (Vibe Check / RECALLbot /
+%    Hear You in Silence / Perspectra): user-selectable expert lenses, agentic
+%    cross-session memory, reciprocal disclosure, context-aware pacing, and an
+%    explicit critical-vs-sycophantic alignment manipulation. See \S System + RQ6.
+% TODO before submission: verify all author names + the SafeBARS'23 citation on ACM DL
+%    (ACM Open Access landing blocked full-text fetch; VERIFY against DL).
 % ============================================================================
 \documentclass[manuscript,screen]{acmart}
 
-\title{SafeBARS Re-Mirrored: An LLM-Extended Ethical Mirror That Resists Sycophancy}
+\title{SafeBARS Re-Mirrored: A Multimodal Ethical Mirror That Lets Researchers
+Discover Their Own Blind Spots}
 % TODO: finalize title; add authors / affiliations
 
 \begin{abstract}
 % TODO (fill after study): SafeBARS (CHI'23) introduced the "ethical mirror" that
 % surfaces tensions between a system's design and ethical considerations. We extend it
-% with LLM multi-role ethics probes and a deterministic deep-audit layer that catches
-% risks researchers did not write down. Across N researcher plans and K model variants,
-% we find that ... (RQ answers). Unlike companion agents that optimize for rapport, our
-% mirror is deliberately non-sycophantic to preserve critical distance.
+% into a *multimodal* mirror in which researchers confront the consequences of their
+% OWN design through interactive visualization and scenario simulation. Crucially, the
+% mirror withholds prescription: it renders gaps (a stakeholder the researcher never
+% named, a value the design leaves uncovered) so the realization is the user's, not the
+% AI's. Across a between-subjects study (multimodal vs. text-only mirror) we show that
+% the multimodal mirror produces more self-discovered blind spots and measurable
+% mind-change -- operationalized as pre/post affected-group listing plus *behavioral*
+% plan revision, not a generated report. We contrast this with recent work in which
+% AI dialogue shifts bias recognition but remains text-only and where self-reflection
+% emerges only by chance.
 \end{abstract}
 
 \begin{document}
@@ -25,138 +46,251 @@
 % ---------------------------------------------------------------------------
 \section{Introduction}
 % OUTLINE (bullets to expand into prose):
-% - Ethical reflection is hard; researchers miss tensions they did not articulate.
-% - SafeBARS (CHI'23) = pre-LLM mirror; relies on curated exercises, only reflects written content.
-% - LLMs enable (a) multi-role ethics probes and (b) nuanced generation — but also risk sycophancy.
-% - We contribute: LLM-extended mirror + deterministic deep-audit + deliberately non-sycophantic design.
-% - Research questions (see \S4). Expected contribution to HCI ethics-tooling.
-% - NOTE for Erick meeting: tool is deployed & working; this paper closes the evaluation loop.
+% - Ethical blind spots in research design are hard to see *because they are the
+%   researcher's own*: the designer rarely notices who their system affects.
+% - SafeBARS (CHI'23) = pre-LLM mirror; reflects only what is written; text-driven.
+% - Recent CHI'26 work shows AI dialogue can shift bias recognition (Taheri et al.),
+%   but that work is (a) TEXT-ONLY and names multimodality as its own key limitation,
+%   (b) about recognizing bias in *other people's* social interactions, and
+%   (c) found self-reflection only as a serendipitous side-effect -- it was not designed for.
+% - The teacher's requirement, and our contribution: make the mirror MULTIMODAL,
+%   make self-discovery DELIBERATE, and PROVE it changes the user's mind.
+% - We contribute: (1) a multimodal ethical mirror, (2) a designed self-discovery
+%   mechanism ("critical friction" manufactured multimodally), (3) a closed loop with
+%   behavioral mind-change evidence, (4) the LLM engine + deterministic deep-audit behind it.
+% - NOTE for Erick meeting: tool is deployed & working; this paper closes the loop with a study.
 
 % ---------------------------------------------------------------------------
 \section{Related Work}
 Recent CHI research has rapidly advanced LLM-based conversational agents across four
 dimensions directly relevant to our work. \citep{vibecheck26} show that an agent's
-personality expression follows an inverted-U: moderate expression aligned with the user
-yields the best outcomes, with extraversion and emotional stability most influential on
-trust and adoption. \citep{recallbot26} demonstrate that agentic memory (a Me/We dual
-memory) combined with reciprocal self-disclosure and user control deepens human--chatbot
-relationships over a two-week deployment. \citep{hearinsilence26} find that context-aware
-pacing---choosing among immediate, silence, and acknowledgment strategies---reads as more
-humane listening and promotes self-disclosure and affective trust. Most directly related,
-\citep{perspectra26} show that letting users choose and invite expert agents, visualized as
-a forum, enhances critical thinking and produces more structured, interdisciplinary
-revisions than a single group chat.
+personality expression follows an inverted-U; \citep{recallbot26} demonstrate that
+agentic memory combined with reciprocal self-disclosure deepens human--chatbot
+relationships; \citep{hearinsilence26} find that context-aware pacing promotes
+self-disclosure and affective trust; and \citep{perspectra26} show that letting users
+choose and invite expert agents enhances critical thinking. These papers share one
+goal: optimizing the agent to build rapport, trust, and intimacy. We borrow their
+\emph{mechanisms} (user-selectable perspectives, transparent memory, paced guidance)
+while inverting the objective: a critical reflection tool must resist sycophancy and
+preserve critical distance rather than maximize liking.
 
-These papers share one goal: optimizing the agent to build rapport, trust, and intimacy.
-Our work starts from the CHI'23 SafeBARS ethical mirror \citep{safebars23}---a pre-LLM tool
-that surfaces tensions between a system's design and ethical considerations and asks
-researchers to respond. We inject LLMs into this mirror, but \emph{invert} the objective:
-a critical reflection tool must resist sycophancy and preserve critical distance rather
-than maximize trust or liking. We therefore borrow the \emph{mechanisms} these papers
-establish---user-selectable multiple perspectives \citep{perspectra26}, transparent memory
-and user control \citep{recallbot26}, deliberately designed persona \citep{vibecheck26},
-and paced guidance \citep{hearinsilence26}---while rejecting their \emph{aim}. To our
-knowledge, no reflection tool has (a) used LLM multi-role ethics probes to extend SafeBARS,
-nor (b) added a deterministic deep-audit layer that surfaces risks researchers did not
-write down---addressing the known limit that reflection prompts only reflect what is
-already articulated.
+\paragraph{AI-mediated dialogue and bias recognition.}
+Most directly adjacent, \citep{taheri26} (CHI'26) show that AI-mediated \emph{dialogue}
+shifts recognition of ableist bias more than a text-only reading control, and that
+resisting a biased AI coach can forge sharper moral boundaries -- what they call
+\emph{critical friction}. Three facts make their work both our anchor and our point of
+departure. \emph{First}, their intervention is \textbf{text-only}: they explicitly state
+as a limitation that their "text-based dialogue \dots lacks the multimodal richness of
+face-to-face interaction" and call for "virtual reality or voice-based agents" as future
+work \cite{taheri26}. \emph{Second}, their self-reflection finding was \textbf{serendipitous}
+-- an "unintended" learning mechanism, not a designed one. \emph{Third}, they measure
+recognition of bias in \emph{others'} interactions via vignette ratings; they do not
+measure whether the tool changes the participant's \emph{own} design, nor capture
+behavioral revision. Our work takes their strongest mechanism (critical friction) and
+\emph{designs for it multimodally}, on the researcher's \emph{own} artifact, with
+\emph{behavioral} mind-change as the outcome.
+
+\paragraph{SafeBARS and the ethical mirror.}
+We build on the CHI'23 SafeBARS ethical mirror \citep{safebars23}, a pre-LLM tool that
+surfaces tensions between a design and ethical considerations and asks researchers to
+respond. We inject LLMs (multi-role ethics probes, a deterministic deep-audit layer that
+catches risks researchers did not write down) and -- the contribution of this paper --
+turn the mirror from a \emph{text report} into a \emph{multimodal, self-discovery loop}.
+To our knowledge no reflection tool has (a) used multimodal rendering to trigger
+user-owned realization of ethical blind spots, nor (b) measured behavioral mind-change
+rather than generated a report.
 
 % ---------------------------------------------------------------------------
-\section{SafeBARS: The Ethical Mirror, Extended}
-% OUTLINE:
-% - Architecture: Flask backend + LLM providers (Zhipu / Bailian-Qwen / Hunyuan / DeepSeek / OpenAI).
-% - Multi-role ethics probes: LLM generates tensions across ethics lenses (privacy, fairness,
-%   transparency, accountability, autonomy, ...); researchers choose which "expert" lenses to enable
-%   (mirrors \citep{perspectra26} user control).
-% - Deterministic deep-audit layer (offline, no LLM budget): contradiction detection, high-risk
-%   domain injection, severity gaps, missing evidence bridges. Addresses "only reflects written content."
-% - Deliberately non-sycophantic persona + paced guidance (draws on \citep{vibecheck26},
-%   \citep{hearinsilence26}) but tuned for ethical审慎, not companionship.
-% - Deployed & publicly usable (URL). End-to-end: submit plan -> tension map + suggested revisions
-%   -> researcher responds -> exports ethics-committee application (.docx).
+\section{SafeBARS: The Multimodal Ethical Mirror}
+% Engine (unchanged from prior work): Flask + LLM providers; multi-role ethics probes;
+% deterministic deep-audit. What is NEW for CHI'27 is the front-end interaction loop.
+\subsection{Engine (background)}
+Flask backend + pluggable LLM providers. The system is \emph{deployed and publicly
+accessible} at \texttt{safebars-ai.pages.dev/safebars/mirror}. Multi-role ethics probes generate tensions
+across ethics lenses (privacy, fairness, autonomy, \dots); researchers choose which
+"expert" lenses to enable (mirrors \citep{perspectra26}). A deterministic deep-audit
+layer (offline, no LLM budget) catches contradictions, high-risk domains, and
+unwritten risks. The engine outputs structured tensions, lens coverage states, bounded
+role probes, and suggested scenarios -- the raw material the multimodal layer renders.
+
+\subsection{The Multimodal Layer (contribution)}
+Instead of presenting tensions as a text list or a generated PDF, the mirror renders
+three coordinated views from the engine output:
+\begin{itemize}
+  \item \textbf{① Stakeholder map} (interactive SVG): the researcher's design at the
+    center; green nodes are groups the researcher named; \textbf{red, pulsing nodes are
+    groups the engine inferred the researcher did \emph{not} name}. The gap is seen,
+    not stated.
+  \item \textbf{② Value-conflict heatmap}: ethics lenses (rows) $\times$ coverage state
+    (Missing / Claimed / Reasoned / Action-linked), colored. Red rows = values the
+    design leaves uncovered. This is evidence-coverage, explicitly \emph{not} an ethics
+    score.
+  \item \textbf{③ Scenario branch tree}: a design choice branches into "as designed
+    $\to$ consequence for a group" vs. "with a safeguard $\to$ mitigated". The user
+    sees the fork their decision creates.
+\end{itemize}
+
+\subsection{Self-Discovery, by Design (not by accident)}
+Taheri et al.\ found self-reflection only when participants happened to resist a biased
+coach. We \emph{manufacture critical friction}: the mirror highlights one red
+stakeholder node and \textbf{asks} -- "Did you anticipate this group?" -- rather than
+declaring a problem. The user must actively predict / acknowledge; only then does the
+mirror reveal the consequence. The realization is the user's; the AI withholds the
+verdict. This is the core difference from a report-generating app.
+
+\subsection{Co-Revision With AI Help (not auto-fix)}
+When the user responds, the AI offers \textbf{scaffolding}, not a fix
+\citep{taheri26}: multiple resolution options (revise / contest-with-evidence /
+consult-stakeholder / retain-with-rationale) the user can adapt. After the user writes
+the revision, the mirror \textbf{re-renders} the stakeholder map and heatmap
+(before $\to$ after), closing the loop and making the change visible and owned.
+
+\subsection{Closed Loop}
+Input design $\to$ multimodal mirror $\to$ user self-discovery $\to$ co-revision with
+AI scaffold $\to$ re-mirror (before/after). Mind-change is measured at the seam
+(pre/post affected-group listing + the actual revised plan as behavioral evidence).
+
+\subsection{Agentic Refinements Informed by CHI 2026}
+The live mirror already embodies one CHI'26 mechanism -- \emph{bounded multi-role
+probes}~\citep{perspectra26} (researchers are shown several ethics standpoints). We
+extend it with four refinements drawn from the CHI'26 agentic-AI literature, each
+borrowing a \emph{mechanism} while inverting the field's rapport-optimizing goal:
+\begin{itemize}
+  \item \textbf{User-selectable experts (Perspectra).} Researchers explicitly
+    \emph{invite} the expert lenses/roles they want challenged by, rather than
+    receiving a fixed set. Hypothesis: user-chosen perspectives deepen critical
+    engagement (tested as a within-condition probe).
+  \item \textbf{Agentic memory (RECALLbot).} The mirror remembers a researcher's
+    prior commitments and revisions across sessions and can recall ``last time you
+    committed X but did not act on it'' -- continuity of ethical attention.
+  \item \textbf{Reciprocal disclosure (RECALLbot).} Beyond the boundary notices
+    already in the UI, the mirror states its own limits up front: ``I am an AI; I
+    infer stakeholders you may not have considered; verify them.'' Calibrates trust.
+  \item \textbf{Context-aware pacing (Hear You in Silence).} After a self-discovery
+    moment or a hard tension, the mirror pauses rather than surfacing the next
+    tension immediately; it batches tensions by the user's revealed cognitive load.
+  \item \textbf{Alignment manipulation (Vibe Check).} The mirror's persona is
+    deliberately \emph{critical, non-sycophantic}. We expose this as a study
+    condition -- \emph{critical} vs.\ \emph{sycophantic/agreeable} alignment (RQ6) --
+    to test whether non-sycophancy trades felt agreement for greater critical
+    distance and behavioral mind-change, inverting Vibe Check's rapport agenda.
+\end{itemize}
 
 % ---------------------------------------------------------------------------
 \section{Research Questions}
-% Modeled on the "does X improve Y" structure of the four anchor papers.
+% Modeled on Taheri's "does X improve Y" structure but push past text-only + report.
 \begin{itemize}
-  \item \textbf{RQ1 (cf. \citep{perspectra26}):} Do multi-role ethics probes surface more
-    ethical tensions than a single-lens or no-mirror baseline? (Metric: tension count, lens coverage.)
-  \item \textbf{RQ2 (cf. \citep{vibecheck26}):} Does a deliberately non-sycophantic mirror keep
-    researchers appropriately skeptical rather than blindly adopting AI suggestions?
-    (Metric: contest rate and critical-distance score from the simulation.)
-  \item \textbf{RQ3 (cf. \citep{recallbot26}, \citep{hearinsilence26}):} Does retained context +
-    paced guidance improve the quality of researchers' revisions? (Metric: revision-quality rubric.)
-  \item \textbf{RQ4 (our deep-audit increment):} Does the deterministic deep-audit layer catch risks
-    that LLM-only generation misses? (Metric: internal-contradiction detection rate, unwritten-risk count.)
+  \item \textbf{RQ1 (Multimodal > text-only, cf. \citep{taheri26}):} Does a multimodal
+    ethical mirror produce more \emph{self-discovered} blind spots and greater
+    mind-change than a Taheri-style text-only dialogue mirror? (Primary outcome:
+    self-discovery utterances + behavioral plan revision.)
+  \item \textbf{RQ2 (Self-discovery mechanism, cf. \citep{taheri26} critical friction):}
+    When the system surfaces a gap \emph{multimodally and without prescribing the
+    problem}, do users report more "I didn't realize" moments and show greater
+    \emph{ownership} of revisions than when the system states the problem directly?
+    (Prescription vs no-prescription within-subject contrast.)
+  \item \textbf{RQ3 (Co-revision, not auto-fix):} Does user-led revision with AI
+    scaffolding (vs AI auto-fixing the plan) yield higher-quality, more durable
+    revisions and retained agency? (Revision-quality rubric + agency self-report.)
+  \item \textbf{RQ4 (Does it change the mind, not just report?):} Does the loop change
+    researchers' actual coverage -- pre/post affected-group listing \emph{and}
+    behavioral plan change -- rather than only generating a document? (This is the
+    teacher's "must change the user's mind" bar.)
+  \item \textbf{RQ5 (engine characterization, reuse \citep{perspectra26} multi-role idea):}
+    Does engine model choice affect which tensions surface? (Answered by the
+    computational simulation in \S\ref{sec:sim}; secondary, not the human-outcome claim.)
+  \item \textbf{RQ6 (alignment \& critical distance, cf. \citep{vibecheck26}):} Does a
+    deliberately \emph{non-sycophantic} mirror (vs.\ a sycophantic one) lower felt
+    agreement yet raise critical distance and behavioral mind-change? (Manipulated as
+    the alignment condition; probes the inverse of Vibe Check's rapport-optimizing goal.)
 \end{itemize}
 
 % ---------------------------------------------------------------------------
 \section{Method}
-\subsection{Computational Simulation: LLM Variants as Simulated Researchers}
-We evaluate SafeBARS with a \emph{computational simulation} in which different LLM
-variants stand in for researchers. This probes how the mirror behaves across model
-capabilities without recruiting human participants, and we report it as a simulation
-with its limits made explicit (see \S\ref{sec:limits}).
+\subsection{Study 1 -- Human user study (primary, answers RQ1--RQ4)}
+\noindent\textbf{Design.} Primary between-subjects: \emph{Multimodal mirror} (deployed at
+\texttt{safebars-ai.pages.dev/safebars/mirror}, with the three-view self-discovery
+layer) vs.\ \emph{Text-only mirror} (Taheri-style: same engine output as a text list /
+chat, no visualization). A 2$\times$2 crosses Modality with \emph{Alignment}
+(\emph{critical/non-sycophantic} vs.\ \emph{sycophantic/agreeable}) to answer RQ6. A
+within-subject prescription contrast (mirror states the problem vs.\ withholds it)
+addresses RQ2. Pre $\to$ intervention $\to$ post.
 
-\noindent\textbf{Corpus.} We authored six realistic HCI/AI research plans (e.g., a campus
-mental-health chatbot, an AI hiring screener), each embedding multiple ethical tensions
-and a set of researcher-stated commitments. The corpus ships with the paper
-(\texttt{paper/corpus/researcher\_plans.json}).
+\noindent\textbf{Participants.} Friends pilot (8--12, per SURF guidance) for
+feasibility, then a Prolific sample sized for the between-subjects effect (target
+$\ge$60--80, matched to Taheri's 160 if resources allow). Eligibility: researchers /
+grad students who have designed or are designing an AI/HCI system.
 
-\noindent\textbf{Conditions.} For each plan we run the SafeBARS mirror engine with one of
-four Aliyun Bailian Qwen variants as the \emph{engine} (Qwen-Turbo, Qwen-Plus,
-Qwen-Max, Qwen-Long), isolating model-capability effects within a single provider
-family. The same variant is then prompted, \emph{in the role of the researcher}, to
-respond to every tension the mirror surfaced---choosing among revise / add-safeguard /
-contest-with-evidence / consult-stakeholders and giving a rationale. Treating each
-variant as a distinct ``participant'' yields a within-corpus comparison of how
-different models engage the mirror.
+\noindent\textbf{Procedure.} (1)~\emph{Pre}: participant lists the groups their design
+affects and rates its ethical robustness. (2)~\emph{Intervention}: submit a real or
+provided plan; experience the assigned mirror condition; for RQ2, half receive
+prescription, half withhold. (3)~\emph{Self-discovery probe}: the mirror asks "did you
+anticipate this group?"; we log "I didn't realize" utterances. (4)~\emph{Co-revision}:
+participant revises with AI scaffolding. (5)~\emph{Post}: re-list affected groups; we
+code the \emph{actual revised plan} for whether the missed stakeholder / safeguard was
+added (behavioral mind-change).
 
-\noindent\textbf{Measures.} (1)~\emph{Engine richness}: number of dissonance edges
-(tensions), lens-coverage states, bounded role probes (multi-expert lenses, cf.
-\citep{perspectra26}), and suggested revisions. (2)~\emph{Researcher engagement}: an
-independent judge model scores each response on recognition, appropriateness,
-evidence, and \emph{critical distance}---the tendency to contest weak suggestions or
-consult people rather than accept the mirror. We report a \emph{contest rate}
-(share of tensions met with contest-with-evidence or consult-stakeholders) as a proxy
-for critical distance. The judge uses a fixed rubric; when no API key is available the
-pipeline falls back to a deterministic keyword rubric so the method is fully
-reproducible offline. All scripts are released (\texttt{modules/multi\_model\_eval.py}).
+\noindent\textbf{Measures.} (1)~Self-discovered blind spots (coded "I didn't realize"
+vs "the system told me"). (2)~Mind-change: $\Delta$ affected-group count (pre/post) +
+behavioral revision count. (3)~Revision quality rubric (independent raters).
+(4)~Agency / ownership self-report. All coding schemes released with the paper.
 
-\noindent\textbf{Analysis.} We compare variants on the above measures---does model
-choice significantly affect tension coverage and critical-distance behavior?---and
-report effect sizes. RQ1--RQ3 are addressed through this simulation; RQ4 (deep-audit)
-is characterized deterministically.
+\noindent\textbf{Analysis.} Between-subjects ANOVA / mixed models on the above; code
+self-discovery vs AI-prescribed utterances; report effect sizes. RQ1--RQ4 answered here.
+
+\noindent\textbf{Instruments (released).} The full protocol -- consent form, step-by-step
+script, the 7-construct post-questionnaire (self-discovery, mind-change, agency, critical
+distance, trust, aha, manipulation checks) with Likert items, the 2-coder coding scheme
+(self-discovery attribution, mind-change, revision-quality rubric; target IRR $\ge$.70), the
+analysis plan, and the pilot runbook -- is specified in \texttt{paper/study1\_protocol.md}
+(v1.0) with a participant-facing \texttt{.docx} packet. Pre-registration on OSF covers
+H1/H3/H4 and the primary DVs.
+
+\subsection{Study 2 -- Computational simulation (secondary, characterizes the engine)}
+\label{sec:sim}
+\noindent\textbf{Conditions.} For each of six corpus plans we run the mirror engine with
+different LLM variants as the \emph{engine}, then prompt the same variant \emph{as a
+simulated researcher} to respond to every tension. This characterizes how engine choice
+shapes surfaced tensions and critical-distance behavior (RQ5), and probes the engine
+without recruiting participants. It is a system characterization, \emph{not} a
+human-outcome claim; scripts released (\texttt{modules/multi\_model\_eval.py}).
 
 \subsection{Why a Simulation, and Its Limits}
 \label{sec:whysim}
-This evaluation does \emph{not} substitute for a study with human participants.
-LLM-simulated researchers approximate but do not reproduce human moral reasoning,
-surprise, or accountability. We therefore position the simulation as a
-system/behavior characterization and a design probe, and we flag a human pilot
-(mirror vs no-mirror, within-subjects) as \emph{required future work} before any claim
-about effects on real researchers. All human-outcome claims in this paper are
-explicitly scoped accordingly.
+The simulation does \emph{not} substitute for Study 1. LLM-simulated researchers
+approximate but do not reproduce human moral reasoning, surprise, or accountability.
+We position it as a design probe and engine characterization only; all human-outcome
+claims come from Study 1.
 
 % ---------------------------------------------------------------------------
 \section{Expected Contributions}
-% - (1) LLM multi-role ethics probes extending CHI'23 SafeBARS.
-% - (2) Deterministic deep-audit layer catching unwritten risks (novel vs reflection-tool baselines).
-% - (3) A deliberately non-sycophantic critical mirror — design rationale informed by, and intentionally
-%   opposing, the rapport-optimizing agenda of \citep{vibecheck26,recallbot26,hearinsilence26,perspectra26}.
+\begin{itemize}
+  \item (1) A \textbf{multimodal ethical mirror} (interactive visualization +
+    scenario simulation) -- going beyond Taheri's text-only dialogue, which they named
+    as their own key limitation.
+  \item (2) A \textbf{designed self-discovery mechanism}: critical friction manufactured
+    multimodally, so users own the realization instead of being told (vs.\ Taheri's
+    serendipitous self-reflection).
+  \item (3) \textbf{Behavioral mind-change evidence}: the loop is shown to change
+    researchers' actual design coverage, not merely to emit a report.
+  \item (4) The LLM multi-role engine + deterministic deep-audit behind the mirror
+    (non-sycophantic by design, inverting the rapport-optimizing agenda of
+    \citep{vibecheck26,recallbot26,hearinsilence26,perspectra26}).
+\end{itemize}
 
 % ---------------------------------------------------------------------------
 \section{Limitations and Future Work}
 \label{sec:limits}
 \begin{itemize}
-  \item The multi-model evaluation uses one provider family (Bailian/Qwen); a
-        cross-provider follow-up is needed to generalize the capability-effect claim.
-  \item The evaluation is a \emph{computational simulation}, not a study with human
-        participants. LLM-simulated researchers do not stand in for real moral
-        reasoning; a human pilot (mirror vs no-mirror, within-subjects) remains
-        required future work before any human-outcome claim (see \S\ref{sec:whysim}).
-  \item LLM-as-judge validity: we disclose the rubric and use a deterministic fallback,
-        but human ratings would triangulate the engagement scores.
+  \item Study 1's friends pilot is small; the Prolific sample is needed before any
+    general claim. The simulation (Study 2) is a system characterization, not evidence
+    about humans (see \S\ref{sec:whysim}).
+  \item Like Taheri et al., a single session cannot establish \emph{durability} of
+    mind-change; longitudinal follow-up is future work.
+  \item Voice / VR modalities (Taheri's suggested future environments) are sketched but
+    not yet implemented; we prioritize interactive visualization as the first modality.
+  \item LLM-as-judge (Study 2) validity: we disclose the rubric and use a deterministic
+    fallback; human ratings triangulate the engagement scores.
 \end{itemize}
 
 % ---------------------------------------------------------------------------
@@ -171,6 +305,13 @@ TODO: SafeBARS CHI'23 authors.
 \newblock SafeBARS: ... (ethical mirror).
 \newblock In \emph{Proc. CHI '23}.
 \newblock \url{https://doi.org/VERIFY}
+
+\bibitem[Taheri et al.(2026)]{taheri26}
+A.~Taheri, H.~El Alaoui, P.~Carrington, and J.~P.~Bigham.
+\newblock "I followed what felt right, not what I was told": Autonomy, Coaching, and
+Recognizing Bias Through AI-Mediated Dialogue.
+\newblock In \emph{Proc. CHI '26}, pp.\ 1--23.
+\newblock \url{https://doi.org/10.1145/3772318.3791078}
 
 \bibitem[Rahman and Desai(2026)]{vibecheck26}
 S. Rahman and S. Desai.

@@ -258,6 +258,31 @@ def add_revision(session_id: str):
     return jsonify({"success": True, "session": session})
 
 
+@mirror_api.post("/sessions/<session_id>/self-discovery")
+def save_self_discovery(session_id: str):
+    """Persist the participant's self-discovery reflection to the server.
+
+    The Step-4 discovery save is independent of the Step-5 revision submit, so a
+    participant who realizes a blind spot but never submits a revision would
+    otherwise leave no server-side trace. This endpoint guarantees the reflection
+    is captured (and carries the assigned condition trio for analysis)."""
+    payload, error = _json_object()
+    if error:
+        return error
+    try:
+        session = mirror_engine.save_self_discovery(
+            session_id,
+            data=payload.get("self_discovery") or payload,
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as exc:
+        return _unexpected("save the self-discovery reflection", exc)
+    if not session:
+        return jsonify({"success": False, "error": "Session not found."}), 404
+    return jsonify({"success": True, "session": session})
+
+
 @mirror_api.post("/sessions/<session_id>/replay")
 @rate_limit(max_requests=6, window_seconds=120, scope="mirror_replay")
 def replay_session(session_id: str):

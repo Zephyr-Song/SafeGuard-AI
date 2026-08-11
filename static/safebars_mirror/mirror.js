@@ -349,6 +349,21 @@
             const c = new URLSearchParams(location.search).get("cond");
             return c === "text" ? "text" : "multimodal";
         },
+        // RQ2 manipulation: how tensions are disclosed.
+        //   withhold (default) — mirror only asks, never names the problem
+        //   prescribe          — mirror explicitly states the ethical issue
+        //   split              — within-session mix (even idx withhold / odd prescribe)
+        get disc() {
+            const d = new URLSearchParams(location.search).get("disc");
+            return (d === "prescribe" || d === "withhold" || d === "split") ? d : "withhold";
+        },
+        // RQ-align manipulation: tone of the mirror's wording.
+        //   critical (default) — points out the gap directly
+        //   sycophantic        — affirms the plan, softly surfaces the gap
+        get align() {
+            const a = new URLSearchParams(location.search).get("align");
+            return (a === "critical" || a === "sycophantic") ? a : "critical";
+        },
         selfDiscovery: null,
         onStep: null,
     };
