@@ -368,3 +368,211 @@ def _dimension_label(dim: str) -> str:
         "monitoring_learning_redress": "Monitoring & redress",
     }
     return labels.get(dim, dim)
+
+
+# ---------------------------------------------------------------------------
+# Resolution guide — step 5 conversational revision
+# ---------------------------------------------------------------------------
+# The manual "resolution sandbox" asks the researcher to fill a static form per
+# tension. ``MirrorResolutionGuide`` replaces that with a genuine dialogue: the
+# assistant walks through each surfaced tension, asks how the researcher wants
+# to respond, and at the end extracts structured resolutions + a revised plan
+# that feed the exact same revision/export pipeline as the manual form.
+
+RESOLUTION_SYSTEM_PROMPT = """\
+You are the SafeBARS Ethical Mirror's revision companion. The researcher has \
+already seen the ethical tensions their design surfaced. Your job now is to help \
+them decide, in their own words, how to respond to each tension — through a calm, \
+one-question-at-a-time conversation.
+
+Your manner:
+- Ask about ONE tension at a time. Do not fire a checklist.
+- Reflect back what you heard before opening a new thread.
+- Offer the four response paths neutrally — the researcher chooses, never you:
+  1. Revise the design — change a feature, data flow, user journey, or assumption.
+  2. Add a safeguard — human review, evaluation, fallback, monitoring, stopping rule.
+  3. Contest with evidence — explain why the concern does not fit, citing support.
+  4. Consult real people — leave it open for affected people or an accountable expert.
+- Stay warm and unhurried. It is fine to sit with uncertainty.
+- Never decide for them, never score, never approve. Hand the decision back.
+- Keep responses short (2-4 sentences). Move gently through all tensions.
+
+When they signal they have worked through the tensions, you will be asked to \
+produce a structured summary in a separate step — do not do that inside the chat.
+"""
+
+RESOLUTION_FINALIZE_PROMPT = """\
+You are converting a revision conversation into structured resolutions for the \
+SafeBARS Ethical Mirror. Output ONLY a single JSON object, no prose.
+
+For EVERY tension listed, produce exactly one resolution. Use the EXACT edge_id \
+from the tensions list (e.g. "EDGE-001").
+
+Schema:
+{
+  "revised_plan": string,   // >= 20 words, a concrete revised research design that
+                            // weaves in the researcher's decisions; first-person
+  "resolutions": [
+    {
+      "edge_id": string,    // exact id from the tensions list
+      "resolution_type": "revise_design" | "add_safeguard" | "contest_with_evidence" | "consult_stakeholders",
+      "rationale": string,  // why this response, in the researcher's voice
+      "follow_up": string   // any evidence, action, or open question to pursue
+    }
+  ]
+}
+
+Rules:
+- One resolution per tension; do not invent tensions.
+- If a tension had no clear decision, use "consult_stakeholders" with a rationale
+  explaining it stays open.
+- Summarise only what the researcher said; do not invent facts or quotes.
+- Return valid JSON only.
+"""
+
+
+class MirrorResolutionGuide:
+    """Conversational guide for resolving the Mirror's tensions (step 5)."""
+
+    def __init__(self, llm_client: Any = None):
+        self.llm = llm_client
+        self._last_ok_provider = None
+
+    def llm_available(self) -> bool:
+        return self.llm is not None
+
+    # -- multi-provider fallback (mirrors MirrorGuide._chat_first_available) --
+    def _chat(self, messages, temperature):
+        if not self.llm_available():
+            return None, None
+        active = self.llm.active_provider_id
+        last_ok = getattr(self, "_last_ok_provider", None)
+        rest = [p for p in self.llm.providers if p != active]
+        if last_ok and last_ok != active and last_ok in self.llm.providers:
+            rest = [last_ok] + [p for p in rest if p != last_ok]
+        order = [active] + rest
+        last_error = None
+        for pid in order:
+            det = self.llm.chat_with_provider_detailed(pid, messages, temperature=temperature)
+            if det.get("ok"):
+                text = (det.get("text") or "").strip()
+                if text:
+                    self._last_ok_provider = pid
+                    return text, None
+            last_error = {
+                "provider": pid,
+                "error_type": det.get("error_type"),
+                "status_code": det.get("status_code"),
+                "error": det.get("error"),
+            }
+        return None, last_error
+
+    # -- helpers -----------------------------------------------------------
+    @staticmethod
+    def _format_tensions(tensions):
+        lines = []
+        for i, t in enumerate(tensions or [], 1):
+            tid = t.get("id") or f"EDGE-{i:03d}"
+            label = t.get("label") or t.get("from_lens") or f"tension {i}"
+            party = t.get("affected_party") or ""
+            desc = (t.get("description") or "").strip()
+            sugg = (t.get("suggested_revision") or t.get("revision_lever") or "").strip()
+            bit = f"{i}. [{tid}] {label}"
+            if party:
+                bit += f" — affects: {party}"
+            if desc:
+                bit += f"\n   {desc}"
+            if sugg:
+                bit += f"\n   Possible mitigation: {sugg}"
+            lines.append(bit)
+        return "\n".join(lines)
+
+    # -- public API --------------------------------------------------------
+    def start(self, tensions):
+        opener = (
+            "You've surfaced the ethical tensions in your design. Now let's work through "
+            "how you'd like to handle each one — no form to fill, just a conversation.\n\n"
+            f"The mirror found {len(tensions or [])} tension(s):\n"
+            f"{self._format_tensions(tensions)}\n\n"
+            "For each, I'll ask how you'd respond — revise the design, add a safeguard, "
+            "contest it with evidence, or leave it open for real people. There's no single "
+            "right answer; what matters is that your reasoning is yours.\n\n"
+            "Let's start with the first. In your own words, what would you do about it, and why?"
+        )
+        if not self.llm_available():
+            return opener + (
+                "\n\n(Note: the AI guide isn't connected to a language model here, so I "
+                "can only show this opening.)"
+            )
+        return opener
+
+    def reply(self, tensions, history, temperature: float = 0.6):
+        if not self.llm_available():
+            return None, None
+        system = (
+            RESOLUTION_SYSTEM_PROMPT
+            + "\n\nTensions the researcher is working through:\n"
+            + self._format_tensions(tensions)
+        )
+        messages = [{"role": "system", "content": system}] + list(history)
+        return self._chat(messages, temperature)
+
+    def finalize(self, tensions, history, research_plan: str = ""):
+        fallback = self._derive_from_transcript(tensions, history, research_plan)
+        if not self.llm_available():
+            return fallback, None
+        user_ctx = (
+            "Tensions (use the exact edge_id in your output):\n"
+            + self._format_tensions(tensions)
+        )
+        messages = [
+            {"role": "system", "content": RESOLUTION_FINALIZE_PROMPT},
+            {"role": "user", "content": user_ctx},
+            *list(history),
+            {
+                "role": "user",
+                "content": "Now output the JSON with revised_plan and one resolution per tension.",
+            },
+        ]
+        text, error = self._chat(messages, 0.3)
+        if not text:
+            return fallback, error
+        parsed = self._parse_resolution_json(text)
+        if not parsed or not parsed.get("resolutions"):
+            return fallback, None
+        return parsed, None
+
+    # -- fallback / parsing ------------------------------------------------
+    def _derive_from_transcript(self, tensions, history, research_plan: str = ""):
+        base = (research_plan or "").strip() or (
+            "The researcher discussed the tensions with the AI guide but no language "
+            "model was available to draft a revision; the original plan stands pending "
+            "manual revision."
+        )
+        resolutions = []
+        for t in (tensions or []):
+            resolutions.append({
+                "edge_id": t.get("id") or "",
+                "resolution_type": "consult_stakeholders",
+                "rationale": "Discussed with the guide; decision pending manual entry.",
+                "follow_up": "",
+            })
+        return {"revised_plan": base, "resolutions": resolutions}
+
+    @staticmethod
+    def _parse_resolution_json(raw):
+        if not raw:
+            return None
+        match = re.search(r"\{.*\}", raw, re.DOTALL)
+        if not match:
+            return None
+        try:
+            data = json.loads(match.group(0))
+        except (ValueError, json.JSONDecodeError):
+            return None
+        if not isinstance(data, dict):
+            return None
+        return {
+            "revised_plan": data.get("revised_plan"),
+            "resolutions": data.get("resolutions"),
+        }

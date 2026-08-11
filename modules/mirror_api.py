@@ -7,7 +7,7 @@ from typing import Any, Dict, Tuple
 from flask import Blueprint, current_app, jsonify, request
 
 from .mirror_engine import MirrorEngine
-from .mirror_guide import MirrorGuide, guide_dimensions
+from .mirror_guide import MirrorGuide, MirrorResolutionGuide, guide_dimensions
 from .mirror_literature import (
     EVIDENCE_STATE_NOTICE,
     LENS_SYNTHESIS_NOTICE,
@@ -22,6 +22,7 @@ mirror_api = Blueprint(
 )
 mirror_engine = MirrorEngine()
 mirror_guide = MirrorGuide(mirror_engine.llm_client)
+mirror_resolution_guide = MirrorResolutionGuide(mirror_engine.llm_client)
 
 
 def _json_object() -> Tuple[Dict[str, Any], Any]:
@@ -308,3 +309,83 @@ def export_application(session_id: str):
             )
         },
     )
+
+
+@mirror_api.post("/sessions/<session_id>/guide-resolution")
+@rate_limit(max_requests=40, window_seconds=120, scope="mirror_resolution_guide")
+def guide_resolution(session_id: str):
+    """Conversational step-5 revision guide.
+
+    Body:
+      {"action": "start" | "reply" | "finalize",
+       "message": str,             # user text for "reply"
+       "history": [{"role","content"}, ...]}
+    Returns the next assistant reply (start/reply) or, on "finalize", saves the
+    extracted revisions and returns the updated session + parsed resolutions.
+    """
+
+    payload, error = _json_object()
+    if error:
+        return error
+    session = mirror_engine.get_session(session_id)
+    if not session:
+        return jsonify({"success": False, "error": "Session not found."}), 404
+    tensions = session.get("dissonance_edges", [])
+    action = (payload.get("action") or "reply").lower()
+    guide = mirror_resolution_guide
+
+    if action == "start":
+        opener = guide.start(tensions)
+        return jsonify({
+            "success": True,
+            "reply": opener,
+            "history": [{"role": "assistant", "content": opener}],
+            "tensions": tensions,
+            "llm_available": guide.llm_available(),
+        })
+
+    history = payload.get("history") or []
+    if action == "reply":
+        text, llm_error = guide.reply(tensions, history)
+        if text is None:
+            text = (
+                "I'm having trouble reaching the language model right now. You can keep "
+                "writing your thoughts here — nothing you've shared is lost."
+            )
+        return jsonify({
+            "success": True,
+            "reply": text,
+            "history": history + [{"role": "assistant", "content": text}],
+            "llm_error": llm_error,
+        })
+
+    if action == "finalize":
+        parsed, llm_error = guide.finalize(
+            tensions, history, session.get("research_plan", "")
+        )
+        revised_plan = (parsed.get("revised_plan") or "").strip()
+        if len(revised_plan) < 20:
+            revised_plan = (session.get("research_plan") or "") + (
+                "\n\n" + revised_plan if revised_plan else ""
+            )
+        resolutions = parsed.get("resolutions") or []
+        try:
+            saved = mirror_engine.add_revision(
+                session_id, revised_plan=revised_plan, resolutions=resolutions
+            )
+        except ValueError as exc:
+            return jsonify(
+                {"success": False, "error": str(exc), "parsed": parsed}
+            ), 400
+        except Exception as exc:
+            return _unexpected("save the conversational revision", exc)
+        if not saved:
+            return jsonify({"success": False, "error": "Session not found."}), 404
+        return jsonify({
+            "success": True,
+            "session": saved,
+            "parsed": parsed,
+            "llm_error": llm_error,
+        })
+
+    return jsonify({"success": False, "error": f"Unknown action: {action}"}), 400
