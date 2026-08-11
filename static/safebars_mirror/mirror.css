@@ -4562,3 +4562,10 @@ a.quiet-button {
 .mm-delta-card strong { color: #173f37; font-size: 14px; flex-basis: 100%; }
 .mm-delta-card span { font-size: 13px; color: #25302a; }
 .mm-delta-card small { flex-basis: 100%; color: #5a6a63; font-size: 12px; }
+
+.realize-bridge { margin: 0 0 18px; padding: 16px 20px; border-left: 4px solid #c2772f; background: #fbf4ea; border-radius: 10px; }
+.realize-bridge[hidden] { display: none; }
+.realize-bridge .eyebrow { color: #8a5a1e; margin: 0 0 4px; }
+.realize-bridge h2 { margin: 0 0 8px; color: #173f37; font-size: 16px; }
+.realize-bridge #realizeBridgeText { margin: 0 0 8px; color: #25302a; font-size: 14px; line-height: 1.5; }
+.realize-bridge-note { margin: 0; color: #5a6a63; font-size: 12px; font-style: italic; }

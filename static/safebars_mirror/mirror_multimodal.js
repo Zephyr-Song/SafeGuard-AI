@@ -349,7 +349,39 @@
         if (window.SafeBarsMirror) {
             window.SafeBarsMirror.onStep = function (target) {
                 if (target === 4) window.setTimeout(renderMultimodal, 40);
+                else if (target === 5) window.setTimeout(renderRealizeBridge, 40);
             };
+        }
+    }
+
+    /* ------------------------------------------------------------------ *
+     * Bridge: carry the Step-4 self-discovery into the Step-5 fix
+     * (realize -> fix loop). The user, not the AI, owns the change.
+     * ------------------------------------------------------------------ */
+    function renderRealizeBridge() {
+        const host = $("realizeBridge");
+        if (!host) return;
+        const store = window.SafeBarsMirror;
+        let sd = store && store.selfDiscovery;
+        if (!sd || !sd.realized) {
+            try {
+                const id = (getSession() && getSession().id) || "anon";
+                const raw = localStorage.getItem("safebarsDiscovery:" + id);
+                if (raw) sd = JSON.parse(raw);
+            } catch (e) { /* ignore */ }
+        }
+        if (!sd || !sd.realized) {
+            host.hidden = true;
+            return;
+        }
+        host.hidden = false;
+        const text = $("realizeBridgeText");
+        if (text) text.textContent = sd.realized;
+        const title = $("realizeBridgeTitle");
+        if (title) {
+            title.textContent = sd.party
+                ? "You realized: " + sd.party
+                : "What you noticed in Step 4";
         }
     }
 
