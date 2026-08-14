@@ -6,6 +6,21 @@
 \documentclass[manuscript,screen]{acmart}
 \citestyle{acmauthoryear}
 
+% --- Fix: acmart 2.19 \thanks recursion ---
+% acmart 2.19 stores \thanks via \g@addto@macro; when hyperref \edef-expands
+% \@title for PDF metadata, the stored \thanks{} is expanded inside \edef and
+% recurses ("TeX capacity exceeded, input stack size"). \noexpand breaks the loop
+% while \@setthanks (in \maketitle) still renders the footnote normally.
+\makeatletter
+\renewcommand{\thanks}[1]{%
+  \@ifnotempty{#1}{%
+    \if@ACM@anonymous
+      \g@addto@macro\thankses{\noexpand\thanks{A note}}%
+    \else
+      \g@addto@macro\thankses{\noexpand\thanks{#1}}%
+    \fi}}
+\makeatother
+
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{subcaption}
@@ -21,7 +36,7 @@ not a controlled human-subjects study; no IRB approval was required for the
 reported evaluation.}}
 
 \author{[Your Name]}
-\affiliation{\institution{Xi'an Jiaotong-Liverpool University}}
+\affiliation{\institution{Xi'an Jiaotong-Liverpool University}\country{China}}
 \email{[you@xjtlu.edu.cn]}
 % Add co-authors with additional \author{} / \affiliation{} blocks.
 % XJTLU students are typically dual-award with the University of Liverpool ---
