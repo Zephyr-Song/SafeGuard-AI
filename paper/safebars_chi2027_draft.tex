@@ -3,7 +3,7 @@
 % Figures: vector PDFs exported to figures_export/ (300+ DPI PNGs also available).
 % Reference policy: zero self-citation, zero pre-2023 references, zero fictional cites.
 %   SafeBARS is our own deployed prototype and is described in body text + URL only.
-\documentclass[manuscript,screen]{acmart}
+\documentclass[sigconf,screen]{acmart}
 \citestyle{acmauthoryear}
 
 % --- Fix: acmart 2.19 \thanks recursion ---
@@ -139,7 +139,7 @@ combined with reciprocal self-disclosure deepens human--chatbot relationships
 promotes self-disclosure and affective trust \citep{hearinsilence26}; and
 \citeauthor{perspectra26} show that letting users choose and invite expert
 agents enhances critical thinking \citep{perspectra26}. These papers share one
-goal: optimizing the agent to build rapport, trust, and intimacy. We borrow
+goal: optimizing the agent to build rapport, trust, and intimacy. Persona design in LLM agents also raises consistency and ethical challenges \citep{sun2024persona}, and scaffolded, humanized turn-taking improves conversational depth \citep{liu2025scaffolded}. We borrow
 their \emph{mechanisms}---user-selectable perspectives, transparent memory,
 paced guidance---while inverting the objective: a critical reflection tool must
 resist sycophancy and preserve critical distance rather than maximize liking.
@@ -156,7 +156,7 @@ modalities. \emph{Second}, their self-reflection finding was serendipitous---an
 measure recognition of bias in others' interactions; they do not measure
 whether the tool changes the participant's own design or capture behavioral
 revision. Our work takes their strongest mechanism, critical friction, and
-\emph{designs for it multimodally}, on the researcher's \emph{own} artifact,
+\emph{designs for it multimodally}, on the researcher's \emph{own} artifact, with critical-reflection interventions shown to outperform didactic ones \citep{lee2023criticalreflection}, debate chatbots provoking self-scrutiny \citep{tanprasert2024debate}, and friction established as a design method for reflection \citep{benedetti2023friction},
 with \emph{behavioral} mind-change as the outcome.
 
 \paragraph{Ethical mirrors and value-sensitive design.}
@@ -164,10 +164,11 @@ Interview studies of CS researchers show that anticipating unintended
 consequences is considered important but rarely practiced, for lack of a
 formal process or strategy \citep{do2023}. Recent reviews of value-sensitive
 AI design argue that stakeholder and value tensions must be first-class
-concerns in AI design processes \citep{sadek2023}; AI systems carry systematic,
+concerns in AI design processes \citep{sadek2023}; value-sensitive toolkits now translate values into responsible-AI practice \citep{sadek2024vsdtoolkit}, the method's foundations date to \citep{friedman2008vsd}, and transparency gaps between designers and standards persist \citep{schor2024gap}; AI systems carry systematic,
 hard-to-see bias whose sources span data, algorithms, and human interaction
 \citep{ferrara2024}; and AI-specific review guidance now extends
-human-subjects review to AI systems \citep{makridis2023}. SafeBARS is our own
+human-subjects review to AI systems \citep{makridis2023}. The closest design precedent is card-based critical-reflection tools
+\citep{elsayedali2023ric}. SafeBARS is our own
 prototype of such a mirror: a publicly deployed system (code and technical
 report at \url{https://github.com/Zephyr-Song/SafeGuard-AI}) that surfaces
 tensions between a design and ethical considerations and asks researchers to
@@ -175,6 +176,45 @@ respond. We inject LLMs (multi-role ethics probes, a deterministic deep-audit
 layer that catches risks researchers did not write down) and---the contribution
 of this paper---turn the mirror from a \emph{text report} into a
 \emph{multimodal, self-discovery loop}.
+
+\paragraph{Multimodal and dialogic explanation.}
+A growing HCI literature argues that explanation should be multimodal and
+conversational rather than a static text report. XAI frameworks now span
+augmented-reality and multimodal presentations \citep{xu2023xair}, and user
+studies call for \emph{selective, mutable, and dialogic} explanations
+\citep{bertrand2023xai}; surveys of multimodal XAI further motivate treating
+modality as a first-class design lever \citep{rodis2024mxai}. SafeBARS takes
+this seriously: tensions are rendered, not printed, and the mirror withholds
+the verdict so the realization stays the user's.
+
+\paragraph{Stakeholder mapping and data probes.}
+Surfacing affected parties the designer did not name is a recognized
+participatory move. Stakeholder-centered co-design uses data probes to bring
+gig workers into tool design \citep{zhang2023stakeholder}, stakeholder
+workshops map contested positions on technologies such as facial recognition
+\citep{ullstein2024frt}, and data probes act as boundary objects for policy
+alignment \citep{zhang2024dataprobes}. Worker-centered data institutions show
+the agency dimension \citep{stein2023worker}, and community-stakeholder
+frameworks ask whether we are ``asking the right questions'' about affected
+groups \citep{haque2024questions}---exactly the gap the mirror's red nodes
+surface.
+
+\paragraph{Auditing and AI-specific ethics review.}
+Because SafeBARS audits a plan rather than a deployed model, it sits in the
+literature on algorithmic auditing \citep{groves2024auditing} and on the
+risks that persist when sensitive attributes are unobserved
+\citep{cheng2023redundant,jaime2024ethnic}; public-participation accounts
+extend auditing to accountability \citep{groves2023goingpublic}. This also
+bears on research ethics: standard IRB frameworks struggle with AI-specific
+harms \citep{bouhouita2023challenges,resnik2024ethicsai}, which motivates
+evaluating a reflection tool on archived plans before any human study.
+
+\paragraph{Responsible-AI patterns and action plans.}
+The deep-audit layer's checklist logic echoes responsible-AI pattern
+catalogues \citep{lu2024pattern} and ethics-focused action plans that turn
+reflection into executable trajectories
+\citep{gray2024actionplan,iliadis2024gfa}; SafeBARS differs by recording, not
+prescribing, the researcher's path.
 
 Figure~\ref{fig:mechanisms} summarizes how we borrow and invert the five CHI'26
 mechanisms. The left column lists the original papers' goals (rapport,
@@ -589,33 +629,8 @@ human-subjects study remains future work: the plan-diff instrument is
 operational and ready to measure behavioral mind-change once an IRB-approved
 cohort is recruited.
 
-% ---------------------------------------------------------------------------
-\appendix
-\section{Supplementary Material: Verbatim Mirror Replay (Pilot R1)}
-\label{sec:appendix}
-
-To make the effectiveness claim inspectable rather than asserted, we include a
-verbatim replay of researcher R1's SafeBARS mirror session (shared-dorm
-fairness assistant). The replay was generated from the archived session JSON
-(\texttt{SafeBARS\_StudentTest/study\_bundle.json})---a real capture, not a
-live re-run---and renders the mirror's step-by-step surfacing of tensions, the
-stakeholder map, and the revision ledger. It substantiates the discovery-yield
-counts in Section~\ref{sec:pilot} with the actual conversational sequence
-through which the AI brought uncovered ethical gaps to the researcher.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig_replay_dorm.pdf}
-\caption{Verbatim replay of pilot R1's SafeBARS mirror session (shared-dorm
-fairness assistant), generated from the archived session JSON. The mirror
-surfaces each tension, renders the stakeholder map, and records the
-researcher's revisions---evidence that the tool can surface ethical problems
-the researcher did not include in the written plan.}
-\label{fig:replay}
-\end{figure}
-
 % ============================================================================
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
 
 \bibitem[Do et al.(2023)]{do2023}
 Kimberly~Do, Rock~Yuren~Pang, Jiachen~Jiang, and Katharina~Reinecke.
@@ -687,6 +702,210 @@ research ideation.
 \newblock In \emph{Proceedings of the 2026 CHI Conference on Human Factors in
 Computing Systems (CHI~'26)}. ACM, New York, NY, USA, 27~pages.
 \newblock \url{https://doi.org/10.1145/3772318.3791560}
+
+\bibitem[Sadek et al.(2024)]{sadek2024vsdtoolkit}
+Malak~Sadek, Marios~Constantinides, Daniele~Quercia, and C\'{e}line~Mougenot.
+\newblock Guidelines for integrating value sensitive design in responsible AI
+toolkits.
+\newblock In \emph{Proceedings of the 2024 CHI Conference on Human Factors in
+Computing Systems (CHI~'24)}. ACM, New York, NY, USA, Article~587, 15~pages.
+\newblock \url{https://doi.org/10.1145/3613904.3642810}
+
+\bibitem[Friedman et al.(2008)]{friedman2008vsd}
+Batya~Friedman, Peter~H.~Kahn, and Alan~Borning.
+\newblock Value sensitive design and information systems.
+\newblock In \emph{Handbook of Information and Computer Ethics}, Wiley,
+pp.~69--101.
+\newblock \url{https://doi.org/10.1002/9780470281819.ch4}
+
+\bibitem[Schor et al.(2024)]{schor2024gap}
+Bruna~G.~S.~Schor, Christopher~Norval, Eileen~Charlesworth, and Jatinder~Singh.
+\newblock Mind the gap: designers and standards on algorithmic system transparency
+for users.
+\newblock In \emph{Proceedings of the 2024 CHI Conference on Human Factors in
+Computing Systems (CHI~'24)}. ACM, New York, NY, USA, Article~333, 15~pages.
+\newblock \url{https://doi.org/10.1145/3613904.3642531}
+
+\bibitem[Groves et al.(2024)]{groves2024auditing}
+Luna~Groves, Jacob~Metcalf, Alayna~Kennedy, Bi~Vecchione, and Anna~Strait.
+\newblock Auditing work: exploring the New York City algorithmic bias audit regime.
+\newblock In \emph{Proceedings of the 2024 ACM Conference on Fairness,
+Accountability, and Transparency (FAccT~'24)}. ACM, New York, NY, USA,
+Article~17, 14~pages.
+\newblock \url{https://doi.org/10.1145/3630106.3658959}
+
+\bibitem[Cheng et al.(2023)]{cheng2023redundant}
+Lu~Cheng, Isaiah~O.~Gallegos, D.~Ouyang, J.~Goldin, and D.~Ho.
+\newblock How redundant are redundant encodings? Blindness in the wild and racial
+disparity when race is unobserved.
+\newblock In \emph{Proceedings of the 2023 ACM Conference on Fairness,
+Accountability, and Transparency (FAccT~'23)}. ACM, New York, NY, USA,
+Article~554, 12~pages.
+\newblock \url{https://doi.org/10.1145/3593013.3594034}
+
+\bibitem[Jaime and Kern(2024)]{jaime2024ethnic}
+Sergio~Jaime and Christoph~Kern.
+\newblock Ethnic classifications in algorithmic fairness: concepts, measures and
+implications in practice.
+\newblock In \emph{Proceedings of the 2024 ACM Conference on Fairness,
+Accountability, and Transparency (FAccT~'24)}. ACM, New York, NY, USA,
+Article~74, 12~pages.
+\newblock \url{https://doi.org/10.1145/3630106.3658902}
+
+\bibitem[Groves et al.(2023)]{groves2023goingpublic}
+Luna~Groves, Andrew~Peppin, Anna~Strait, and J.~Brennan.
+\newblock Going public: the role of public participation approaches in commercial
+AI labs.
+\newblock In \emph{Proceedings of the 2023 ACM Conference on Fairness,
+Accountability, and Transparency (FAccT~'23)}. ACM, New York, NY, USA,
+Article~60, 13~pages.
+\newblock \url{https://doi.org/10.1145/3593013.3594071}
+
+\bibitem[Lee et al.(2023)]{lee2023criticalreflection}
+K.~J.~Lee, A.~Davila, H.~Cheng, J.~Goh, E.~Nilsen, and E.~Law.
+\newblock ``We need to do more\ldots\ I need to do more'': augmenting digital media
+consumption via critical reflection to increase compassion.
+\newblock In \emph{Proceedings of the 2023 CHI Conference on Human Factors in
+Computing Systems (CHI~'23)}. ACM, New York, NY, USA, Article~603, 15~pages.
+\newblock \url{https://doi.org/10.1145/3544548.3581355}
+
+\bibitem[Elsayed-Ali et al.(2023)]{elsayedali2023ric}
+S.~Elsayed-Ali, S.~E.~Berger, V.~Figueredo~de~Santana, and J.~C.~Becerra~Sandoval.
+\newblock Responsible \& inclusive cards: an online card tool to promote critical
+reflection in technology industry work practices.
+\newblock In \emph{Proceedings of the 2023 CHI Conference on Human Factors in
+Computing Systems (CHI~'23)}. ACM, New York, NY, USA, Article~376, 17~pages.
+\newblock \url{https://doi.org/10.1145/3544548.3580771}
+
+\bibitem[Benedetti and Mauri(2023)]{benedetti2023friction}
+Andrea~Benedetti and Michele~Mauri.
+\newblock A literature review on ``friction'' as a method for reflection in design
+interventions.
+\newblock \emph{Converg\^{e}ncias}, 16(31):139--146, 2023.
+\newblock \url{https://doi.org/10.53681/c1514225187514391s.31.139}
+
+\bibitem[Tanprasert et al.(2024)]{tanprasert2024debate}
+T.~Tanprasert, S.~S.~Fels, L.~Sinnamon, and D.~Yoon.
+\newblock Debate chatbots to facilitate critical thinking on YouTube.
+\newblock In \emph{Proceedings of the 2024 CHI Conference on Human Factors in
+Computing Systems (CHI~'24)}. ACM, New York, NY, USA, Article~181, 16~pages.
+\newblock \url{https://doi.org/10.1145/3613904.3642513}
+
+\bibitem[Xu et al.(2023)]{xu2023xair}
+X.~Xu, A.~Yu, T.~R.~Jonker, K.~Todi, and H.~Benko.
+\newblock XAIR: a framework of explainable AI in augmented reality.
+\newblock In \emph{Proceedings of the 2023 CHI Conference on Human Factors in
+Computing Systems (CHI~'23)}. ACM, New York, NY, USA, Article~534, 20~pages.
+\newblock \url{https://doi.org/10.1145/3544548.3581500}
+
+\bibitem[Bertrand et al.(2023)]{bertrand2023xai}
+A.~Bertrand, T.~Viard, R.~Belloum, J.~R.~Eagan, and W.~Maxwell.
+\newblock On selective, mutable and dialogic XAI: a review of what users say about
+different types of interactive explanations.
+\newblock In \emph{Proceedings of the 2023 CHI Conference on Human Factors in
+Computing Systems (CHI~'23)}. ACM, New York, NY, USA, Article~437, 17~pages.
+\newblock \url{https://doi.org/10.1145/3544548.3581314}
+
+\bibitem[Rodis et al.(2024)]{rodis2024mxai}
+N.~Rodis, C.~Sardianos, P.~Radoglou-Grammatikis, P.~Sarigiannidis, I.~Varlamis,
+and G.~T.~Papadopoulos.
+\newblock Multimodal explainable artificial intelligence: a comprehensive review of
+methodological advances and future research directions.
+\newblock \emph{IEEE Access}, 12:95974--96006, 2024.
+\newblock \url{https://doi.org/10.48550/arXiv.2306.05731}
+
+\bibitem[Sun et al.(2024)]{sun2024persona}
+G.~Sun, X.~Zhan, and J.~M.~Such.
+\newblock Building better AI agents: a provocation on the utilisation of persona in
+LLM-based conversational agents.
+\newblock In \emph{Proceedings of the 2024 ACM Conference on Conversational User
+Interfaces (CUI~'24)}. ACM, New York, NY, USA, Article~15, 11~pages.
+\newblock \url{https://doi.org/10.1145/3640794.3665887}
+
+\bibitem[Liu et al.(2025)]{liu2025scaffolded}
+D.~Liu, Y.~Zhang, B.~Zhao, S.~Ma, C.~Shi, and X.~Ma.
+\newblock Scaffolded turns and logical conversations: designing humanized
+LLM-powered conversational agents for hospital admission interviews.
+\newblock In \emph{Proceedings of the 2025 CHI Conference on Human Factors in
+Computing Systems (CHI~'25)}. ACM, New York, NY, USA, Article~795, 17~pages.
+\newblock \url{https://doi.org/10.1145/3706598.3714196}
+
+\bibitem[Bouhouita-Guermech et al.(2023)]{bouhouita2023challenges}
+S.~Bouhouita-Guermech, P.~Gogognon, and J.~C.~B\'{e}lisle-Pipon.
+\newblock Specific challenges posed by artificial intelligence in research ethics.
+\newblock \emph{Frontiers in Artificial Intelligence}, 6:1149082, 2023.
+\newblock \url{https://doi.org/10.3389/frai.2023.1149082}
+
+\bibitem[Resnik and Hosseini(2024)]{resnik2024ethicsai}
+D.~B.~Resnik and M.~Hosseini.
+\newblock The ethics of using artificial intelligence in scientific research: new
+guidance needed for a new tool.
+\newblock \emph{AI and Ethics}, 5:1279--1287, 2025 (online 2024).
+\newblock \url{https://doi.org/10.1007/s43681-024-00493-8}
+
+\bibitem[Zhang et al.(2023)]{zhang2023stakeholder}
+A.~Zhang, A.~Boltz, J.~Lynn, C.~W.~Wang, and M.~K.~Lee.
+\newblock Stakeholder-centered AI design: co-designing worker tools with gig workers
+through data probes.
+\newblock In \emph{Proceedings of the 2023 CHI Conference on Human Factors in
+Computing Systems (CHI~'23)}. ACM, New York, NY, USA, Article~602, 17~pages.
+\newblock \url{https://doi.org/10.1145/3544548.3581354}
+
+\bibitem[Ullstein et al.(2024)]{ullstein2024frt}
+C.~Ullstein, J.~K.~Pfeiffer, M.~Hohendanner, and J.~Grossklags.
+\newblock Mapping the stakeholder debate on facial recognition technologies: review
+and stakeholder workshop.
+\newblock In \emph{Companion of the 2024 ACM Conference on Computer-Supported
+Cooperative Work and Social Computing (CSCW~'24)}. ACM, New York, NY, USA,
+Article~118, 6~pages.
+\newblock \url{https://doi.org/10.1145/3678884.3681887}
+
+\bibitem[Zhang et al.(2024)]{zhang2024dataprobes}
+A.~Zhang, R.~Rana, A.~Boltz, V.~Dubal, and M.~K.~Lee.
+\newblock Data probes as boundary objects for technology policy design.
+\newblock In \emph{Proceedings of the 2024 CHI Conference on Human Factors in
+Computing Systems (CHI~'24)}. ACM, New York, NY, USA, Article~174, 17~pages.
+\newblock \url{https://doi.org/10.1145/3613904.3642000}
+
+\bibitem[Stein et al.(2023)]{stein2023worker}
+J.~M.~L.~Stein, V.~Vizgirda, M.~Van~Kleek, and N.~Shadbolt.
+\newblock ``You are you and the app. There's nobody else.'': building worker-designed
+data institutions within platform hegemony.
+\newblock In \emph{Proceedings of the 2023 CHI Conference on Human Factors in
+Computing Systems (CHI~'23)}. ACM, New York, NY, USA, Article~335, 17~pages.
+\newblock \url{https://doi.org/10.1145/3544548.3581114}
+
+\bibitem[Lu et al.(2024)]{lu2024pattern}
+Q.~Lu, L.~Zhu, X.~Xu, J.~Whittle, D.~Zowghi, and A.~Jacquet.
+\newblock Responsible AI pattern catalogue: a collection of best practices for AI
+governance and engineering.
+\newblock \emph{ACM Computing Surveys}, 56(7):1--34, 2024.
+\newblock \url{https://doi.org/10.1145/3626234}
+
+\bibitem[Gray et al.(2024)]{gray2024actionplan}
+C.~Gray, I.~Obi, S.~S.~Chivukula, Z.~Li, T.~Carlock, M.~Will, and A.~Bharadwaj.
+\newblock Building an ethics-focused action plan: roles, process moves, and
+trajectories.
+\newblock In \emph{Proceedings of the 2024 CHI Conference on Human Factors in
+Computing Systems (CHI~'24)}. ACM, New York, NY, USA, Article~214, 17~pages.
+\newblock \url{https://doi.org/10.1145/3613904.3642302}
+
+\bibitem[Iliadis(2024)]{iliadis2024gfa}
+A.~Iliadis.
+\newblock AI-GFA: applied framework for producing responsible artificial
+intelligence.
+\newblock In \emph{Proceedings of the 2024 Good Technologies, Social Influences and
+Well-Being Workshop (GoodTechs~'24)}. ACM, New York, NY, USA, Article~14,
+10~pages.
+\newblock \url{https://doi.org/10.1145/3677525.3678646}
+
+\bibitem[Haque et al.(2024)]{haque2024questions}
+M.~R.~Haque, D.~Saxena, K.~Weathington, J.~Chudzik, and S.~Guha.
+\newblock Are we asking the right questions?: designing for community stakeholders'
+interactions with AI in policing.
+\newblock In \emph{Proceedings of the 2024 CHI Conference on Human Factors in
+Computing Systems (CHI~'24)}. ACM, New York, NY, USA, Article~717, 17~pages.
+\newblock \url{https://doi.org/10.1145/3613904.3642738}
 \end{thebibliography}
 
 \end{document}
