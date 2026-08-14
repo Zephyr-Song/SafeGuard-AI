@@ -1,7 +1,17 @@
 % ============================================================================
 % SafeBARS — Multimodal Ethical Mirror — CHI 2027 draft outline + Related Work
 % Format: ACM acmart (CHI template). Drop into Overleaf; verify track/length with PCS.
-% TODO before submission: verify all author names + the SafeBARS'23 citation on ACM DL.
+% REFERENCE VERIFICATION (done 2026-08-13; ACM DL landing pages + CrossRef authors):
+%   - All 5 CHI'26 papers verified: ACM DL confirms title + venue (Proceedings of the
+%     2026 CHI Conference on Human Factors in Computing Systems); author full names,
+%     page ranges, and DOIs confirmed via CrossRef.
+%   - Do et al. (CHI'23) verified as the true paper behind the old "SafeBARS CHI'23"
+%     rumour: Do, Pang, Jiang, Reinecke; Article 602; doi:10.1145/3544548.3581347.
+%   - POLICY (per author): NO self-citation and NO pre-2023 references. SafeBARS is our
+%     own unpublished prototype, so it is DESCRIBED in body text (with its public URL),
+%     not cited. VSD / bias anchors are Sadek et al. 2023 (AI and Ethics) and
+%     Ferrara 2024 (Sci). Do NOT reintroduce "safebars23", "song2026safebars",
+%     "vsd2008", or "bias1996".
 % This version reframes the paper around the teacher's explicit requirement:
 %   (1) MULTIMODAL interaction (Taheri et al. CHI'26 named text-only as a limitation),
 %   (2) USER SELF-DISCOVERY of blind spots (not AI telling them),
@@ -16,8 +26,6 @@
 %    Hear You in Silence / Perspectra): user-selectable expert lenses, agentic
 %    cross-session memory, reciprocal disclosure, context-aware pacing, and an
 %    explicit critical-vs-sycophantic alignment manipulation. See \S System + RQ6.
-% TODO before submission: verify all author names + the SafeBARS'23 citation on ACM DL
-%    (ACM Open Access landing blocked full-text fetch; VERIFY against DL).
 % ============================================================================
 \documentclass[manuscript,screen]{acmart}
 
@@ -26,7 +34,7 @@ Discover Their Own Blind Spots}
 % TODO: finalize title; add authors / affiliations
 
 \begin{abstract}
-% TODO (fill after study): SafeBARS (CHI'23) introduced the "ethical mirror" that
+% TODO (fill after study): SafeBARS is our own prototype of an "ethical mirror" that
 % surfaces tensions between a system's design and ethical considerations. We extend it
 % into a *multimodal* mirror in which researchers confront the consequences of their
 % OWN design through interactive visualization and scenario simulation. Crucially, the
@@ -48,7 +56,8 @@ Discover Their Own Blind Spots}
 % OUTLINE (bullets to expand into prose):
 % - Ethical blind spots in research design are hard to see *because they are the
 %   researcher's own*: the designer rarely notices who their system affects.
-% - SafeBARS (CHI'23) = pre-LLM mirror; reflects only what is written; text-driven.
+% - SafeBARS = our own prototype (not a prior CHI paper); pre-LLM mirror; reflects
+%   only what is written; text-driven.
 % - Recent CHI'26 work shows AI dialogue can shift bias recognition (Taheri et al.),
 %   but that work is (a) TEXT-ONLY and names multimodality as its own key limitation,
 %   (b) about recognizing bias in *other people's* social interactions, and
@@ -90,12 +99,21 @@ behavioral revision. Our work takes their strongest mechanism (critical friction
 \emph{designs for it multimodally}, on the researcher's \emph{own} artifact, with
 \emph{behavioral} mind-change as the outcome.
 
-\paragraph{SafeBARS and the ethical mirror.}
-We build on the CHI'23 SafeBARS ethical mirror \citep{safebars23}, a pre-LLM tool that
-surfaces tensions between a design and ethical considerations and asks researchers to
-respond. We inject LLMs (multi-role ethics probes, a deterministic deep-audit layer that
-catches risks researchers did not write down) and -- the contribution of this paper --
-turn the mirror from a \emph{text report} into a \emph{multimodal, self-discovery loop}.
+\paragraph{Ethical mirrors and value-sensitive design.}
+Interview studies of CS researchers show that anticipating unintended consequences
+is considered important but rarely practiced, for lack of a formal process or
+strategy \citep{do2023}. Recent reviews of value-sensitive AI design argue that
+stakeholder and value tensions must be first-class concerns in AI design processes
+\citep{sadek2023}; AI systems carry systematic, hard-to-see bias whose sources span
+data, algorithms, and human interaction \citep{ferrara2024}; and AI-specific review
+guidance now extends human-subjects review to AI systems \citep{makridis2023}.
+SafeBARS is our own prototype of such a mirror: a publicly deployed system
+(\texttt{safebars-ai.pages.dev/safebars/mirror}, code and technical report at
+\url{https://github.com/Zephyr-Song/SafeGuard-AI}) that surfaces tensions between a
+design and ethical considerations and asks researchers to respond. We inject LLMs
+(multi-role ethics probes, a deterministic deep-audit layer that catches risks
+researchers did not write down) and -- the contribution of this paper -- turn the
+mirror from a \emph{text report} into a \emph{multimodal, self-discovery loop}.
 To our knowledge no reflection tool has (a) used multimodal rendering to trigger
 user-owned realization of ethical blind spots, nor (b) measured behavioral mind-change
 rather than generated a report.
@@ -299,46 +317,80 @@ claims come from Study 1.
 
 % ============================================================================
 \begin{thebibliography}{9}
-% VERIFY all author names + SafeBARS'23 citation against ACM DL before submission.
-\bibitem[SafeBARS(2023)]{safebars23}
-TODO: SafeBARS CHI'23 authors.
-\newblock SafeBARS: ... (ethical mirror).
-\newblock In \emph{Proc. CHI '23}.
-\newblock \url{https://doi.org/VERIFY}
+% All entries verified 2026-08-13: ACM DL landing pages confirm titles + venues;
+% author full names, page ranges, and DOIs confirmed via CrossRef. Every entry is
+% from 2023 or later. NO self-citation: SafeBARS (our own prototype) is described in
+% body text, not cited.
+
+\bibitem[Do et al.(2023)]{do2023}
+Kimberly~Do, Rock~Yuren~Pang, Jiachen~Jiang, and Katharina~Reinecke.
+\newblock ``That's important, but...'': How computer science researchers anticipate
+unintended consequences of their research innovations.
+\newblock In \emph{Proceedings of the 2023 CHI Conference on Human Factors in
+Computing Systems (CHI~'23)}. ACM, New York, NY, USA, Article~602, 16~pages.
+\newblock \url{https://doi.org/10.1145/3544548.3581347}
+
+\bibitem[Sadek et al.(2023)]{sadek2023}
+Malak~Sadek, Rafael~A.~Calvo, and C\'{e}line~Mougenot.
+\newblock Designing value-sensitive AI: A critical review and recommendations for
+socio-technical design processes.
+\newblock \emph{AI and Ethics}, 4(4):949--967, 2023.
+\newblock \url{https://doi.org/10.1007/s43681-023-00373-7}
+
+\bibitem[Ferrara(2024)]{ferrara2024}
+Emilio~Ferrara.
+\newblock Fairness and bias in artificial intelligence: A brief survey of sources,
+impacts, and mitigation strategies.
+\newblock \emph{Sci}, 6(1):3, 2024.
+\newblock \url{https://doi.org/10.3390/sci6010003}
+
+\bibitem[Makridis et al.(2023)]{makridis2023}
+Christos~A.~Makridis, Anthony~Boese, Rafael~Fricks, Don~Workman, Molly~Klote,
+Joshua~Mueller, Isabel~J.~Hildebrandt, Michael~Kim, and Gil~Alterovitz.
+\newblock Informing the ethical review of human subjects research utilizing
+artificial intelligence.
+\newblock \emph{Frontiers in Computer Science}, 5:1235226, 2023.
+\newblock \url{https://doi.org/10.3389/fcomp.2023.1235226}
 
 \bibitem[Taheri et al.(2026)]{taheri26}
-A.~Taheri, H.~El Alaoui, P.~Carrington, and J.~P.~Bigham.
-\newblock "I followed what felt right, not what I was told": Autonomy, Coaching, and
-Recognizing Bias Through AI-Mediated Dialogue.
-\newblock In \emph{Proc. CHI '26}, pp.\ 1--23.
+Atieh~Taheri, Hamza~El~Alaoui, Patrick~Carrington, and Jeffrey~P.~Bigham.
+\newblock ``I followed what felt right, not what I was told'': Autonomy, coaching,
+and recognizing bias through AI-mediated dialogue.
+\newblock In \emph{Proceedings of the 2026 CHI Conference on Human Factors in
+Computing Systems (CHI~'26)}. ACM, New York, NY, USA, 23~pages.
 \newblock \url{https://doi.org/10.1145/3772318.3791078}
 
 \bibitem[Rahman and Desai(2026)]{vibecheck26}
-S. Rahman and S. Desai.
-\newblock Vibe Check: Understanding the Effects of LLM-Based Conversational Agents'
-Personality and Alignment on User Perceptions in Goal-Oriented Tasks.
-\newblock In \emph{Proc. CHI '26}.
+Hasibur~Rahman and Smit~Desai.
+\newblock Vibe Check: Understanding the effects of LLM-based conversational agents'
+personality and alignment on user perceptions in goal-oriented tasks.
+\newblock In \emph{Proceedings of the 2026 CHI Conference on Human Factors in
+Computing Systems (CHI~'26)}. ACM, New York, NY, USA, 30~pages.
 \newblock \url{https://doi.org/10.1145/3772318.3790388}
 
 \bibitem[Jiang et al.(2026)]{recallbot26}
-Y. Jiang et al.
-\newblock RECALLbot: Designing Agentic Memory and Reciprocal Disclosure for
-Human-Chatbot Relationships.
-\newblock In \emph{Proc. CHI '26}.
+Zhaojun~Jiang, Chunyuan~Zheng, Hongyi~Chen, and Liuqing~Chen.
+\newblock RECALLbot: Designing agentic memory and reciprocal disclosure for
+human--chatbot relationships.
+\newblock In \emph{Proceedings of the 2026 CHI Conference on Human Factors in
+Computing Systems (CHI~'26)}. ACM, New York, NY, USA, 20~pages.
 \newblock \url{https://doi.org/10.1145/3772318.3790714}
 
 \bibitem[Jiang et al.(2026)]{hearinsilence26}
-X. Jiang et al.
-\newblock Hear You in Silence: Designing for Active Listening in Human Interaction
-with Conversational Agents Using Context-Aware Pacing.
-\newblock In \emph{Proc. CHI '26}.
+Zhihan~Jiang, Qianhui~Chen, Chu~Zhang, Yanheng~Li, and RAY~LC.
+\newblock Hear You in Silence: Designing for active listening in human interaction
+with conversational agents using context-aware pacing.
+\newblock In \emph{Proceedings of the 2026 CHI Conference on Human Factors in
+Computing Systems (CHI~'26)}. ACM, New York, NY, USA, 29~pages.
 \newblock \url{https://doi.org/10.1145/3772318.3791238}
 
 \bibitem[Liu et al.(2026)]{perspectra26}
-Y. Liu et al.
-\newblock Perspectra: Choosing Your Experts Enhances Critical Thinking in Multi-Agent
-Research Ideation.
-\newblock In \emph{Proc. CHI '26}.
+Yiren~Liu, Viraj~Nischal~Shah, Sangho~Suh, Pao~Siangliulue, Tal~August, and
+Yun~Huang.
+\newblock Perspectra: Choosing your experts enhances critical thinking in multi-agent
+research ideation.
+\newblock In \emph{Proceedings of the 2026 CHI Conference on Human Factors in
+Computing Systems (CHI~'26)}. ACM, New York, NY, USA, 27~pages.
 \newblock \url{https://doi.org/10.1145/3772318.3791560}
 \end{thebibliography}
 

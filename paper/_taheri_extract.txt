@@ -1,0 +1,1411 @@
+PAGES=23
+
+
+===== PAGE 1 =====
+“I followed what felt right, not what I was told”: Autonomy,
+Coaching, and Recognizing Bias Through AI-Mediated Dialogue
+Atieh Taheri Hamza El Alaoui
+Human-Computer Interaction Institute Human-Computer Interaction Institute
+Carnegie Mellon University Carnegie Mellon University
+Pittsburgh, Pennsylvania, USA Pittsburgh, Pennsylvania, USA
+ataheri@cs.cmu.edu helalaou@cs.cmu.edu
+Patrick Carrington Jeffrey P Bigham
+Human-Computer Interaction Institute Human-Computer Interaction Institute
+Carnegie Mellon University Carnegie Mellon University
+Pittsburgh, Pennsylvania, USA Pittsburgh, Pennsylvania, USA
+pcarring@cs.cmu.edu jbigham@cs.cmu.edu
+Abstract ACM Reference Format:
+Ableist microaggressions remain pervasive in everyday interactions, Atieh Taheri, Hamza El Alaoui, Patrick Carrington, and Jeffrey P Bigham.
+2026. “I followed what felt right, not what I was told”: Autonomy, Coaching,
+yet interventions to help people recognize them are limited. We
+and Recognizing Bias Through AI-Mediated Dialogue. In Proceedings of
+present an experiment testing how AI-mediated dialogue influences
+the 2026 CHI Conference on Human Factors in Computing Systems (CHI ’26),
+recognition of ableism. 160 participants completed a pre-test, inter- April 13–17, 2026, Barcelona, Spain. ACM, New York, NY, USA, 23 pages.
+vention, and a post-test across four conditions: AI nudges toward
+https://doi.org/10.1145/3772318.3791078
+bias (Bias-Directed), inclusion (Neutral-Directed), unguided dia-
+logue (Self-Directed), and a text-only non-dialogue (Reading). Par- 1 Introduction
+ticipants rated scenarios on standardness of social experience and
+Disabled people make up one of the largest minority groups in
+emotional impact; those in dialogue-based conditions also provided
+the world, with 1.3 billion individuals -about 16% of the global
+qualitative reflections. Quantitative results showed dialogue-based
+population1 . Despite this prevalence, ableism -discrimination or
+conditions produced stronger recognition than Reading, though
+prejudice against people with disabilities -is still deeply ingrained
+trajectories diverged: biased nudges improved differentiation of
+in society. Ableism can be explicit or subtle and it comes from the
+bias from neutrality but increased overall negativity. Inclusive or
+idea that there is a “right” way for bodies and minds to work [11, 33].
+no nudges remained more balanced, while Reading participants
+Anyone who does not fit that mold is seen as deficient. This ideology
+showed weaker gains and even declines. Qualitative findings re-
+perpetuates structural barriers across domains such as education,
+vealed biased nudges were often rejected, while inclusive nudges
+employment, healthcare, and daily life, and frames disability as a
+were adopted as scaffolding. We contribute a validated vignette
+problem to be fixed rather than a natural part of human diversity 2 .
+corpus, an AI-mediated intervention platform, and design impli-
+A particularly insidious manifestation of ableism is the microag-
+cations highlighting trade-offs conversational systems face when
+gression: an often unintentional, indirect, and subtle expression
+integrating bias-related nudges.
+of prejudice [74]. Microaggressions can be verbal or non-verbal
+CCS Concepts and typically include remarks, actions, or environmental cues that
+convey bias. They are often unconsciously delivered in the form of
+• Human-centered computing → Empirical studies in HCI; subtle snubs, dismissive gestures, or tones, and are so pervasive in
+Empirical studies in accessibility; Accessibility systems and tools;
+daily interactions that they are frequently dismissed as harmless or
+• Computing methodologies → Artificial intelligence; Natural unintentional [70, 71]. Yet these seemingly minor exchanges send
+language processing. demeaning messages that reflect and reinforce structural exclusion.
+Research specific to disability has identified four recurring forms of
+Keywords
+ableist microaggressions. Conover et al. [17] validated the Ableist
+Ableism, Microaggressions, Bias Recognition, Accessibility, Disabil- Microaggressions Scale (AMS), which organizes these experiences
+ity Studies, Social Interaction, Human-AI Interaction, AI-Driven into: Helplessness, in which disabled people are pitied or treated
+Dialogue, Large Language Models, Computational Social Science, as incapable (e.g., being offered unsolicited help or assumed un-
+Intervention Design, Vignettes Corpus employable); Minimization, which denies or downplays disability
+or the need for accommodations (e.g., suggesting someone is “not
+really disabled” or that “it could be worse”); Denial of Personhood,
+which reduces individuals to their disability and assumes incompe-
+This work is licensed under a Creative Commons Attribution 4.0 International License.
+CHI ’26, Barcelona, Spain tence or child-like dependence (e.g., speaking to wheelchair users
+© 2026 Copyright held by the owner/author(s).
+ACM ISBN 979-8-4007-2278-3/26/04 1https://www.who.int/health-topics/disability
+https://doi.org/10.1145/3772318.3791078 2https://www.who.int/publications/i/item/9789241564182
+===== PAGE 2 =====
+CHI ’26, April 13–17, 2026, Barcelona, Spain Taheri et al.
+as though they were children, or assuming they lack intelligence); Research questions. We investigate whether brief, structured
+and Otherization, which frames disability as abnormal or outside interactions can shift recognition of ableist versus neutral exchanges,
+social norms, often through staring, desexualization, or suggesting and how the direction of AI coaching shapes those shifts.
+that disabled people should not date or have children. Studies show
+that these seemingly small repeated acts accumulate over time to • RQ1 (Effectiveness). Do dialogue-based interventions im-
+drain psychological and emotional energy and negatively affect the prove recognition of ableist versus neutral interactions more
+psychological and physical health of recipients [5, 47, 73]; In med- than a non-dialogue reading intervention?
+ical contexts, microaggressions contribute to anxiety, depression, • RQ2 (Directionality). How does coaching direction -to-
+burnout, and decreased performance [3, 20, 24, 27, 49, 71]. ward biased framings versus inclusive framings -affect par-
+While the literature on microaggressions is expansive, most em- ticipants’ judgments of standardness and emotional impact?
+pirical research has focused on documenting their prevalence or • RQ3 (Differentiation). Do interventions change partici-
+identifying their types and effects, particularly in the context of pants’ contrast between neutral and ableist scenarios (Neu-
+race, gender, and sexual orientation [53, 73]. Studies on ableist tral − Ableist) on judgments of standardness and emotional
+microaggressions are fewer and primarily qualitative, often center- impact?
+ing on how such interactions impact disabled identity and sense
+of belonging[19]. There is limited experimental work examining Grounded in work on framing, defaults, and nudges [4, 12, 16,
+how people come to recognize ableist microaggressions in situ, or 41, 78], we expected that small shifts in conversational guidance
+whether short interventions can shift this recognition in measur- could produce measurable changes in judgments. We also drew
+able ways [19, 53]. At the same time, conversational AI systems are on research showing that interactive, situated practice-based in-
+rapidly entering everyday social and professional settings, where terventions leads to better retention and behavioral transfer than
+their prompts, suggestions, and default phrasings can subtly steer passive, reading-only or lecture-based modules [26, 39, 40], and
+human judgments [12, 16]. Users often treat algorithmic advice as on recent work arguing for feedback-rich, in-situ support rather
+objective or more reliable than human advice, giving AI-generated than purely didactic materials when helping people reflect on their
+suggestions disproportionate influence over how they phrase and language [6, 7, 13, 25, 51, 72]. In our case, AI-mediated dialogue re-
+justify their choices [45]. LLMs are increasingly deployed as writing quires participants to generate their own responses in context and,
+assistants and conversational partners that suggest what to say next, in the coached conditions, to decide whether to follow or ignore
+effectively acting as “coaches” in sensitive interactions. Yet audits private suggestions from the coach, whereas the reading module
+of language models and content-moderation systems show that presents information but does not demand the same level of active
+these tools are not neutral arbiters of harm: they can misclassify mi- construction. Specifically, we anticipated that (a) dialogue-based
+croaggressions and encode ableist stereotypes in both classification conditions would outperform reading on recognition (RQ1); (b)
+and generation, including under-and over-identifying disability- inclusive coaching would encourage more supportive evaluations
+related microaggressions and downplaying their emotional impact of neutral interactions, while biased coaching would heighten sen-
+on disabled people [57, 58]. Prior work in framing and nudging sitivity to harm in ableist interactions (RQ2); and (c) all dialogue
+shows that small shifts in how information is presented can system- conditions would increase differentiation relative to reading (RQ3).
+atically alter perception and behavior [41, 78]. Research on social We embed a short intervention inside a simulated text-based
+bias frames demonstrates how language can reinforce stereotypes conversation with a disabled character whose responses are gener-
+through implied meanings rather than explicit statements [65]. ated in real time by an LLM. Participants are randomly assigned
+Yet we know little about how AI-mediated dialogue, especially AI- to one of four conditions: (i) Bias-Directed (coach prompts model
+generated coaching suggestions shown alongside a conversation biased framings), (ii) Neutral-Directed (coach prompts model in-
+might either attenuate or amplify ableist framings in real time. In- clusive framings), (iii) Self-Directed (no coach), and (iv) Reading
+vestigating these dynamics is critical as LLMs increasingly function (a non-dialogue informational control). We assess recognition us-
+as “moral scaffolds” in digital communication. If these systems har- ing pre/post ratings of 40 validated vignette scenarios (20 ableist,
+bor latent ableist biases, as recent audits suggest [56, 79], they risk 20 neutral) adapted from the AMS domains [17] and balanced by
+automating the reinforcement of stigma at scale. Conversely, if de- character gender and disability type. Outcomes include (1) change
+signed intentionally, they offer a unique opportunity to provide the in ratings from pre-to post-test for ableist and neutral vignettes
+sort of “just-in-time” feedback that static diversity training often separately, and (2) change in contrast (Neutral − Ableist), which
+lacks. indexes differentiation ability.
+To address this gap, we designed an experiment that embeds Dialogue-based conditions generally improved recognition rela-
+recognition of ableist interactions within simulated dialogue. This tive to reading. Coaching direction mattered: biased nudges most
+approach aligns with a growing use of conversational AI to simu- strongly increased recognition of harm in ableist scenarios, while
+late real-life scenarios for interactive learning and training [21, 75]. inclusive or unguided dialogues supported balanced judgments
+Participants were required to converse with a virtual character and stronger affirmation of neutral scenarios. Reading showed the
+explicitly presented as a person with a disability, whose dialogue weakest gains and, at times, declines. Qualitative reflections illu-
+was dynamically generated in real time by a large language model minate mechanism: participants often resisted biased prompts as
+(LLM). This setup enabled participants to experience conversational inappropriate, while inclusive prompts were described as helpful
+dynamics rather than only reading about them, bringing microag- scaffolds for maintaining respectful, natural flow.
+gressions into a more realistic social context. Contributions. This paper contributes:
+===== PAGE 3 =====
+Autonomy, Coaching, and Recognizing Bias Through AI-Mediated Dialogue CHI ’26, April 13–17, 2026, Barcelona, Spain
+(1) An AI-mediated dialogue platform introduced and empirically ecologically valid social scenarios. However, most of this work re-
+evaluated in this study, for studying recognition of ableism mains descriptive, with limited attention to how microaggression
+in situ, isolating how one-way coaching suggestions shape recognition can be trained or shifted in controlled interventions,
+conversational judgments. the gap our study addresses.
+(2) A validated vignette corpus of disability-related interactions
+spanning four microaggression domains with balanced gen- 2.2 Interventions, Nudges, and Framing for Bias
+der and disability-type representation, released as supple-
+Recognition
+mental materials for reuse.
+(3) Empirical evidence that brief dialogue-based interventions Efforts to help people recognize and respond to bias have tradi-
+can shift recognition and differentiation of ableist vs. neutral tionally relied on educational interventions such as workshops,
+interactions, and that coaching direction modulates these perspective-taking exercises, or implicit bias training, particularly
+shifts. in contexts of race and gender. These methods can produce short-
+(4) Design implications for AI systems that mediate social in- term improvements in awareness, but the effects often diminish
+teraction, including safeguards against biased steering and without reinforcement [26, 39, 40]. Within disability contexts, inter-
+guidelines for supportive, inclusive scaffolding. ventions are far less common and often qualitative in nature: role-
+Our goal is not to replace disability-led education, but to test play [1, 15, 38] storytelling [31, 81], or simulation exercises [29, 35,
+whether short, scalable dialogue experiences can complement it. We 64] are used to sensitize participants to lived experience. Although
+designed materials with input from lived experience and analyzed these methods can be valuable, they are labor-intensive, hard to
+harms and benefits of coaching frameworks. We discuss ethical scale, and often faulted for offering only abstract understanding
+considerations for AI-mediated social tools, including transparency, rather than engaging people in the conversational dynamics where
+user agency, and the risks of normalizing biased suggestions. microaggressions usually occur. Recent work in healthcare high-
+We first review related work on microaggressions and AI-mediated lights the limitations of passive knowledge transfer, calling instead
+nudging, then describe the concept and implementation of our in- for interactive feedback systems that help practitioners reflect on
+tervention platform. We next detail our methodology, measures, language in real time [6, 7, 25, 51]. Similarly, education research has
+and analyses. We present quantitative and qualitative results, fol- experimented with vignette-based modules, but these often reduce
+lowed by implications for the design of AI systems that shape social to reading exercises rather than active engagement.
+judgments and interactions. In parallel, behavioral economics and HCI have shown that small
+changes in presentation, such as pushes, framing, defaults, and re-
+2 Related Work minders, can reliably influence judgments and decisions. The semi-
+2.1 Disability Microaggressions: Concepts and nal work by Tversky and Kahneman revealed that people’s choices
+change dramatically depending on whether outcomes are framed
+Measures
+as gains or losses [78]. Building on this, Caraban et al. catalogued a
+The concept of microaggressions was originally theorized in the design space of 23 technology-mediated nudges, highlighting how
+context of racial prejudice, where they were described as subtle, interface features leverage cognitive biases to steer user behavior
+everyday insults that convey hostility or marginalization even if across domains such as health, sustainability, and privacy [12]. For
+unintended [73]. Over the past two decades, the framework has accessibility, this raises a double edge: nudges can scaffold inclusive
+been extended to gender, sexuality, and disability, with increasing communication by reminding users of respectful phrasing, but they
+attention to how repeated “small” slights accumulate into major can just as easily entrench stereotypes if the defaults or framings
+impacts on identity and well-being. Disability microaggressions themselves are biased. Natural Language Processing research has
+include behaviors such as unsolicited assistance, speaking to a com- emphasized this tension through Social Bias Frames, which for-
+panion rather than to the disabled person, assuming incompetence, malize how everyday language encodes implicit stereotypes even
+or expressing pity. These are often dismissed as benign, yet studies without overt slurs [65].
+demonstrate that they erode autonomy and reinforce stigma. Bringing these strands together, a growing consensus suggests
+To capture these experiences systematically, Conover et al. de- that effective bias interventions must combine the immersive re-
+veloped the Ableist Microaggressions Scale (AMS), which clusters alism of interactive practice [13, 72] with the subtle but power-
+items into four domains: Helplessness, Minimization, Denial of Per- ful steering of framing and nudges. Rather than relying on static
+sonhood, and Otherization [17]. This typology has become a cor- reading modules, systems can embed opportunities for reflection
+nerstone in both counseling psychology and accessibility research, directly into conversational flow, where bias typically manifests,
+providing a way to categorize the subtle but recurrent forms of while carefully designing the direction of nudges. Our work sits
+ableism. More recent studies have adapted these domains to diverse at this intersection. We test whether embedding recognition tasks
+disability groups, including invisible and chronic conditions, show- within AI-mediated dialogue provides a more effective mechanism
+ing that manifestations differ depending on visibility and social for shifting awareness of ableist microaggressions. By contrasting
+context [19]. Health and workplace research has linked ableist mi- biased coaching, inclusive coaching, and unguided dialogue against
+croaggressions to negative psychological outcomes such as anxiety, a reading-only baseline, we extend research on bias training and
+depression, and burnout, especially when combined with other nudging into the underexplored domain of disability microaggres-
+marginalized identities [19, 52, 68]. This literature provides a foun- sions, quantifying how conversational framing shapes recognition
+dation for our vignette corpus, which adapts AMS domains into trajectories in real time.
+===== PAGE 4 =====
+CHI ’26, April 13–17, 2026, Barcelona, Spain Taheri et al.
+2.3 AI-mediated dialogue, coaching, and risks of this foundation by shifting the focus from evaluating the model’s
+influence static bias to deploying the model as an active conversational part-
+ner, testing whether its guidance (even if imperfect) can scaffold
+Large language models (LLMs) now mediate a growing range of
+human recognition of these same subtleties.
+everyday conversations, from productivity assistance to customer
+support and peer tutoring. Studies show that users often exhibit an 2.4 Vignette-Based Methods and Experimental
+appreciation for the algorithm, rating AI advice as more reliable
+Approaches
+than equivalent human advice [45]. Other work has demonstrated
+the persuasive power of LLMs: in debate-style tasks, ChatGPT and Beyond theoretical and training-oriented work, a significant tra-
+similar models can sway opinions more effectively than human dition in psychology, education, and HCI employs vignette-based
+interlocutors, raising both opportunities and risks [32, 62, 76]. At methods to study how people perceive and respond to sensitive so-
+the same time, analyses of LLM behavior reveal embedded biases: cial situations. Vignettes, short hypothetical scenarios that describe
+models can display uneven empathy by race [34, 55], replicate everyday interactions, are widely used to obtain judgments about
+stereotypes, and exhibit human-like cognitive biases such as fram- appropriateness, fairness, or harm while maintaining experimental
+ing effects and anchoring [44, 46]. control [36]. In bias research, they allow investigators to manipu-
+HCI researchers have begun exploring frameworks for human- late subtle contextual cues (e.g., role, wording, setting) and measure
+AI deliberation, where systems are designed not only to provide participants’ recognition of prejudice without exposing them to
+answers but to scaffold reflection and critical engagement [30, 48]. direct confrontation [2]. This method has been applied to topics
+This paradigm of AI-driven scaffolding has been applied in other such as racial discrimination [8, 67], workplace harassment [59],
+complex domains, such as using context-aware voice prompts to and ethical decision-making [50, 54], and more recently to acces-
+help users compose long-form texts while mobile [22]. This aligns sibility, where carefully crafted scenarios capture the nuance of
+with long-standing accessibility concerns about agency and trans- disability-related interactions [63, 77].
+parency: If AI can subtly nudge users toward biased framings, it can In HCI, vignette studies complement field-based methods by
+also be designed to model inclusive framings that support learn- offering a scalable, replicable way to probe user attitudes toward
+ing. This concern is particularly salient given that even models technologies or social practices. They are particularly valuable
+aligned to mitigate overt prejudice may still exhibit significant im- when direct observation is impractical or ethically fraught, for ex-
+plicit biases when simulating behavior [43]. Our study quantifies ample, when studying microaggressions that could cause harm if
+this double-edged potential by contrasting three dialogue-based enacted in situ. Researchers have used vignettes to evaluate acces-
+intervention conditions, i.e., biased coaching, inclusive coaching, sibility barriers in education, online communities, and healthcare
+and no coaching, against a reading-only baseline. In doing so, we communication [18, 60, 69]. These studies highlight the tension be-
+contribute empirical evidence to debates about how AI systems tween ecological validity and experimental control: while vignettes
+should be designed to mediate sensitive social interactions without abstract away from the messiness of lived interaction, they also
+amplifying harm. This line of inquiry is part of a broader move- enable systematic comparisons across conditions.
+ment towards using interactive environments for research, with Our work builds on this tradition by embedding vignette-like
+platforms like SOTOPIA 3 being developed to simulate complex scenarios into interactive dialogue, rather than presenting them
+social scenarios for evaluating AI’s social intelligence [82]. solely as static texts. This hybrid approach leverages the strengths
+Recent audits of LLMs, specifically regarding ableism, reveal of vignette methods, controlled variation and ethical safety, while
+significant misalignments between model outputs and the lived situating them in a more realistic conversational flow. In doing so,
+experiences of disabled people. Phutane et al. [57] found that while it advances experimental approaches in HCI that seek both rigor
+models can identify overt ableism, their explanations are often per- and ecological validity when investigating subtle forms of social
+ceived by disabled evaluators as “cold, calculated, and condescend- bias.
+ing,” lacking the nuanced understanding of harm that comes from
+lived experience. Furthermore, cultural context heavily influences
+3 Concept and Implementation
+these capabilities; comparative studies show that Western-centric 3.1 Design Rationale
+models may overestimate ableist harm while non-Western or local-
+The core concept of our system was to experimentally examine
+ized models may underestimate it, often failing to capture the subtle,
+how conversational framing influences perceptions of ableism. We
+relational nature of ableist microaggressions [58]. Related analyzes
+therefore designed and implemented a platform that could simu-
+of ableist language classification and generation demonstrate that,
+late “everyday social interactions” and introduce different forms of
+even when LLMs correctly recognize explicit ableist content, they
+intervention. These interventions were intended to test whether
+still struggle with nuanced ableism and intersectional harms, often
+brief, scalable dialogue experiences could shift participants’ recogni-
+expressing systematically negative sentiment [42, 61, 79]. Quanti-
+tion of ableist microaggressions. We focused on simulated dialogue
+tative frameworks further highlight these risks, showing that such
+rather than static reading tasks in order to provide participants
+biases persist in high-stakes contexts like hiring, where disability is
+with a more immersive and socially realistic context. Instead of
+frequently conflated with incompetence [56]. Our work builds on
+repurposing an existing chat interface, the platform was purpose-
+built for this study and is empirically evaluated here through both
+3SOTOPIA is an open-ended environment that simulates social interactions between
+behavioral outcomes and post-intervention reflections, rather than
+artificial agents to evaluate social intelligence capabilities such as negotiation, persua-
+sion, and theory of mind. relying on any prior external evaluations.
+===== PAGE 5 =====
+Autonomy, Coaching, and Recognizing Bias Through AI-Mediated Dialogue CHI ’26, April 13–17, 2026, Barcelona, Spain
+Figure 1: System architecture of the study platform. Participants interacted through a browser-based front end supporting
+avatar creation, a dialogue intervention interface, and a reading module. The Flask backend handled condition assignment,
+prompt pipelines, and data integration, exchanging information asynchronously with the front end via JSON. User state
+and conversation history were persisted to and retrieved from the database. LLM services powered the intervention: GPT-4o
+generated replies of the virtual character who is a person with a disability (PwD) and coaching suggestions, while DALL·E
+generated avatars from user-provided features.
+To operationalize everyday social interactions in a controlled This design operationalizes our research questions by isolating
+setting, we grounded the dialogue in common social contexts that the role of conversational nudges in shaping how participants judge
+frequently appear in accessibility and microaggression research, interactions. The overall system architecture is shown in Figure 1,
+such as casual social events and workplaces [37, 69, 77]. Rather than which illustrates the front-end interface, Flask backend, database
+presenting participants with static transcripts, the virtual charac- management, and LLM services supporting the intervention plat-
+ter responded turn by turn using an LLM seeded with a scenario form.
+prompt and conversation history, while participants typed their
+own replies freely (Section 3.2). This preserved the temporal flow,
+3.2 Dialogue Architecture
+turn-taking, and local responsiveness of everyday conversation The dialogue system consisted of three roles: the participant, the
+while still allowing us to hold constant the setting, roles, and high- disabled character, and in the coached intervention conditions, a
+level goals of each interaction. In this sense, the platform offers coach only visible to the participant. Conversations unfolded in
+an ecologically grounded but deliberately simplified simulation
+everyday settings (party or workplace) to reflect common social en-
+of real-world encounters, suitable for experimental manipulation.
+counters. These settings were chosen to mirror familiar, low-stakes
+Qualitative reflections (Section 6) further indicate that many par-
+situations (e.g., chatting at a party, talking with a colleague in the
+ticipants experienced these conversations as natural or typical and
+office) where ableist or inclusive comments often arise, allowing
+reported responding similarly to how they would in real life, pro-
+us to study conversational dynamics without placing participants
+viding initial evidence for the plausibility of the simulation.
+in highly specialized or clinical contexts. The disabled character’s
+Within this platform, we operationalized different interventions
+dialogue was generated dynamically using a large language model
+by manipulating a one-way “coach” component that appears only to (OpenAI GPT-4o 4), seeded with scenario-specific prompts and con-
+the participant. In the dialogue-based conditions, the coach provides
+versation history. The coach produced one-way suggestions before
+pre-turn suggestions that either subtly reinforce biased framings
+each user turn, which the participant could choose to follow or ig-
+(Bias-Directed) or model inclusive, bias-aware framings (Neutral-
+nore. This structure balanced ecological validity with experimental
+Directed); in the Self-Directed condition, the coach is removed
+control. The dialogue interface (Figure 2) presented participants
+entirely. A separate reading module implemented on the same plat-
+with a scenario prompt, scripted exchanges to initiate the con-
+form provides a non-dialogue control condition. Together, these
+versation, messages exchanged between the participant and the
+elements allow us to isolate how the presence and direction of
+AI-driven virtual character that is a disabled person, and private
+coaching influence participants’ recognition of ableist versus neu-
+coaching suggestions visible only to the participant.
+tral interactions, using a common underlying system architecture
+shown in Figure 1.
+4OpenAI. (2024). GPT-4o [Large language model]. OpenAI. https://openai.com
+===== PAGE 6 =====
+CHI ’26, April 13–17, 2026, Barcelona, Spain Taheri et al.
+Figure 2: Dialogue Interface. The system includes (A) Scenario prompt introducing the social setting, with a toggle button to
+expand or collapse. (B) Pre-scripted dialogues between the virtual character (e.g., Alex) and the user. (C) User responses as part
+of the conversation. (D) AI-generated continuation from the character. (E) Private coaching suggestion visible only to the user,
+offering guidance. (F) User response input box with Send button. (G) Navigation controls. (H) Termination button.
+3.3 Coach Guidance Logic 3.4 Avatar Creation
+Microaggression themes (Helplessness, Minimization, Denial of Per- Before beginning the dialogue, participants were asked to create
+sonhood, Otherization) were adapted from the Ableist Microaggres- a personalized avatar. This step was intended to increase engage-
+sions Scale [17] and randomized per participant. In the Bias-Directed ment and provide a sense of role anchoring in the interface: the
+condition, the coach’s advice included subtle ableist framings (e.g., participant’s avatar appeared alongside the disabled character’s
+pity, lowered expectations) that participants might resist or repro- avatar during conversation, mirroring everyday technologies such
+duce. In the Neutral-Directed condition, the coach instead modeled as chat apps or video calls. Importantly, the avatar creation step was
+bias-aware, inclusive framings. In the Self-Directed condition, par- not part of our experimental manipulation or analysis. No features
+ticipants received no guidance. Coach outputs were generated using of the avatar were used as independent or dependent variables; it
+structured prompts and logged for later analysis. served only to personalize the interface and standardize technical
+For example, in the Bias-Directed condition the coach might setup across participants.
+suggest:
+“Ask Alex if his disability makes it harder to enjoy the 3.5 Reading Intervention (Control Condition)
+party.” (party setting)
+The non-dialogue condition replaced interactive conversation with
+“Tell Ellie that you share her excitement for the new a structured reading task. Participants read a seven-page training
+project, but hint that it might be too challenging for module that introduced the concept of microaggressions, provided
+her.” (work office setting) examples across domains, and included embedded quizzes to ensure
+comprehension. This module was adapted from prior diversity and
+Whereas in the Neutral-Directed condition the coach might suggest:
+bias awareness training practices grounded in microaggression
+“Ask Alex if he’s been enjoying the party so far.” (party framework [17, 73] and served as a passive control against which
+setting) dialogue-based conditions were compared.
+“Maybe you could ask Ellie what aspect of the project
+excites her the most.” (work office setting) 3.6 System Implementation
+These suggestions were visible only to the participant and varied The platform was implemented as a web application using Flask
+slightly by setting (party or work office). (Python) on the backend and HTML/CSS/JavaScript templates on
+===== PAGE 7 =====
+Autonomy, Coaching, and Recognizing Bias Through AI-Mediated Dialogue CHI ’26, April 13–17, 2026, Barcelona, Spain
+the frontend. User state (e.g., task type, scenario assignment, con- comfortable engaging in conversations where perspectives may
+versation history) was managed with SQLAlchemy models (User, differ (M=3.8, SD=0.9 on a 5-point scale) and in conversations with
+Message, ReadingTask, PostInteractionResponse). Interactive unfamiliar people (M=3.6, SD=1.0). Most reported having at least
+dialogues were rendered via dynamic templates with scenario- occasional experience critically evaluating different viewpoints.
+specific backgrounds (party or workplace). Avatar creation was Finally, 135 participants (84%) reported prior use of AI-driven chat-
+supported through OpenAI’s DALL·E 5 image generation API, al- bots or virtual assistants (e.g., ChatGPT 6 , Siri 7 , Alexa 8). Usage
+lowing participants to generate a personalized character image ranged from occasional information-seeking to frequent use for
+before dialogue. All interactions and responses were logged in a creative, professional, or customer support tasks. The commonly
+SQLite database, with export functions for subsequent analysis. An reported benefits were speed and convenience, while limitations
+overview of these components and their integration is summarized included occasional inaccuracy and lack of nuance.
+in Figure 1.
+4.2 Study Design
+4 Methodology
+We employed a pre-test → intervention → post-test experimental
+4.1 Participants
+design to investigate how different forms of conversational framing
+We recruited 302 participants through Prolific using the platform’s influenced participants’ ability to recognize ableist interactions
+built-in study posting system. All recruitment occurred directly and evaluate their social and emotional implications. This design
+on Prolific; we did not use social media, email lists, institutional allowed us to capture within-subject changes (from pre-to post-test)
+channels, or external advertisements. Participants self-selected into and compare effects across four intervention conditions. The full
+the study after viewing the posting. Eligibility criteria were imple- procedure is illustrated in Figure 3, which outlines the two-session
+mented through Prolific’s prescreening tools. We restricted partic- design including pre-test, intervention, reflection, and post-test.
+ipation to adults aged 18 or older, residents of the United States, Participants were randomly assigned to one of four between-
+and individuals who self-reported fluency in English. These criteria subject intervention conditions:
+ensured that all participants could fully comprehend the vignette
+• Bias-Directed. Participants engaged in an AI-driven dia-
+materials and AI-mediated dialogues, which were written in English,
+logue with a virtual character representing a person with
+and provided a consistent sociocultural context regarding disability
+a disability. A separate coach window, visible only to the
+norms and microaggression interpretation within the U.S. We did
+participant, provided one-way prompts that modeled biased
+not apply any additional demographic quotas or targeted sampling
+or ableist responses. The coach did not participate in the
+filters (e.g., based on gender, race/ethnicity, disability status, or
+dialogue directly; instead, its role was to nudge participants
+education). Beyond the basic eligibility requirements above, partic-
+toward biased framings of their responses. This condition
+ipation remained open to the full pool of Prolific users who met
+tested whether biased coaching could impair participants’
+these criteria.
+recognition of ableist versus neutral interactions.
+Of the 302 participants who completed the pre-test, 223 returned
+• Neutral-Directed. Participants engaged in the same AI-
+for the second session of our two-session study, and 63 cases were
+driven dialogue, but the one-way coach prompts modeled
+excluded due to incomplete or invalid data. This left a final analytic
+inclusive, bias-aware responses. As in the Bias-Directed con-
+sample of 160 participants across the four intervention conditions.
+dition, the coach was visible only to the participant and did
+After giving their consent, participants completed an initial demo-
+not participate directly in the dialogue. This condition tested
+graphic survey that we administered, which we used as the source
+whether neutral coaching would strengthen participants’
+for the statistics reported here. this analytic sample, the age ranged
+ability to recognize ableism and encourage more supportive
+from 18 to 65+ years. The largest group was 25-34 years old (n=58,
+judgments.
+36%), followed by 35-44 (n=41, 26%), 45-54 (n=33, 21%), 18-24 (n=15,
+• Self-Directed. Participants engaged in AI-driven dialogue
+9%), and the smallest group was 55+ (n=13, 8%). Gender identity was
+with the virtual character without receiving any coaching
+reported as female (n=82, 51.25%), male (n=74, 46.25%), and non-
+prompts. This condition provided a baseline for unguided
+binary or self-described (n=4, 2.5%). Education levels varied: high
+interaction, capturing the spontaneous strategies of partici-
+school or less (n=17, 11%), associate degree (n=29, 18%), bachelor’s
+pants when conversing with a disabled person.
+degree (n=69, 43%), master’s degree (n=35, 22%), and doctoral degree
+• Reading (Control). Participants did not engage in a dia-
+(n=10, 6%). Regarding disability, a small proportion of participants
+logue. Instead, they read an informational text about ableism
+self-identified as having a disability (n=12, 8%). In terms of personal
+and microaggressions. This non-dialogue condition served
+connections, 18% (n=28) reported having an immediate family mem-
+as a passive educational baseline. Because participants did
+ber with a disability (parent, sibling, or grandparent). An additional
+not engage in a simulated interaction, the variable “setting”
+30% reported disability connections through extended relatives,
+was not applicable here.
+partners, or friends. These relationships encompassed a range of
+disability types, including physical, sensory, cognitive/learning, and
+psychological conditions. Participants also described their social
+comfort. On average, they reported being moderately to highly
+6https://chatgpt.com
+7https://www.apple.com/siri
+5OpenAI. (2024). DALL·E [Text-to-image model]. OpenAI. https://openai.com/dall-e 8https://alexa.amazon.com
+===== PAGE 8 =====
+CHI ’26, April 13–17, 2026, Barcelona, Spain Taheri et al.
+Figure 3: Study procedure across two sessions. On Day 1, participants completed a Demographic Questionnaire and a Pre-Test
+Vignette Survey (20 scenarios: 10 ableist, 10 neutral). On Day 6, they returned for the assigned intervention (three dialogue-based
+conditions: Bias-Directed, Neutral-Directed, or Self-Directed, presented in either a Party or Work Office setting; or a passive
+Reading control), followed by a Post-Interaction Reflection (dialogue conditions only) and a Post-Test Vignette Survey (20 new
+scenarios matched in structure to the pre-test).
+For clarity, the first three conditions (Bias-Directed, Neutral- be released with the article as supplementary materials. To further
+Directed, and Self-Directed) are referred to as dialogue-based condi- increase engagement, we also generated simple visualizations for
+tions, since they involved an AI-driven conversation. The Reading each vignette using OpenAI’s DALL·E model, after the text was
+condition is referred to as a non-dialogue condition. finalized. These visualizations were not part of the experimental
+By integrating pre- and post-test vignette ratings with post- manipulation; they served only as an engagement aid and did not
+intervention reflections, the design enabled us to evaluate both alter the scenario content.
+quantitative changes in bias recognition and qualitative reasoning Development and Review. The initial vignettes were drafted
+processes across conditions. by the first author and systematically adapted from the Ableist
+Microaggressions Scale (AMS) developed by Conover et al. [17].
+To ensure ecological validity and appropriateness of framing, the
+4.3 Materials
+vignettes were then reviewed by three individuals with relevant
+4.3.1 Vignettes. We developed a corpus of 40 vignette-based con- lived and professional expertise: an accessibility researcher with
+versational scenarios, evenly divided between ableist and neutral lived experience of disability (Spina Bifida and Major Depressive
+interactions. Each vignette described a short, naturalistic exchange Disorder), another individual with lived experience of disability
+involving a person with a disability in contexts such as workplaces, (Spinal Muscular Atrophy), and a third individual with professional
+public spaces, or social gatherings. Participants were presented only expertise from working at the Muscular Dystrophy Association
+with the scenario text; all underlying categorizations were used (MDA) who also has lived experience of disability. Each reviewer
+exclusively for study design and analysis. To support transparency provided feedback on clarity, realism, and sensitivity for every
+and reuse, the full set of 40 vignette texts (ableist and neutral) will vignette, and revisions were made based on their comments. This
+===== PAGE 9 =====
+Autonomy, Coaching, and Recognizing Bias Through AI-Mediated Dialogue CHI ’26, April 13–17, 2026, Barcelona, Spain
+review process helped ground the scenarios in lived experience and In the Bias-Directed and Neutral-Directed conditions, par-
+minimized researcher bias. ticipants also saw a separate AI coach window that was visible
+only to them and not part of the conversation itself. The coach
+• Ableist scenarios (n = 20). These were systematically adapted
+generated one-way prompts before each participant turn, model-
+from the AMS. The AMS identifies four empirically validated
+ing either biased responses (Bias-Directed) or inclusive, bias-aware
+domains of ableist microaggressions: Helplessness, Mini-
+responses (Neutral-Directed). These prompts adapted dynamically
+mization, Denial of Personhood, and Otherization. We used
+to the context of the conversation.
+these domains to guide the construction of scenarios. For
+In the Self-Directed condition, no coaching prompts were pro-
+example, a vignette under Helplessness portrayed a disabled
+vided, and participants responded freely to the AI-driven dialogue.
+character being offered unsolicited assistance despite show-
+ing no need, while a vignette under Denial of Personhood
+depicted a colleague speaking to a disabled character as if 4.4 Procedure
+they were a child. These domain labels were not presented
+The study was conducted entirely online. Recruitment occurred
+to participants, but ensured systematic coverage of ableist
+through Prolific, where participants first encountered the study
+experiences in our scenario set.
+listing and eligibility requirements (see Section 4.1). Upon accept-
+• Neutral scenarios (n = 20). Neutral scenarios were de-
+ing the task, participants were redirected via a secure link either
+signed to be structurally parallel to the ableist ones in terms
+to a scripted Google Form (for the pre-and post-tests) or to our
+of setting and interaction type, but without any biased fram-
+laboratory website (for the intervention and post-intervention re-
+ing. Rather than direct “counterparts” with the same char-
+flection). Participant identity was tracked across phases using their
+acter, each neutral vignette presented a different disabled
+unique Prolific ID, ensuring that pre-test, intervention, reflection,
+character in a similar everyday context, portrayed through
+and post-test data could be matched.
+respectful or bias-free interactions.
+Before beginning the study, participants viewed an online con-
+Two balanced sets were created: sent form. To minimize demand characteristics, participants were
+given only a general description of the study’s purpose during con-
+• Pre-test set (20 vignettes): 10 ableist, 10 neutral.
+sent and instructions. They were told that the research examined
+• Post-test set (20 vignettes): 10 ableist, 10 neutral.
+“how people interpret social interactions in everyday scenarios.”
+Each set included 10 male and 10 female characters with disabil- They were not informed that the study specifically focused on
+ities, balanced across framing: 5 men and 5 women appeared in ableist microaggressions, the role of AI-generated coaching, or any
+ableist scenarios, and 5 men and 5 women appeared in neutral sce- hypotheses regarding differences across conditions. No mention
+narios. This ensured gender parity in the representation of disabled was made of microaggression recognition, bias detection, or dia-
+characters while controlling for potential gender-related confounds logue framing. This limited disclosure follows established method-
+in scenario interpretation. ological practice in studies of bias recognition and ensured that
+Across both sets, scenarios represented a wide range of disabil- participants’ judgments were not influenced by knowledge of the
+ity types, including physical (35%), sensory (22.5%), chronic health study’s objectives.
+(17.5%), neurological (12.5%), developmental and cognitive (7.5%), The study was carried out across six days, with two stages of
+speech and language (2.5%), and other categories (2.5%). This distri- participation. Participants completed the pre-test on Day 1. On Day
+bution aligns closely with global prevalence estimates of disability 6, they returned to complete the intervention, post-intervention
+reported by the World Health Organization, supporting the ecolog- reflection (for dialogue-based conditions), and the post-test. This
+ical validity of the vignette set. interval reduced immediate testing effects while allowing us to
+To evaluate these scenarios, participants rated each interaction capture short-term changes in recognition.
+on two perspective-taking items: Q1 (Standard Social Experience), Pre-Test (Day 1). After providing informed consent, participants
+which asked whether the disabled character would likely perceive completed the pre-test using a custom-scripted Google Form. The
+the interaction as a typical social exchange, and Q2 (Emotional Im- pre-test consisted of 20 vignettes (10 ableist, 10 neutral), balanced
+pact), which asked how the character would likely feel emotionally by gender of the disabled character as described in Section 4.3.1.
+about the interaction. After each vignette, participants answered two perspective-taking
+Validation. As reported in Section 5, participants consistently questions (Q1 and Q2) about how the disabled character would
+rated ableist scenarios significantly lower than neutral scenarios experience the interaction (see Section 4.5). This phase lasted ap-
+across both outcome measures (Q1 and Q2). This confirms that proximately 20 minutes.
+the vignettes reliably differentiate biased from non-biased interac- Intervention (Day 6). Five days later (Day 6), participants were
+tions, validating them as a measurement instrument for studying invited via a second Prolific link, which redirected them to our
+recognition of ableism in dialogue. laboratory website hosting the intervention. Of the 302 participants
+who completed the pre-test, 223 returned for the second session. We
+4.3.2 Intervention Materials. In the three dialogue-based condi- excluded 63 participants from analysis due to incomplete or invalid
+tions, participants interacted with a virtual character representing data. The effective analytic sample therefore included 160 partici-
+a person with a disability through a text-based interface. The di- pants. These participants were randomly assigned with a balanced
+alogue of the character and the coach prompts were generated allocation to one of the four conditions described in Section 4.2,
+dynamically in real time by an LLM-driven system. ensuring an equal number of participants (n = 40) in each condition.
+===== PAGE 10 =====
+CHI ’26, April 13–17, 2026, Barcelona, Spain Taheri et al.
+During this phase, participants completed their assigned condition values indicate reduced differentiation. Contrast scores were calcu-
+using the materials described in Section 4.3. The intervention phase lated for both Q1 and Q2.
+lasted approximately 32-34 minutes. Qualitative Reflections. Participants in the dialogue-based con-
+Post-Interaction Reflection (Dialogue-Based Conditions ditions (Bias-Directed, Neutral-Directed, Self-Directed) provided
+Only). Immediately after completing the dialogue, participants open-ended reflections immediately after the intervention. These
+in the dialogue-based conditions answered open-ended reflection responses were analyzed thematically using an iterative coding
+questions hosted on our laboratory website. Prompts asked them scheme (see Section 4.6). The codes captured dimensions such as at-
+to describe how they approached the dialogue, how they felt about titude toward the disabled character, emotional tone, action orienta-
+the interaction, and their impressions of the coach prompts (if tion, and whether participants followed or resisted coach guidance.
+applicable). These qualitative reflections were later analyzed the- The Reading condition did not include a reflection stage.
+matically (see Section 4.6). The Reading condition did not include Demographics and Moderators. The demographic question-
+this reflection stage. This phase lasted approximately 6-8 minutes. naire (see Section 4.1) included participant’s age, gender identity, ed-
+Post-Test. Following the intervention (and reflection, where ucation, disability status, and their connections to disability through
+applicable), participants were redirected to a scripted Google Form family or friends. Participants also reported their social comfort and
+to complete the post-test. The post-test consisted of a new set of prior use of AI-driven chatbots or virtual assistants. These variables
+20 vignettes (10 ableist, 10 neutral). No vignettes were repeated were considered as potential moderators in exploratory analyzes,
+from the pre-test, though the sets were matched in structure, length, for example, examining whether prior exposure to disability or AI
+gender distribution, and disability type representation. After each technologies influenced intervention effects.
+vignette, participants again answered Q1 and Q2 (see Section 4.5).
+This phase lasted approximately 15 minutes.
+Ethics and Compensation. The study was reviewed and ap-
+4.6 Analysis
+proved by the Carnegie Mellon University Institutional Review Quantitative Analysis. We first verified the validity of the vi-
+Board (IRB) (Protocol #2024_00000467). Each participant was com- gnette stimuli by confirming that participants rated ableist sce-
+pensated $15 for approximately one hour of participation (≈ $15/hour), narios significantly lower than neutral scenarios across both Q1
+consistent with fair-pay guidelines on Prolific. and Q2 at baseline (see Section 4.5). For the main analyzes, we
+focused on participants’ change scores (Δ = Post − Pre) and con-
+4.5 Measures trast scores (Neutral − Ableist), computed separately for Q1 and Q2.
+Vignette Ratings. For both the pre-and post-tests, participants We used analysis of variance (ANOVA) to test the effect of inter-
+vention condition (Bias-Directed, Neutral-Directed, Self-Directed,
+rated each vignette on two 7-point Likert Scale items. The name
+Reading) on change scores and contrast scores. When assumptions
+of the disabled character was inserted into the question text dy-
+of homogeneity of variance were violated, Welch’s ANOVA was
+namically (e.g., “Robin” was replaced with the name of the disabled
+applied. Post-hoc comparisons were conducted using Tukey’s HSD.
+character in that vignette). The two items were:
+We calculated effect sizes (Cohen’s 𝑑) to assess the magnitude and
+• Q1: Standard Social Experience. “Do you think [Name]
+direction of pairwise differences.
+would describe the interaction as a standard social expe- Qualitative Analysis. We analyzed the open-ended responses
+rience?” Response options were fully labeled: Strongly Dis-
+using reflexive thematic analysis (TA) following Braun and Clarke’s
+agree, Disagree, Somewhat Disagree, Neutral, Somewhat Agree,
+six-phase framework [9, 10]. We selected reflexive TA because our
+Agree, Strongly Agree.
+goal was not to enumerate response types or quantify agreement,
+• Q2: Emotional Impact. “How do you think [Name] would
+but to interpret how participants made sense of AI-mediated coach-
+feel about this interaction?” Response options were fully
+ing and negotiated bias, agency, and social norms within situated
+labeled: Very Negative, Negative, Somewhat Negative, Neutral,
+dialogue. Reflexive TA is explicitly designed for this kind of inter-
+Somewhat Positive, Positive, Very Positive.
+pretive work, treating meaning as actively constructed through
+Q1 captured the participants’ perception of how the disabled char- the analytic engagement of researchers with the data rather than
+acter would judge the social typicality or acceptability of the in- as patterns that objectively “emerge” through coding frequency
+teraction, while Q2 captured participants’ perception of how the or inter-rater reliability. This orientation aligns with our focus on
+character would feel emotionally about the interaction. participants’ reasoning, resistance, and reflection, rather than on
+Change Scores (Δ). For each participant, we computed change prevalence or consensus alone.
+scores by subtracting pre-test ratings from post-test ratings (Δ = Two authors independently conducted Phase 1 (familiarization)
+Post − Pre). Change scores were calculated separately for ableist and collaboratively developed an initial coding framework during
+scenarios, neutral scenarios, and all scenarios combined, and for Phase 2. To strengthen reflexivity and interpretive rigor, both au-
+both Q1 and Q2. Positive Δ values indicate an increase in perceived thors coded a shared subset of approximately 25% of the data and
+typicality or positivity, while negative values indicate a decrease. compared interpretations. Rather than seeking statistical agreement,
+Contrast Scores. To capture participants’ ability to differenti- we used this process to discuss differences, refine code meanings,
+ate ableist from neutral interactions, we computed contrast scores and ensure conceptual clarity consistent with reflexive TA’s em-
+as the difference between ratings of neutral and ableist scenarios phasis on researcher subjectivity over quantification. Through this
+(Neutral − Ableist). Higher values indicate greater differentiation collaborative dialogue, we consolidated a stable set of semantic
+between biased and unbiased scenarios, while lower or negative codes and subcodes. The first coder then coded the remaining data,
+===== PAGE 11 =====
+Autonomy, Coaching, and Recognizing Bias Through AI-Mediated Dialogue CHI ’26, April 13–17, 2026, Barcelona, Spain
+with iterative memoing and regular peer debriefs to refine theme tests, which control for family-wise error across pairwise compar-
+development (Phases 3-5). Final themes represent shared interpre- isons.
+tive patterns across the dataset rather than mechanically derived Interpretation note. For ableist scenarios, more negative Δ in-
+categories, in line with reflexive TA principles (Phase 6). dicates improved recognition of ableism (lower Q1 = judged less
+Exploratory Moderator Analysis. We also examined whether “standard,” lower Q2 = more negative emotional impact). For neu-
+demographic variables (e.g., prior disability exposure, self-reported tral scenarios, more positive Δ indicates improved recognition of
+social comfort, prior AI use) moderated the impact of condition. neutrality (higher Q1/Q2).
+These analyses were conducted using regression models with inter-
+action terms, treating Δ scores as the dependent variable. Results of 5.2.1 Ableist Scenarios. These results show that when partici-
+these exploratory analyses are reported descriptively in the Results pants encountered ableist interactions, all conditions increased sen-
+section. sitivity to ableism, with the strongest effects in the Bias-Directed
+condition (consistent with RQ2). In other words, ableist coaching
+5 Results made participants most likely to recognize ableist interactions as
+non-standard and harmful.
+5.1 Baseline Validity of Vignettes Q1 (Standard Social Experience). Participants showed larger de-
+Before evaluating the intervention effects, we first validated that creases (i.e., judged ableist interactions as less “standard”) after Bias-
+the vignette set reliably distinguished ableist from neutral scenar- Directed than Self-Directed; Tukey: Bias-Directed < Self-Directed
+ios. As expected, at pre-test, participants rated neutral interactions (𝑝 = .040).
+as more acceptable and positive than ableist ones, confirming the Q2 (Emotional Impact). Participants also showed larger decreases
+validity of the vignette set and that the materials were suitable for (i.e., perceived more negative impact) after Bias-Directed than both
+testing our research questions. A within-subjects ANOVA showed Neutral-Directed (𝑝 = .019) and Self-Directed (𝑝 = .009).
+a strong effect of scenario type for Q1 (Standard Social Experi- Taken together, Bias-Directed coaching produced the strongest
+ence), 𝐹 (1, 159) = 469.3, 𝑝 < .001, and for Q2 (Emotional Impact), improvements in recognizing ableist interactions as abnormal and
+𝐹 (1, 159) = 2039.3, 𝑝 < .001. harmful, while Neutral-Directed and Self-Directed conditions also
+For Q1, neutral scenarios (M=5.93, SD=0.54) were rated higher increased recognition but to a lesser degree. (See Figure 4:A.)
+than ableist scenarios (M=4.09, SD=0.80). For Q2, neutral scenarios
+(M=6.18, SD=0.50) were also rated higher than ableist scenarios 5.2.2 Neutral Scenarios. For neutral interactions, dialogue helped
+(M=3.40, SD=0.61). Tukey post-hoc comparisons confirmed that participants affirm these scenarios as acceptable and positive, while
+these differences were significant (𝑝 < .001). the Reading condition moved judgments in the opposite direction,
+We report validity analyses using pre-test data only, as this stage consistent with RQ2.
+provides an unbiased baseline across all participants prior to any Q1. Dialogue-based conditions produced increases (greater accep-
+intervention. Post-test ratings may reflect condition-specific influ- tance) whereas Reading produced a decrease in ratings of neutral
+ences (e.g., biased or inclusive coaching, reading), and are therefore scenarios, indicating that participants in Reading condition became
+analyzed in later sections as intervention outcomes rather than less likely to affirm neutral interactions as positive. Reading was
+as evidence of vignette validity. These results demonstrate that significantly lower than Bias-Directed (𝑝 = .007), Neutral-Directed
+the vignette corpus reliably differentiates biased from non-biased (𝑝 < .001), and Self-Directed (𝑝 = .008).
+interactions, providing a valid instrument for assessing recognition Q2. Neutral-Directed (𝑝 = .0029) and Self-Directed (𝑝 = .003)
+of ableism. conditions both produced more positive changes than Reading.
+Thus, dialogue engagement improved evaluations of neutral inter-
+actions, while the passive Reading condition reduced them. (See
+5.2 Change Scores by Condition
+Figure 4:B.)
+To address RQ1 (Effectiveness), we tested whether dialogue-based
+interventions improved recognition of ableist versus neutral inter- 5.2.3 Combined Scenarios. We analyzed the combined set of
+actions more than reading. We also examined RQ2 (Directionality), scenarios to assess the net effect of the interventions on partici-
+asking whether coaching direction shaped recognition: we expected pants’ overall judgment tendencies. This allowed us to determine
+biased coaching to heighten sensitivity to harm in ableist scenar- if an intervention caused a generalized shift in sentiment (e.g., be-
+ios and neutral coaching to scaffold more supportive judgments coming more negative overall) or if distinct responses to ableist and
+of neutral scenarios. We analyzed change scores (Δ = Post − Pre) neutral scenarios canceled each other out. Looking at the numeric
+separately for ableist, neutral, and combined scenarios, and for both breakdown (Table 1), the changes effectively balanced out in the
+outcome measures (Q1: Standard Social Experience; Q2: Emotional Neutral-Directed and Self-Directed conditions. For instance, on Q1,
+Impact). One-way ANOVAs revealed significant effects of condi- the Neutral-Directed group showed increased criticism of ableist
+tion for all outcomes: Q1 (Ableist), 𝐹 (3, 156) = 3.13, 𝑝 = .027; Q1 scenarios (Δ = −0.21) matched by increased affirmation of neutral
+(Neutral), 𝐹 (3, 156) = 7.42, 𝑝 < .001; Q2 (Ableist), 𝐹 (3, 156) = 4.72, ones (Δ = +0.24), yielding a net change close to zero (Δ = +0.02).
+𝑝 = .0035; Q2 (Neutral), 𝐹 (3, 156) = 4.49, 𝑝 = .0047; Q1 (Com- In contrast, the Bias-Directed and Reading conditions drove more
+bined), 𝐹 (3, 156) = 4.21, 𝑝 = .007; Q2 (Combined), 𝐹 (3, 156) = 4.86, strongly negative overall changes (Bias-Directed: Δ = −0.32 for Q1,
+𝑝 = .003. Levene’s tests indicated variance heterogeneity for several −0.41 for Q2; Reading: Δ = −0.28 for Q1, −0.29 for Q2), indicating
+outcomes, so we interpret findings alongside Tukey HSD post-hoc that increased criticism was not offset by positive affirmation.
+===== PAGE 12 =====
+CHI ’26, April 13–17, 2026, Barcelona, Spain Taheri et al.
+(A)
+(B)
+(C)
+Figure 4: Change in ratings of (A) ableist scenarios, (B) neutral scenarios, and (C) all scenarios combined for Q1 (“standard social
+experience”) and Q2 (“emotional impact”). Bars represent mean change from pre-to post-study across the four conditions
+(Bias-Directed, Neutral-Directed, Self-Directed, and Reading). Error bars indicate the standard error of the mean (SEM).
+Q1. Condition effect: 𝐹 (3, 156) = 4.21, 𝑝 = .007; Bias-Directed Q2. Condition effect: 𝐹 (3, 156) = 4.86, 𝑝 = .003; Neutral-Directed
+produced a more negative shift than Neutral-Directed (𝑝 = .021). (𝑝 = .030) and Self-Directed (𝑝 = .035) were more positive than
+===== PAGE 13 =====
+Autonomy, Coaching, and Recognizing Bias Through AI-Mediated Dialogue CHI ’26, April 13–17, 2026, Barcelona, Spain
+Ableist Neutral Combined
+Condition Q1 Q2 Q1 Q2 Q1 Q2
+Bias-Directed −0.75 (.20) −0.74 (.17) +0.11 (.11) −0.07 (.11) −0.32 (.12) −0.41 (.12)
+Neutral-Directed −0.21 (.14) −0.28 (.05) +0.24 (.08) 𝑎 +0.20 (.07) 𝑏 +0.02 (.08) 𝑎 −0.04 (.08) 𝑏
+Self-Directed −0.18 (.16) 𝑐 −0.24 (.05) 𝑑 +0.10 (.08) 𝑒 +0.15 (.07) 𝑓 −0.04 (.08) 𝑐 −0.05 (.08) 𝑑,𝑓
+Reading −0.29 (.07) −0.58 (.13) −0.26 (.03) 𝑎,𝑒 −0.20 (.09) 𝑏,𝑓 −0.28 (.08) 𝑎,𝑐 −0.29 (.09) 𝑏,𝑑
+Note. Means are followed by SEM in parentheses. Superscripts indicate significant Tukey post-hoc comparisons (𝑝 < .05). (a) Neutral-Directed > Reading (Neutral
+Q1; Combined Q1). (b) Neutral-Directed > Reading (Neutral Q2; Combined Q2). (c) Self-Directed > Bias-Directed (Ableist Q1; Combined Q1). (d) Self-Directed >
+Bias-Directed (Ableist Q2; Combined Q2). (e) Self-Directed > Reading (Neutral Q1). (f) Self-Directed > Reading (Neutral Q2; Combined Q2).
+Table 1: Mean change scores (Δ = Post − Pre, with SEM in parentheses) by condition. Positive values indicate increases in ratings,
+negative values decreases. Significant Tukey post-hoc differences are marked with superscripts.
+Bias-Directed, and both were also higher than Reading (𝑝 = .042; differing perspectives, comfort with strangers, and prior AI chatbot
+𝑝 = .049). experience.
+Overall, while Neutral-Directed and Self-Directed conditions Close family connection. Participants with a close family
+achieved a balance between recognizing harm and affirming inclu- member with a disability (n = 28) showed stronger improvements
+sion, Bias-Directed and Reading resulted in a net negative trajectory in recognizing the negative emotional impact of ableist scenarios
+(See Figure 4:C). (𝑝 = .034, Cohen’s 𝑑 = 0.36). An interaction with condition also
+emerged for neutral scenarios in Q2 (𝑝 = .049, 𝑑 = 0.31), suggesting
+that family connection amplified intervention effects. A trend also
+5.3 Contrast Scores (Differentiation)
+appeared for overall Q2 contrast differentiation (𝑝 = .061, 𝑑 = 0.28).
+To address RQ3, we analyzed whether interventions improved par- Social comfort. Higher comfort with differing perspectives (n
+ticipants’ ability to differentiate between ableist and neutral sce- = 160) predicted greater positive changes in Q1 ratings of neutral
+narios. So we computed contrast scores as the difference between scenarios (𝑝 = .003, 𝑑 = 0.42). Comfort with strangers (n = 160)
+neutral and ableist ratings (Neutral − Ableist). Positive values there- predicted stronger improvements in Q1 ratings of neutral scenarios
+fore indicate greater differentiation (i.e., neutral scenarios judged (𝑝 = .049, 𝑑 = 0.32) and also increased differentiation scores, both
+more positively and ableist scenarios judged more negatively). Fig- Q1 (𝑝 = .044, 𝑑 = 0.30) and marginally Q2 (𝑝 = .059, 𝑑 = 0.27).
+ure 5 visualizes changes in contrast scores from pre-to post-test by AI chatbot experience. Prior experience with chatbots (re-
+condition for Q1 and Q2, while Table 2 reports the corresponding ported by 135 participants, 84%) did not significantly moderate any
+mean contrast-change values (with SEM) and significant Tukey outcomes (𝑝 > .15, all 𝑑 < 0.20).
+post-hoc differences. Disability identity. Self-identification as disabled (n = 12) did
+We analyzed changes in contrast scores (Δ = Post − Pre) for not moderate effects (𝑝 > .2, 𝑑 < 0.25).
+both outcome measures (Q1 and Q2). One-way ANOVAs showed Setting (Party vs Work Office). Because dialogue scenarios
+significant effects of condition: Q1, 𝐹 (3, 156) = 3.91, 𝑝 = .010; Q2, were presented in two settings, we tested whether intervention
+𝐹 (3, 156) = 3.22, 𝑝 = .024. Tukey HSD tests were used for post-hoc effects varied by context. ANOVAs with Condition × Setting as
+comparisons. factors revealed no significant main effects of setting (all 𝑝 > .12)
+Q1 (Standard Social Experience). Differentiation improved and no significant interactions (all 𝑝 > .14, 𝑑 < 0.20). Participants
+across all conditions, but participants in the Reading condition responded similarly across the Party (n = 80) and Work Office (n =
+showed significantly smaller gains compared to Bias-Directed (𝑝 = 80) contexts, indicating that intervention effects were robust across
+.006). No other pairwise differences reached significance. these everyday scenarios.
+Q2 (Emotional Impact). Participants in the Reading condition Overall, these exploratory analyses suggest that intervention ef-
+again showed weaker improvements. Tukey tests revealed that fects were broadly consistent across participant groups and settings.
+Bias-Directed produced significantly larger gains than Reading However, a close family connection to disability and greater social
+(𝑝 = .034), and Self-Directed also outperformed Reading (𝑝 = .045). comfort were associated with stronger improvements, particularly
+Other differences were not significant. These results indicate that for neutral scenarios and differentiation scores.
+dialogue-based conditions helped participants better distinguish the
+emotional impact of ableist versus neutral scenarios, while Reading
+6 Qualitative Findings
+lagged behind.
+The qualitative findings help contextualize how participants inter-
+preted the dialogue experience and how coaching direction shaped
+5.4 Exploratory Moderator Analyses
+their judgments, addressing RQ2 (influence of coaching direction
+We next examined whether individual differences moderated inter- on social judgments) and complementing the quantitative analyses
+vention effects by adding demographic and experiential variables for RQ1. Because the post-intervention survey contained three ana-
+into regression models with interaction terms. Moderators included lytically distinct prompts, we conducted three separate thematic
+disability identity, close family disability connection, comfort with analyzes: (1) general reflections on the dialogue (all dialogue-based
+===== PAGE 14 =====
+CHI ’26, April 13–17, 2026, Barcelona, Spain Taheri et al.
+Figure 5: Change in contrast scores (Neutral − Ableist) for Q1 (Standard Social Experience) and Q2 (Emotional Impact). Higher
+values indicate greater differentiation between neutral and ableist scenarios. Error bars show SEM.
+Condition Q1 (Standard Social Experience) Q2 (Emotional Impact)
+Bias-Directed +0.85 (.24) +0.67 (.06) 𝑎
+Neutral-Directed +0.45 (.17) +0.48 (.09)
+Self-Directed +0.28 (.17) +0.39 (.10) 𝑏
+Reading +0.03 (.09) 𝑎 +0.38 (.05) 𝑎,𝑏
+Note. Means are followed by SEM in parentheses. Superscripts indicate significant Tukey post-hoc comparisons (𝑝 < .05). (a) Bias-Directed > Reading (Q1, Q2). (b)
+Self-Directed > Reading (Q2).
+Table 2: Mean change in contrast scores (Neutral − Ableist; Δ = Post − Pre, with SEM in parentheses). Positive values indicate
+greater differentiation.
+conditions), (2) perceptions of the coach (Bias-Directed and Neutral- perceived as normal. For example, P8 in Bias-Directed condition
+Directed only), and (3) unguided experiences (Self-Directed only). remarked,
+Themes below represent higher-level interpretive patterns, with “It felt like a typical interaction other than my frustra-
+codes and representative quotations illustrating how participants tion over the suggestions from the coach.”
+made sense of the interaction.
+P137 in the Neutral-Directed condition also reflected,
+Table 3 provides an illustrative code hierarchy (themes, exam-
+“It felt like a typical interaction because it had a natu-
+ple codes, and representative quotes) across the three reflection
+ral flow.”
+prompts. Quotes are attributed to participants using anonymized
+identifiers (e.g., P83). P152 in Self-Directed condition stated,
+“The conversation felt very typical and free flowing. It
+6.1 General Reflections on Dialogue made me feel very comfortable to speak and interact
+with my co-worker. It also felt like speaking to a very
+Across all three dialogue-based conditions, participants provided
+old friend I have known my whole life.”
+broad reflections about the social experience, flow of conversa-
+tion, and perceived challenges. Reflexive thematic analysis yielded Participants routinely emphasized that the conversational turns,
+six themes that capture interpretive patterns shared across condi- emotional tone, and small talk felt consistent with everyday social
+tions, with variation when relevant: Naturalness/Typicality, Contex- exchanges.
+tual Adjustment, Awkwardness/Unnaturalness, Challenge/Difficulty,
+6.1.2 Theme 2: Contextual Adjustment. 17 participants (14.2% of the
+Ease/Comfort, and Self-Reflection. We coded 209 instances across
+dialogue-based sample) reported adapting their tone, conversational
+120 responses (𝑀 = 1.74 codes/participant).
+style, or level of disclosure based on the scenario’s setting (party
+vs. workplace). These adjustments reflected an awareness of social
+6.1.1 Theme 1: Naturalness / Typicality. This theme emerged as a
+norms tied to context. As P54 in Bias-Directed condition wrote:
+highly prominent theme, with 82 (68.3%) participants describing
+the exchange as “natural,” “normal,” or “typical,” indicating that the “I felt they were normal workplace interactions.”
+simulated dialogue largely aligned with participants’ expectations Others highlighted a sense of appropriateness linked to context,
+for authentic social interaction. Even when coaching prompts felt describing their responses as fitting the social situation. As P94
+inappropriate, the core interaction with the virtual character was explained:
+===== PAGE 15 =====
+Autonomy, Coaching, and Recognizing Bias Through AI-Mediated Dialogue CHI ’26, April 13–17, 2026, Barcelona, Spain
+Analysis Theme Example Code Example Quote
+Category
+Naturalness / Typicality Natural interaction “It felt like a typical interaction because it had a natural flow.” (P137 in
+Neutral-Directed)
+General Contextual Adjustment Adjust formality by context “I adjusted how I spoke because the setting was a casual social event, not a
+Reflections professional environment. I used a relaxed tone . . . ” (P143 in Self-Directed)
+Awkwardness / Unnaturalness Awkward disability probing “It was awkward being told to ask about a handicap. Great conversation otherwise.”
+(P11 in Bias-Directed)
+Challenge / Difficulty Extra deliberation “The coach’s suggestions added an extra layer of consideration, making it hard to
+respond naturally.” (P82 in Bias-Directed)
+Ease / Comfort Easy to communicate “It felt very natural and was easy to communicate.” (P156 in Neutral-Directed)
+Self-Reflection Reflecting on one’s language “It made me think about how I talk to people with disabilities and how weird it is
+to bring it up .. . ” (P34 in Bias-Directed)
+Resistance to Coach Ignore ableist suggestions “The coach was offering rude and offensive topics so I ignored them . . . Every time
+they wanted to mention Alex’s disability.” (P10 in Bias-Directed)
+Coach
+Perceptions Following the Coach Coach used to initiate “Coach’s beginning suggestions helped get things rolling. Then, I just felt like the
+conversation took off on its own.” (P110 in Neutral-Directed)
+Perceived Bias / Directive Nature Forced disability salience “I was being guided and forced to bring up her physical disability.” (P101 in
+Bias-Directed)
+Perceived Helpfulness / Support Helpful directions “The coach provided insightful topics to extend the conversation . . . it gave me
+other directions to go.” (P66 in Neutral-Directed)
+Naturalness / Unnaturalness Natural dialogue, odd coach “The coach’s input made the conversation feel much less natural. The coach’s
+guidance seem to have a particular tone or agenda, rather than simply facilitating a
+natural conversation.” (P82 in Bias-Directed)
+Authenticity Matches IRL responses “Yes, I would actually have a history with the person and this scenario was made
+up so I had no context.” (P39)
+Unguided
+Experiences More Detail / Depth More elaboration IRL “Yes . . . I would have been able to go into much greater detail about the job . . . ”
+(P40)
+Social Awkwardness More awkward face-to-face “Yes . . . I’m just more socially awkward when I’m face-to-face.” (P15)
+Contextual Variation Selective self-disclosure “Yes . . . if it was a peer, then I wouldn’t have necessarily given up so much personal
+information.” (P132)
+Table 3: Illustrative example of the qualitative code hierarchy (Theme → Code → Example Quote) across the three post-
+intervention reflection prompts.
+“It felt fine polite and appropriate for the setting.” than being formal or task-oriented, which helped the
+Participants also described adjusting their conversational style conversation feel more natural and engaging.”
+to match the tone of two people meeting for the first time in a
+This theme highlights participants’ sensitivity to situational cues,
+casual party setting. P156 in Neutral-Directed condition reflected:
+regardless of the condition.
+“The conversation felt very natural like how two new
+people who will have just met will talk, and it felt free 6.1.3 Theme 3: Awkwardness / Unnaturalness. 11 participants (9.2%
+flowing and had a feel of two people who had a good of dialogue-based participants) referenced some form of awkward-
+conversation with each other ” ness or disrupted naturalness-using terms, such as “awkward,”
+Across these accounts, contextual fit, not system behavior, was “weird,” “off,” or “forced”, highlighting that conversational break-
+the guiding consideration. Participants oriented themselves to the downs were typically tied to coach-generated suggestions rather
+social expectations of the scenario and modulated their responses than the dialogue itself. As P11 in Bias-Directed condition reflected,
+to be situationally appropriate, highlighting the ecological realism
+“It was awkward being told to ask about a handicap.
+with which they approached the dialogue.
+Great conversation otherwise.”
+“I adjusted how I spoke because the setting was a
+casual social event, not a professional environment. I Others described a gradual buildup of discomfort when coached
+used a relaxed tone, shared personal experiences, and prompts pushed the conversation in an unwanted direction. P22
+focused more on building a friendly connection rather reflected:
+===== PAGE 16 =====
+CHI ’26, April 13–17, 2026, Barcelona, Spain Taheri et al.
+“I was happy with my responses through about 90% “It felt very natural and was easy to communicate.”
+of it. I know how to compliment people, and I know
+Others highlighted feeling relaxed or at ease during the interac-
+when too much is too much. The last 20% of the con-
+tion. P21 reflected:
+versation was too much, and I struggled with won-
+“It felt typical and unchallenging. Alex was so easy to
+dering if I should continue to do TINY BITS of what
+talk to so that made it easy.”
+the coach wanted, versus nipping the conversation in
+the bud [...]” The sense of comfort also arose from how smoothly the dialogue
+unfolded. As P70 explained:
+Although most awkwardness arose in coached conditions, a
+few participants in the Self-Directed condition (3 participants) also “I felt like it was a typical interaction. It was easy to
+described moments of disrupted naturalness. In these cases, discom- respond.”
+fort stemmed not from prompts but from situational unfamiliarity- Across these accounts, comfort stemmed from the dialogues in-
+particularly in the work-office setting, where participants lacked tuitive structure and socially familiar tone. These reflections show
+background knowledge about the project. As P18 noted: that for many participants, the interaction felt smooth, positive,
+“It felt kind of weird, our partner being so specific and uncomplicated, reinforcing the ecological realism of the con-
+about us having something to check about the pre- versational experience.
+sentation felt odd.”
+6.1.6 Theme 6: Self-Reflection. A smaller but meaningful subset of
+One participant in the party setting also mentioned feeling un- participants (10 participants; 8.3%) described the dialogue as prompt-
+comfortable due to persistent questioning: ing personal reflection about their own conversational habits, as-
+“I felt like they kept asking me questions and didn’t sumptions, or prior interactions with disabled people. These reflec-
+take the hint when I tried to change the subject.” tions went beyond evaluating the specific exchange and instead
+focused on broader awareness of how they communicate in real
+Overall, awkwardness was typically attributed either to mis-
+life. For example, P34 noted:
+aligned coaching suggestions (in coached conditions) or to situa-
+tional mismatch and uncertainty (in unguided conditions), rather “It made me think about how I talk to people with
+than to the dialogue system as a whole. disabilities and how weird it is to bring it up as if
+something is wrong with them or they are less able.”
+6.1.4 Theme 4: Challenge / Difficulty. A subset of 13 participants
+Others reflected specifically on moments when the coach’s sug-
+(10.8% of those in dialogue-based conditions) described the inter-
+gestions clashed with their own values or intentions. P48 explained:
+action as cognitively or emotionally demanding. These reflections
+centered on moments when participants felt unsure how to phrase “I considered whether I would ever respond in the
+responses, how to manage sensitive topics, or how to reconcile way the coach suggested, which I would hope I never
+their instincts with the system’s structure. In the Bias-Directed con- would.”
+dition, challenge often stemmed from prompts that felt misaligned Across these reflections, participants described becoming more
+or uncomfortable. As P118 noted: aware of their own assumptions or communication tendencies, sug-
+“It was challenging because it was condescending.” gesting that the dialogue—whether coached or unguided—served
+Others described the difficulty as emerging from the need to
+as a moment of self-evaluation. This theme highlights how AI-
+integrate-or deliberately resist-coached suggestions. As P82 ex-
+mediated conversations can elicit introspective responses that sup-
+plained:
+port learning beyond the immediate task.
+“The coach’s suggestions added an extra layer of con- 6.2 Perceptions of the Coach
+sideration, making it hard to respond naturally.”
+Participants in the Bias-Directed and Neutral-Directed conditions
+These reflections show that challenge arose from a combination
+(n=80) reflected specifically on the one-way coaching suggestions
+of conversational uncertainty, moral discomfort, and cognitive load,
+provided during the conversation. Reflexive thematic analysis of
+revealing how the dialogue prompted deliberate social reasoning.
+these responses yielded five themes: Resistance to Coach, Follow-
+6.1.5 Theme 5: Ease / Comfort. Others described the conversa-
+ing the Coach, Perceived Bias/Directive Nature, Perceived Helpful-
+tion as smooth and comfortable, particularly when the interaction ness/Support, and Naturalness/Unnaturalness. These themes reveal
+progressed organically: how participants negotiated the role of the coach, how they inter-
+Thirty-four participants (28.3% of the dialogue-based sample) preted the intent behind suggestions, and how coaching direction
+described the interaction as easy, smooth, or comfortable. These shaped their judgments and interactional choices—directly inform-
+reflections emphasized effortlessness, pleasant flow, or the sense ing RQ2.
+that the dialogue unfolded without strain. For example, P84 in the
+6.2.1 Theme 1: Resistance to Coach. A notable group of participants
+Bias-Directed condition simply noted:
+(n=34, 42.5%) rejected or ignored suggestions that felt inappropri-
+“They were easy.” ate, misaligned, or biased. This resistance was most prevalent in
+Participants in the Neutral-Directed and Self-Directed conditions the Bias-Directed condition, where prompts occasionally pushed
+similarly emphasized ease, often describing the flow as natural. As participants toward condescending or pitying framings. As P10
+P156 wrote: stated:
+===== PAGE 17 =====
+Autonomy, Coaching, and Recognizing Bias Through AI-Mediated Dialogue CHI ’26, April 13–17, 2026, Barcelona, Spain
+“The coach was offering rude and offensive topics so I 6.2.5 Theme 5: Naturalness / Unnaturalness. Finally, participants
+ignored them [...] Every time they wanted to mention (n=9, 11.25%) evaluated how the coach affected the naturalness of
+Alex’s disability.” the interaction. While the dialogue itself was often seen as natural,
+Similarly, P34 emphasized rejecting suggestions that risked mak- coaching suggestions occasionally disrupted this realism. As P82
+ing the disabled character uncomfortable: in the Bias-Directed condition explained:
+“The coach’s input made the conversation feel much
+“I chose to ignore the coach’s suggestions because
+less natural. The coach’s guidance seem to have a par-
+they were very weird and off-topic. They would make
+ticular tone or agenda, rather than simply facilitating
+Alex feel out of place or less than.”
+a natural conversation.”
+These reflections show that participants actively resisted biased
+Participants framed unnaturalness as arising not from the sys-
+nudges and asserted moral agency over the conversation.
+tem’s dialogue model but from the coach’s timing, tone, or forced
+6.2.2 Theme 2: Following the Coach. Other participants (n=32, 42%) topic shifts.
+described selectively or strategically following the coach when Across these themes, participants demonstrated active negotia-
+suggestions aligned with the flow of conversation or helped them tion of the coach’s influence, including resisting biased suggestions,
+formulate a turn. This was more common in the Neutral-Directed selectively adopting inclusive guidance, or managing directive cues
+condition. As P110 explained: within the flow of conversation. These findings illuminate how
+“Coach’s beginning suggestions helped get things coaching direction shapes participants’ judgments, emotional re-
+rolling. Then, I just felt like the conversation took sponses, and conversational strategies, providing key qualitative
+off on its own.” insight into RQ2.
+Similarly, some participants reported partially incorporating 6.3 Unguided Experiences
+suggestions even when they did not fully agree with them, demon-
+strating a negotiated relationship with the system’s guidance. As Participants in the Self-Directed condition (n = 40) were asked
+P102 explained: whether they would respond differently in real life. Four themes
+emerged: Authenticity, More Detail/Depth, Social Awkwardness, and
+“I followed them at first but when she was asking
+Contextual Variation. We coded 38 instances across these responses
+about job, coach wanted to keep giving complimentts.”
+(𝑀 = 0.95 codes/participant).
+6.2.3 Theme 3: Perceived Bias / Directive Nature. Participants (n=56,
+6.3.1 Theme 1: Authenticity. The overwhelming majority empha-
+70%), particularly in the Bias-Directed condition frequently com- sized Authenticity (35, 87.5%), stating that their responses would not
+mented on the coach as directive, insistent, or overly steering,
+differ from a real-life exchange. Many simply wrote “No,” signaling
+though the perceived emotional impact differed by condition. In
+that the unguided dialogue felt genuine and transferable. A few
+the Bias-Directed condition, prompts were experienced as subtly
+who responded “Yes” explained that the differences reflected the
+or overtly ableist. For example, P101 in the Bias-Directed condition
+artificiality of the vignette context rather than their conversational
+mentioned:
+style. As P39 clarified,
+“I was being guided and forced to bring up her physical
+“Yes, I would actually have a history with the person
+disability.”
+and this scenario was made up so I had no context.”
+In the Neutral-Directed condition, suggestions were not biased
+6.3.2 Theme 2: More Detail/Depth. Only isolated participants men-
+but sometimes felt prescriptive or repetitive. As P21 noted:
+tioned other divergences. One (2.5%) pointed to More Detail/Depth.
+“We had moved on to talking about movies and I was
+P40 explained,
+coached to go back and ask about Daniel’s memories.
+“Yes . . . I would have been able to go into much greater
+That ship had sailed. [...] It was directing me in a
+detail about the job, things that hardly anybody out-
+certain way, and it wasn’t natural.”
+side of the field would really know.”
+These accounts highlight tensions between participants’ con-
+versational instincts and the system’s attempt to shape dialogue 6.3.3 Theme 3: Social Awkwardness. Another (2.5%) highlighted
+direction. Social Awkwardness, suggesting face-to-face interactions might am-
+plify anxiety. P15 remarked:
+6.2.4 Theme 4: Perceived Helpfulness / Support. Participants (n=43,
+“Yes . . . Again, I’m just more socially awkward when
+53.75%), especially in the Neutral-Directed condition often described
+I’m face-to-face.”
+the coach as supportive, helping them identify appropriate topics,
+structure their next turn, or maintain rapport. P66 captured this 6.3.4 Theme 4: Contextual Variation. A final participant (2.5%) de-
+sentiment: scribed Contextual Variation, noting they might alter disclosure
+“The coach provided insightful topics to extend the depending on their peer. As P132 put it,
+conversation... it was meant to be helpful because it “Yes . . . if it was a peer, then I wouldn’t have necessarily
+gave me other directions to go.” given up so much personal information.”
+For some, the coach served as a conversational scaffold, boosting Nearly nine out of ten participants affirmed the authenticity of
+confidence or smoothing transitions in moments of uncertainty. their responses, while only a few pointed to differences in depth,
+===== PAGE 18 =====
+CHI ’26, April 13–17, 2026, Barcelona, Spain Taheri et al.
+social comfort, or contextual disclosure. These reflections suggest these contrasts illustrate how bias-aware versus biasing framings
+that unguided participants largely trusted their own conversational shaped participants’ sense of authenticity, agency, and support.
+strategies as realistic and transferable to real-world settings.
+7 Discussion
+6.4 Cross-Condition Insights
+In this study, we investigated whether AI-mediated dialogue can
+Taken together, the qualitative findings highlight how conversa- shift how people recognize ableist microaggressions and how the
+tional framing shaped participants’ experiences differently across framing of AI coaching shapes those perceptions. Our findings
+conditions. While all three groups reported Naturalness/Typicality, reveal a complex but compelling picture that extends beyond sim-
+the source of disruption or support varied by design. ple “bias good/bad” dichotomies. The results show that interactive
+In the Bias-Directed condition, participants most often de- dialogue is a more potent tool for shifting social perception than
+scribed the dialogue itself as typical, but flagged Awkwardness/ passive reading, but the nature of that guidance carries signifi-
+Unnaturalness and Perceived Bias/Directive when prompts pushed cant trade-offs. While inclusive coaching reinforces positive norms,
+them toward ableist framings. For example, P83 explained: exposure to biased coaching, paradoxically, can sharpen critical
+“It felt like a typical interaction other than my frustra- awareness of harm.
+tion over the suggestions from the coach” [Natural-
+ness/Typicality] 7.1 Distinct Roles of Q1 and Q2
+Or P11 remarked: Our analysis revealed that the interventions shaped Q1 (Standard
+“It was awkward being told to ask about a handicap” Social Experience) and Q2 (Emotional Impact) in different ways, high-
+[Awkwardness/Unnaturalness] lighting the importance of treating them as distinct dimensions of
+bias perception. Q1 captured whether participants regarded an in-
+This illustrate how bias cues undermined authenticity. Resis-
+teraction as a “standard social experience,” reflecting judgments
+tance was common, with one-third explicitly rejecting prompts
+of social acceptability. In contrast, Q2 captured participants’ per-
+[Resistance to Coach].
+ception of how the disabled character would feel, reflecting the
+In the Neutral-Directed condition, participants frequently em-
+anticipated “emotional impact” of the exchange.
+phasized Ease/Comfort and Helpfulness, describing the prompts as
+The divergence between these measures is a key finding. For
+scaffolds that supported conversation. P129 explained:
+instance, Bias-Directed coaching sharpened differentiation on Q1
+“The topics and flow were natural, and the coach’s
+but dampened positive ratings on Q2, even for neutral scenarios.
+suggestions helped keep the discussion smooth and This shows that recognizing an interaction as socially atyp-
+meaningful” [Ease/Comfort] ical and anticipating its emotional toll are related but not
+At the same time, more than half also noted a Directive quality, interchangeable processes, each responding differently to inter-
+typically framed as repetitive or misaligned rather than offensive. vention.
+As P21 put it: This separation between perceived “standardness” and antic-
+“We had moved on to talking about movies, and I was ipated emotional harm echoes prior work on microaggressions,
+coached to go back and ask about Daniel’s memories. which distinguishes between whether behavior is seen as socially
+That ship had sailed” [Perceived Bias/Directive]. acceptable and whether it contributes to cumulative stress and
+trauma for marginalized groups [53, 73]. It also parallels multidi-
+Thus, neutral guidance was both supportive and steering.
+In the Self-Directed condition, the dominant theme was Contex- mensional treatments of bias in HCI and NLP, where normative
+tual Adjustment (58%) paired with Authenticity (88%). Participants judgments about what should be said are separated from infer-
+ences about how targets are likely to feel or be affected by what
+relied on their own strategies, such as modulating formality and
+is said [65, 77]. Our results extend this line of work by showing
+adjusting personal disclosure, to adapt tone to setting. For example,
+that AI-mediated interventions can differentially move these two
+P143 reflected
+dimensions: a system may successfully help people flag an interac-
+“At a party, I kept it more relaxed. At work, I would
+tion as atypical without equally improving their sensitivity to its
+have been more formal” [Contextual Adjustment].
+emotional toll, or vice versa.
+They also reflected on conversational norms. As P34 explained:
+“It made me think about how I talk to people with
+7.2 The Double-Edged Nature of Biased Nudges
+disabilities and how weird it is to bring it up as if Perhaps our most striking finding is the paradoxical effect of the
+something is wrong with them or they are less able.” Bias-Directed condition. Participants exposed to subtly ableist
+[Self-Reflection] prompts showed the strongest improvements in differentiating
+Overall Patterns. Across conditions, the same themes appeared ableist from neutral interactions (Figure 5). They became signifi-
+but with distinct meanings: Naturalness was disrupted by biased cantly more likely to judge ableist scenarios as non-standard and
+prompts, reinforced by inclusive ones, and asserted through auton- emotionally harmful.
+omy in unguided dialogues. Directive cues were rejected when bi- The qualitative data explains this phenomenon as a product of
+ased, tolerated when neutral, and absent in self-directed exchanges. active resistance. The prompts likely created a reflective disso-
+Self-Reflection emerged most in self-directed and bias conditions, nance or "critical friction": a moment where participants had to
+while Ease/Comfort was strongest under neutral guidance. Together, consciously reject an inappropriate suggestion and articulate an
+===== PAGE 19 =====
+Autonomy, Coaching, and Recognizing Bias Through AI-Mediated Dialogue CHI ’26, April 13–17, 2026, Barcelona, Spain
+alternative. This reaction mirrors findings in technology-mediated experience into accessible design processes [69], and highlights the
+nudging, where overt steering can trigger reactance rather than importance of developing any such coaching systems in partnership
+compliance [12]. Yet, in the context of human–AI interaction, this with disabled communities. Our findings, therefore, complement
+resistance proved productive; it aligns with research on critical- and extend this disability-led training literature by providing em-
+reflective collaboration [30] and emerging work on user-driven pirical evidence for a concrete, AI-mediated practice layer that can
+value alignment [23], where disagreement with an AI agent serves operationalize these curricula between or after live sessions.
+as a mechanism for clarifying one’s own moral boundaries. This
+process of identifying, evaluating, and countering a biased framing 7.4 The Power of Active Engagement Over
+appears to be a powerful, albeit unintended, learning mechanism. Passive Consumption
+However, this heightened vigilance came at a cost. The Bias-
+Directed group also developed a negative halo effect, rating even Across nearly all measures, all three dialogue-based conditions out-
+neutral scenarios more negatively on emotional impact. This performed the Reading condition. This shows the limits of passive
+suggests that exposure to biased exemplars, even when rejected, exposure; simply presenting information about ableism did not
+may cast a shadow over subsequent social judgments. An inter- reliably shift social judgments and, in our case, sometimes led to
+vention that maximizes sensitivity to harm might inadvertently declines in recognition. Participants in the Reading condition be-
+erode the recognition of safety and inclusion -a critical trade-off came less likely to affirm neutral interactions as positive (Section 5),
+for designers. Taken together, this pattern both reinforces prior suggesting that reading about microaggressions without opportu-
+HCI observations that overt nudges can provoke resistance rather nities to practice responses may foster a more generally negative
+than compliance [12], and extends them by showing that, in the or skeptical stance toward social encounters without equivalently
+context of ableist microaggressions, such resistance can actually sharpening differentiation between harm and safety. This pattern
+sharpen people’s ability to differentiate harmful from neutral in- resembles a kind of “backfire effect,” mirroring findings in diver-
+teractions. To our knowledge, this is the first empirical evidence sity training research, where static instruction without behavioral
+in accessibility contexts that resisting biased AI suggestions can practice can induce defensiveness or disconnects between abstract
+sharpen microaggression recognition, rather than simply leading knowledge and situated application [13, 26, 39, 40]. In contrast, the
+to disengagement. dialogue conditions required participants to actively generate re-
+sponses in context. This act of construction was a far more effective
+mechanism for learning, consistent with theories of active learn-
+7.3 Mechanisms of Change: Inclusive
+ing that link more constructive and interactive forms of cognitive
+Scaffolding and Self-Construction
+engagement to deeper learning outcomes [14, 28]. Our findings
+In contrast, the Neutral-Directed and Self-Directed conditions echo calls in healthcare and education to move from knowledge-
+fostered a more balanced recognition by reinforcing inclusive norms. transfer interventions toward feedback-rich, interactive systems
+Neutral-directed participants perceived the coach’s suggestions that help practitioners reflect on their language in situ [6, 51]. Our
+as helpful "scaffolding" that provided positive, actionable tem- results reinforce these broader findings while extending them into
+plates for respectful interaction. Both groups improved in affirming the underexplored domain of disability microaggressions, show-
+neutral interactions, observing or producing inclusive models of ing experimentally that brief, AI-mediated conversational practice
+engagement. outperforms a reading-only module on short-term recognition and
+Notably, however, these conditions did less to sharpen the con- differentiation. The Self-Directed group’s emphasis on “authen-
+trast between neutral and ableist interactions compared to the ticity” and “contextual adjustment” further shows that unguided,
+biased condition. This suggests that affirming the positive fos- reflective practice can be a valuable learning experience in itself,
+ters recognition of inclusion but may not, by itself, clarify aligning with HCI work on critical self-reflection and deliberation
+the boundaries of harm. Furthermore, even inclusive scaffold- in human-AI collaboration [30, 48]. In the underexplored domain of
+ing was sometimes seen as “directive,” highlighting the thin line disability microaggressions, our study therefore adds experimental
+between helpful guidance and unwelcome steering in supportive support to these broader claims about the advantages of active,
+HCI systems. feedback-rich engagement over passive instruction.
+These dynamics suggest a complementary role for AI-mediated
+dialogue alongside disability-led education rather than as a replace-
+7.5 Connecting to Broader HCI and
+ment for it. Disability training and education work has emphasized Computational Social Science
+the value of storytelling, role-play, and simulation exercises led
+Our work contributes to several ongoing conversations in HCI and
+by disabled people in building empathy and challenging ableist as-
+related fields:
+sumptions [29, 37, 64]. However, such activities are labor-intensive
+and often difficult to scale. Our findings point to one way interactive • Framing and Nudging in HCI: This study extends clas-
+systems could extend this work: disability-led curricula can estab- sic work on framing effects [78] and technology-mediated
+lish norms, share lived experience, and articulate why particular nudging [12, 16] into the dynamic context of AI-mediated di-
+patterns of interaction are harmful, while AI-mediated dialogues alogue. We demonstrate that users are not passive recipients
+provide low-stakes opportunities for repeated practice, feedback, of AI “nudges”: biased coaching was frequently resisted, and
+and reflection between or after those sessions. This aligns with inclusive coaching was selectively adopted as scaffolding.
+HCI research that calls for incorporating social factors and lived This complicates design assumptions that interface defaults
+===== PAGE 20 =====
+CHI ’26, April 13–17, 2026, Barcelona, Spain Taheri et al.
+or suggestions will be quietly accepted, and aligns with re- and conversational patterns inevitably frame interactions
+cent HCI work that emphasizes the negotiated character of and influence users. Designers should, therefore, treat coach-
+human-AI influence [43, 48]. ing prompts as value-laden design decisions and make those
+• Human-AI Interaction as Social Simulation: We present norms explicit rather than presenting them as purely objec-
+a novel paradigm for using LLMs not just as tools but as tive or generic.
+social actors within controlled experiments. This method- • Prefer Scaffolding Over Prescription. The Neutral-Di-
+ology complements interactive evaluation platforms such as rected condition suggests that users benefit most when AI
+SOTOPIA [82] by focusing on human outcomes rather than provides options and examples that they can adapt, rather
+model scores: instead of asking whether an agent exhibits than a single “correct” response. In practice, this means gen-
+social intelligence, we ask how its prompts and framings erating a small set of alternative suggestions or question
+reshape human judgments in situ. In doing so, we offer a stems, and allowing users to ignore or modify them, rather
+methodological contribution in the form of a reusable ex- than forcing the conversation down one path.
+perimental apparatus that other researchers can adapt to • Balance Sensitivity with Positivity. The Bias-Directed
+study different forms of social bias in interaction, alongside condition increased sensitivity to harm but also produced
+empirical evidence about AI-mediated bias interventions. a more globally negative evaluation pattern. To avoid this,
+• Microaggression Research: By demonstrating that norma- systems intended for training should not only highlight prob-
+tive and affective judgments are distinct skills that can move lematic phrasings or microaggressions but also immediately
+differently across conditions, our work complements psy- offer constructive, bias-aware alternatives. This pairing can
+chological accounts of microaggressions as both everyday support both vigilance and affirmation of safe, respectful
+norm violations and sources of cumulative harm [53, 73]. It interactions.
+also extends recent vignette-based HCI work on ableism [77] • Consider "Critical Friction" Carefully and with consent.
+by embedding scenarios in interactive dialogue and show- Our results suggest that resisting biased suggestions can
+ing how different coaching framings modulate recognition prompt useful reflection, but biased prompts also carry risk.
+trajectories over time. If designers introduce intentionally problematic examples
+• Complementing Disability-Led Education: We do not po- (e.g., in a training mode), they should clearly label this mode,
+sition AI-mediated dialogue as a replacement for training led obtain consent, and provide context about why the example
+by disabled people, which provides essential lived experience, is inappropriate. Outside of such controlled settings, systems
+context, and accountability. Instead, our findings suggest a should avoid generating biased framings in the first place.
+complementary role: disability-led workshops and courses • Integrate With Disability-Led Education. Finally, AI-
+can establish norms and share lived experiences, while AI mediated dialogue should be deployed as a complement to,
+agents offer a scalable “sandbox” for practice, where learn- not a replacement for, disability-led workshops and curricula.
+ers can rehearse language, make mistakes, and encounter Our findings suggest that such tools are well-suited as scal-
+critical friction in a low-stakes environment between or af- able “practice spaces” where learners can rehearse language
+ter those sessions. In terms of HCI contribution types [80], and reflect on their choices between live sessions, especially
+this work provides empirical evidence about how different when co-designed with disabled people.
+coaching directions shape bias recognition, a methodological
+contribution in the form of an AI-mediated dialogue plat-
+9 Limitations and Future Work
+form and vignette corpus for studying ableism in situ, and
+design-oriented implications for socially aware, anti-ableist Our study’s limitations provide important context for interpreting
+AI systems. these findings and open several promising directions for future
+research.
+This study demonstrates that AI-driven dialogue can be a potent
+First, our text-based dialogue, while enabling experimental con-
+medium for social learning. The findings indicate a more intricate
+trol, lacks the multimodal richness of face-to-face interaction. Fu-
+reality, one where the path to recognizing bias is not singular. While
+ture work could explore these dynamics in more immersive envi-
+inclusive models build positive schemas, the active struggle against
+ronments, such as using virtual reality or voice-based agents,
+biased models can forge a sharper, more critical understanding of
+to incorporate non-verbal cues like tone and body language.
+social harm.
+Second, our intervention was a single, brief exposure. While we
+8 Design Implications for Socially-Aware AI demonstrated immediate shifts in judgment, we cannot assess the
+durability of these changes. Longitudinal studies are needed to
+Our findings carry direct implications for the design of AI systems
+track whether these effects persist over time and, crucially, if they
+that mediate or influence human social interaction. As conver- transfer to actual interpersonal behavior.
+sational AI becomes more prevalent, understanding how subtle
+Third, the artificial nature of the LLM-driven interaction may
+prompts shape social judgment is crucial for creating responsible
+limit transferability, as modern LLMs still demonstrate significant
+and effective technology.
+limits in their social intelligence and theory of mind [66]. Our plat-
+• Guidance is Not Neutral. The starkly different outcomes form is therefore best understood as an experimental apparatus that
+between our conditions show that there is no “neutral” way approximates everyday conversation rather than a full reproduc-
+to design a social AI. System defaults, suggested phrasings, tion of real-world, multimodal interactions. Future studies could
+===== PAGE 21 =====
+Autonomy, Coaching, and Recognizing Bias Through AI-Mediated Dialogue CHI ’26, April 13–17, 2026, Barcelona, Spain
+use this platform in a “Wizard of Oz” setup to compare the effects of must design systems that foster critical thought, respect human
+AI-guidance versus human-guidance in mediating conversations. agency, and are intentionally built to support more inclusive and
+Fourth, our sample demographics reflect specific limitations re- equitable human relationships. The central challenge is not simply
+garding generalizability. The majority of our participants (71%) were to build AI that understands social norms but to build AI that helps
+aged 18–44, and the study was conducted exclusively in English. As us, as humans, understand them and each other better.
+perceptions of ableism and conversational norms often vary across
+generations and linguistic cultures, future work should deliberately
+Acknowledgments
+recruit older adults and non-native English speakers to investigate We sincerely thank Christine Mendoza, Matildelis Medina, and
+how these factors shape the recognition of microaggressions and to Carrie Danny for generously sharing their time and expertise to
+test whether dialogue-based interventions and coaching directions strengthen the vignette materials. We also thank our participants
+produce similar effects in other contexts. for their time and contributions. This work was supported in part by
+Finally, the experimental paradigm itself is highly generalizable Carnegie Mellon University’s Presidential Postdoctoral Fellowship
+and can serve as a powerful tool for studying other forms of social (awarded to the first author).
+bias beyond ableism. The core components, a simulated dialogue
+with an AI character representing a member of a marginalized References
+group and an AI coach modeling biased or inclusive framings, can
+[1] Fareeaa Abdoola, Penelope S Flack, and Saira B Karrim. 2017. Facilitating prag-
+be readily adapted. For instance, researchers could study: matic skills through role-play in learners with language learning disability. South
+• Racial Microaggressions: By simulating a job interview or [2] A H f e r r i m ca a n n J A ou g r u n i a n l i s o f a C n o d m K m yl u e n J i c B a r t a io d n le D y. i s 2 o 0 r 1 d 4 er . s B 6 e 4 s , t 1 p ( r 2 a 0 c 1 ti 7 c ) e , 1 r – e 1 co 2. m mendations for
+a casual social encounter where biased nudges might suggest designing and implementing experimental vignette methodology studies. Orga-
+comments like, “But where are you really from?” or play into nizational research methods 17, 4 (2014), 351–371.
+[3] Nientara Anderson, Elle Lett, Emmanuella Ngozi Asabor, Amanda Lynn Her-
+stereotypes about competence or background. nandez, Max Jordan Nguemeni Tiako, Christen Johnson, Roberto E Montenegro,
+• Gender Bias: By simulating a professional meeting where Tara M Rizzo, Darin Latimore, Marcella Nunez-Smith, et al. 2022. The association
+of microaggressions with depressive symptoms and institutional satisfaction
+a biased coach suggests a participant interrupt a female col- among a national cohort of medical students. Journal of general internal medicine
+league (“hepeating”) or question her technical expertise, al- 37, 2 (2022), 298–307.
+lowing for the study of how people navigate and resist sexist [4] Paritosh Bahirat, Martijn Willemsen, Yangyang He, Qizhang Sun, and Bart Kni-
+jnenburg. 2021. Overlooking context: How do defaults and framing reduce
+framings in real-time. deliberation in smart home privacy decision-making?. In Proceedings of the 2021
+• Ageism: By modeling workplace interactions where a younger chi conference on human factors in computing systems. 1–18.
+manager receives biased prompts suggesting they patronize
+[5] Sarah Barber, PC Gronholm, S Ahuja, N Rüsch, and G Thornicroft. 2020. Mi-
+croaggressions towards people affected by mental health problems: a scoping
+an older employee’s technical skills or make assumptions review. Epidemiology and psychiatric sciences 29 (2020), e82.
+about their career ambitions. [6] Emily Bascom, Reggie Casanova-Perez, Kelly Tobar, Manas Satish Bedmutha,
+Harshini Ramaswamy, Wanda Pratt, Janice Sabin, Brian Wood, Nadir Weibel, and
+This framework serves as an important contribution to Compu- Andrea Hartzler. 2024. Designing communication feedback systems to reduce
+tational Social Science by providing a novel methodology to em- healthcare providers’ implicit biases in patient encounters. In Proceedings of the
+2024 CHI Conference on Human Factors in Computing Systems. 1–12.
+pirically study bias. It creates a testbed for evaluating the societal [7] Elizabeth Bembridge, Gary Crowfoot, Rhonda Wilson, and Julie Reis. 2025. Digital
+impact and persuasive power of large language models, operational- reflective practice among new graduate nurses–A scoping review. Nurse Education
+Today (2025), 106688.
+izing key questions in AI Ethics about algorithmic influence and
+[8] Guy A Boysen. 2012. Teacher and student perceptions of microaggressions in
+responsible AI design. college classrooms. College Teaching 60, 3 (2012), 122–129.
+[9] Virginia Braun and Victoria Clarke. 2006. Using thematic analysis in psychology.
+Conclusion Qualitative research in psychology 3, 2 (2006), 77–101.
+[10] Virginia Braun and Victoria Clarke. 2019. Reflecting on reflexive thematic analysis.
+Qualitative research in sport, exercise and health 11, 4 (2019), 589–597.
+This study demonstrates that the design of AI-mediated dialogue [11] Fiona Campbell. 2009. Contours of ableism: The production of disability and
+not only reflects social norms, but actively shapes them. Our find- abledness. Springer.
+ings reveal that while inclusive AI coaching provides helpful scaf- [12] Ana Caraban, Evangelos Karapanos, Daniel Gonçalves, and Pedro Campos. 2019.
+23 ways to nudge: A review of technology-mediated nudging in human-computer
+folding for positive interaction, it was active resistance to biased interaction. In Proceedings of the 2019 CHI conference on human factors in com-
+nudges that most sharply honed the participants’ ability to differ- puting systems. 1–15.
+entiate harm. This presents a fundamental tension for intervention [13] Edward H Chang, Katherine L Milkman, Dena M Gromet, Robert W Rebele, Cade
+Massey, Angela L Duckworth, and Adam M Grant. 2019. The mixed effects of
+design: the path to increased critical awareness may not be the online diversity training. Proceedings of the National Academy of Sciences 116, 16
+same as the path to reinforcing positive social engagement. (2019), 7778–7783.
+[14] Michelene TH Chi and Ruth Wylie. 2014. The ICAP framework: Linking cognitive
+Our primary contribution is twofold: an empirical demonstra- engagement to active learning outcomes. Educational psychologist 49, 4 (2014),
+tion of the nuanced, often contradictory effects of AI-driven social 219–243.
+nudging and a generalizable experimental framework for studying [15] Gerald L Clore and Katharine M Jeffery. 1972. Emotional role playing, attitude
+change, and attraction toward a disabled person. Journal of personality and social
+these dynamics. This framework offers a robust methodology for psychology 23, 1 (1972), 105.
+HCI and Computational Social Science to move beyond static sur- [16] Andy Cockburn, Blaine Lewis, Philip Quinn, and Carl Gutwin. 2020. Fram-
+veys and investigate bias recognition in a more ecologically valid, ing effects influence interface feature decisions. In Proceedings of the 2020 CHI
+Conference on Human Factors in Computing Systems. 1–11.
+interactive context. [17] Kristin J Conover, Tania Israel, and Karen Nylund-Gibson. 2017. Development
+As we move into an era where conversational AI will increasingly and validation of the Ableist Microaggressions Scale. The Counseling Psychologist
+45, 4 (2017), 570–599.
+mediate our social lives, our responsibility as designers extends
+[18] Caitríona Cox, Thea Hatfield, Jordan Moxey, and Zoë Fritz. 2023. Creating
+beyond creating systems that are merely efficient or engaging. We and administering video vignettes for a study examining the communication
+===== PAGE 22 =====
+CHI ’26, April 13–17, 2026, Barcelona, Spain Taheri et al.
+of diagnostic uncertainty: methodological insights to improve accessibility for Marshburn, et al. 2016. Reducing implicit racial preferences: II. Intervention
+researchers and participants. BMC medical research methodology 23, 1 (2023), effectiveness across time. Journal of Experimental Psychology: General 145, 8
+296. (2016), 1001.
+[19] Melissa D Deroche, Lee Za Ong, and Jennifer M Cook. 2024. Ableist Microag- [41] Thomas C Leonard. 2008. Richard H. Thaler, Cass R. Sunstein, Nudge: Improving
+gressions, Disability Characteristics, and Nondominant Identities. Professional Decisions about Health, Wealth, and Happiness: Yale University Press, New
+Counselor 13, 4 (2024), 404–417. Haven, CT, 2008, 293 pp, $26.00.
+[20] Vimal Desai, Antonio Hernandez Conte, Vu T Nguyen, Philip Shin, Neha T Sudol, [42] Rong Li, Ashwini Kamaraj, Jing Ma, and Sarah Ebling. 2024. Decoding ableism
+Janet Hobbs, and Chunyuan Qiu. 2023. Veiled harm: impacts of microaggressions in large language models: An intersectional approach. In Proceedings of the Third
+on psychological safety and physician burnout. The Permanente Journal 27, 2 Workshop on NLP for Positive Impact. 232–249.
+(2023), 169. [43] Yuxuan Li, Hirokazu Shirado, and Sauvik Das. 2025. Actions speak louder than
+[21] Hamza El Alaoui and Violetta Cavalli-Sforza. 2024. DarijaGenie: Learning Mo- words: Agent decisions reveal implicit biases in language models. In Proceedings
+roccan Arabic Through a Multimodal Chatbot. In International Conference on of the 2025 ACM Conference on Fairness, Accountability, and Transparency. 3303–
+Arabic Language Processing. Springer, 74–89. 3325.
+[22] Hamza El Alaoui, Atieh Taheri, Yi-Hao Peng, and Jeffrey P Bigham. 2025. Step- [44] Gili Lior, Liron Nacchace, and Gabriel Stanovsky. 2025. WildFrame: Comparing
+Write: Adaptive Planning for Speech-Driven Text Generation. In Proceedings Framing in Humans and LLMs on Naturally Occurring Texts. arXiv preprint
+of the 38th Annual ACM Symposium on User Interface Software and Technology arXiv:2502.17091 (2025).
+(Busan, Republic of Korea) (UIST ’25). ACM, New York, NY, USA, Article 86, [45] Jennifer M Logg, Julia A Minson, and Don A Moore. 2019. Algorithm appreciation:
+30 pages. doi:10.1145/3746059.3747610 People prefer algorithmic to human judgment. Organizational Behavior and
+[23] Xianzhe Fan, Qing Xiao, Xuhui Zhou, Jiaxin Pei, Maarten Sap, Zhicong Lu, Human Decision Processes 151 (2019), 90–103.
+and Hong Shen. 2025. User-Driven Value Alignment: Understanding Users’ [46] Jiaxu Lou and Yifan Sun. 2024. Anchoring bias in large language models: An
+Perceptions and Strategies for Addressing Biased and Discriminatory Statements experimental study. arXiv preprint arXiv:2412.06593 (2024).
+in AI Companions. In Proceedings of the 2025 CHI Conference on Human Factors [47] P Priscilla Lui and Lucia Quezada. 2019. Associations between microaggression
+in Computing Systems. 1–19. and adjustment outcomes: A meta-analytic and narrative review. Psychological
+[24] Jack Faulkner. 2025. The Impact of Race on Mental Health Burden and Burnout bulletin 145, 1 (2019), 45.
+in Medical School and Residency: A Literature Review. Undergraduate Journal of [48] Shuai Ma, Qiaoyi Chen, Xinru Wang, Chengbo Zheng, Zhenhui Peng, Ming Yin,
+Public Health 9 (2025). and Xiaojuan Ma. 2025. Towards human-ai deliberation: Design and evaluation
+[25] Estivana Felaza, Ardi Findyartini, Rita Mustika, Jenny Bashiruddin, Joedo Pri- of llm-empowered deliberative ai for ai-assisted decision-making. In Proceedings
+hartono, Lucia RM Royanto, and Subha Ramani. 2025. Promoting medical stu- of the 2025 CHI Conference on Human Factors in Computing Systems. 1–23.
+dents’ reflection through feedback interaction: The RAISE model. Asia Pacific [49] Tracy MacIntosh, Michelle Hernandez, and Anuja S Mehta. 2022. Identifying,
+Scholar 10, 1 (2025), 27–35. addressing, and eliminating microaggressions in healthcare. HCA Healthcare
+[26] Patrick S Forscher, Calvin K Lai, Jordan R Axt, Charles R Ebersole, Michelle Her- Journal of Medicine 3, 3 (2022), 189.
+man, Patricia G Devine, and Brian A Nosek. 2019. A meta-analysis of procedures [50] Catherine L Mah, Emily Taylor, Sylvia Hoang, and Brian Cook. 2014. Using
+to change implicit measures. Journal of personality and social psychology 117, 3 vignettes to tap into moral reasoning in public health policy: Practical advice
+(2019), 522. and design principles from a study on food advertising to children. American
+[27] Anderson J Franklin. 2008. From brotherhood to manhood: How Black men rescue journal of public health 104, 10 (2014), 1826–1832.
+their relationships and dreams from the invisibility syndrome. Turner Publishing [51] Zainab Maqsood, Madiha Sajjad, and Raheela Yasmin. 2025. Effect of feedback-
+Company. integrated reflection, on deep learning of undergraduate medical students in a
+[28] Scott Freeman, Sarah L Eddy, Miles McDonough, Michelle K Smith, Nnadozie Oko- clinical setting. BMC Medical Education 25, 1 (2025), 66.
+roafor, Hannah Jordt, and Mary Pat Wenderoth. 2014. Active learning increases [52] Whitney M Morean. 2022. Ableist Microaggressions and Well-being: Investigating
+student performance in science, engineering, and mathematics. Proceedings of the Moderating Effect of Coping Strategies. Ph. D. Dissertation. Seattle Pacific
+the national academy of sciences 111, 23 (2014), 8410–8415. University.
+[29] Sally French. 1992. Simulation exercises in disability awareness training: A [53] KL Nadal. 2018. Microaggressions and traumatic stress. American Psychological
+critique. Disability, Handicap & Society 7, 3 (1992), 257–266. Association. https://doi. org/10.1 0 37 (2018), 0000073–000.
+[30] Katrin Glinka and Claudia Müller-Birn. 2023. Critical-reflective human-AI col- [54] Prisca Mary Oluoch, Paul Amollo Odundo, and John Kamau Mwangi. 2020.
+laboration: Exploring computational tools for art historical image retrieval. Pro- Context of Vignettes and Ethical Sensitivity in Decision-Making among Under-
+ceedings of the ACM on Human-Computer Interaction 7, CSCW2 (2023), 1–33. graduate Business Studies Learners at University of Nairobi, Kenya. Journal of
+[31] Nicola Grove. 2015. Finding the sparkle: Storytelling in the lives of people with Education and Learning 9, 4 (2020), 151–169.
+learning disabilities. Tizard Learning Disability Review 20, 1 (2015), 29–36. [55] Alex Ouyang. 2025. Study reveals AI chatbots can detect race, but racial bias
+[32] Miriam Havin, Timna Wharton Kleinman, Moran Koren, Yaniv Dover, and Ariel reduces response empathy. MIT Electrical Engineering & Computer Science
+Goldstein. 2025. Can (A) I Change Your Mind? arXiv preprint arXiv:2503.01844 News. https://www.eecs.mit.edu/study-reveals-ai-chatbots-can-detect-race-
+(2025). but-racial-bias-reduces-response-empathy/ Abdul Latif Jameel Clinic for Ma-
+[33] Thomas Hehir. 2002. Eliminating ableism in education. Harvard educational chine Learning in Health.
+review 72, 1 (2002), 1–33. [56] Mahika Phutane, Hayoung Jung, Matthew Kim, Tanushree Mitra, and Aditya
+[34] Valentin Hofmann, Pratyusha Ria Kalluri, Dan Jurafsky, and Sharese King. 2024. Vashistha. 2025. ABLEIST: Intersectional Disability Bias in LLM-Generated Hiring
+AI generates covertly racist decisions about people based on their dialect. Nature Scenarios. arXiv preprint arXiv:2510.10998 (2025).
+633, 8028 (2024), 147–154. [57] Mahika Phutane, Ananya Seelam, and Aditya Vashistha. 2025. “Cold, Calcu-
+[35] Alexandra Hollo, Carla B Brigandi, Casey M Jelsema, and Mingming Shi. 2021. lated, and Condescending”: How AI Identifies and Explains Ableism Compared
+Effects of a disability simulation activity on the achievement, efficacy, attitudes, to Disabled People. In Proceedings of the 2025 ACM Conference on Fairness, Ac-
+and interests of preservice professionals. Journal of Visual Impairment & Blindness countability, and Transparency. 1927–1941.
+115, 5 (2021), 414–425. [58] Mahika Phutane and Aditya Vashistha. 2025. Disability Across Cultures: A
+[36] Rhidian Hughes. 1998. Considering the vignette technique and its application to Human-Centered Audit of Ableism in Western and Indic LLMs. In Proceedings of
+a study of drug injecting and HIV risk and safer behaviour. Sociology of health & the AAAI/ACM Conference on AI, Ethics, and Society, Vol. 8. 2000–2014.
+illness 20, 3 (1998), 381–400. [59] Charles A Pierce, Herman Aguinis, and Susan KR Adams. 2000. Effects of a
+[37] Michael Ioerger, Reed M Flanders, Jeremy R French-Lawyer, and Margaret A dissolved workplace romance and rater characteristics on responses to a sexual
+Turk. 2019. Interventions to teach medical students about disability: a systematic harassment accusation. Academy of Management Journal 43, 5 (2000), 869–880.
+search and review. American Journal of Physical Medicine & Rehabilitation 98, 7 [60] Gisela Reyes-Cruz, Joel Fischer, and Stuart Reeves. 2022. Supporting Awareness
+(2019), 577–599. of Visual Impairments and Accessibility Reflections through Video Demos and
+[38] Yewon Jin, SeonYul Lee, SeoHyeong Kim, Jiyeon Seo, Kyuha Jung, Hajin Lim, Design Cards. In Nordic Human-Computer Interaction Conference. 1–15.
+and Joonhwan Lee. 2023. Divrsity: Design and development of group role-play [61] Naba Rizvi, Harper Strickland, Saleha Ahmedi, Aekta Kallepalli, Isha Khirwad-
+vr platform for disability awareness education. In Proceedings of the 2023 ACM kar, William Wu, Imani NS Munyaka, and Nedjma Ousidhoum. 2025. Beyond
+Designing Interactive Systems Conference. 161–174. Keywords: Evaluating Large Language Model Classification of Nuanced Ableism.
+[39] Calvin K Lai, Maddalena Marini, Steven A Lehr, Carlo Cerruti, Jiyun-Elizabeth L arXiv preprint arXiv:2505.20500 (2025).
+Shin, Jennifer A Joy-Gaba, Arnold K Ho, Bethany A Teachman, Sean P Wojcik, [62] Francesco Salvi, Manoel Horta Ribeiro, Riccardo Gallotti, and Robert West. 2025.
+Spassena P Koleva, et al. 2014. Reducing implicit racial preferences: I. A com- On the conversational persuasiveness of GPT-4. Nature Human Behaviour (2025),
+parative investigation of 17 interventions. Journal of Experimental Psychology: 1–9.
+General 143, 4 (2014), 1765. [63] Matthew Sample, Sebastian Sattler, Wren Boehlen, and Eric Racine. 2023. Brain-
+[40] Calvin K Lai, Allison L Skinner, Erin Cooley, Sohad Murrar, Markus Brauer, computer interfaces, disability, and the stigma of refusal: A factorial vignette
+Thierry Devos, Jimmy Calanchini, Y Jenny Xiao, Christina Pedram, Christopher K study. Public Understanding of Science 32, 4 (2023), 522–542.
+===== PAGE 23 =====
+Autonomy, Coaching, and Recognizing Bias Through AI-Mediated Dialogue CHI ’26, April 13–17, 2026, Barcelona, Spain
+[64] Eda Ozkara San, Katherine A Marx, Beth Latimer, Gina Robertiello, and Natalya in everyday life: implications for clinical practice. American psychologist 62, 4
+Pasklinsky. 2022. The use of clinical simulation to address disability content (2007), 271.
+inclusion in nursing education: a review of the literature. Clinical Simulation in [74] Derald Wing Sue and Lisa Spanierman. 2020. Microaggressions in everyday life.
+Nursing 71 (2022), 112–127. John Wiley & Sons.
+[65] Maarten Sap, Saadia Gabriel, Lianhui Qin, Dan Jurafsky, Noah A Smith, and Yejin [75] Atieh Taheri, Purav Bhardwaj, Arthur Caetano, Alice Zhong, and Misha Sra.
+Choi. 2019. Social bias frames: Reasoning about social and power implications of 2023. Virtual buddy: Redefining conversational ai interactions for individuals
+language. arXiv preprint arXiv:1911.03891 (2019). with hand motor disabilities. In Adjunct Proceedings of the 36th Annual ACM
+[66] Maarten Sap, Ronan LeBras, Daniel Fried, and Yejin Choi. 2023. Neural Theory- Symposium on User Interface Software and Technology. 1–3.
+of-Mind? On the limits of social intelligence in large LMs. arXiv. arXiv preprint [76] Jasper Timm, Chetan Talele, and Jacob Haimes. 2025. Tailored truths: Optimizing
+arXiv:2210.13312 (2023). llm persuasion with personalization and fabricated statistics. arXiv preprint
+[67] Anniek Schlette, Tobias H Stark, and Anouk Smeekes. 2025. Social signals of arXiv:2501.17273 (2025).
+belonging: How the perceived ethnic-national background of friends affects [77] Shane Timmons, Frances McGinnity, and Eamonn Carroll. 2024. Ableism differs
+ascriptions of belonging given to descendants of migrants. British Journal of by disability, gender and social context: Evidence from vignette experiments.
+Social Psychology 64, 3 (2025), e12898. British Journal of Social Psychology 63, 2 (2024), 637–657.
+[68] Dylan G Serpas, Daniel A Ignacio, Kemesha Gabbidon, and Barbara J Cherry. [78] Amos Tversky and Daniel Kahneman. 1981. The framing of decisions and the
+2024. Ableist microaggressions and psychological distress among adults with psychology of choice. science 211, 4481 (1981), 453–458.
+disabilities: The role of disability visibility. Rehabilitation Psychology (2024). [79] Pranav Narayanan Venkit, Mukund Srinath, and Shomir Wilson. 2023. Automated
+[69] Kristen Shinohara, Jacob O Wobbrock, and Wanda Pratt. 2018. Incorporating ableism: An exploration of explicit disability biases in sentiment and toxicity
+social factors in accessible design. In Proceedings of the 20th international ACM analysis models. arXiv preprint arXiv:2307.09209 (2023).
+SIGACCESS conference on computers and accessibility. 149–160. [80] Jacob O Wobbrock and Julie A Kientz. 2016. Research contributions in human-
+[70] Daniel Solorzano, Miguel Ceja, and Tara Yosso. 2000. Critical race theory, racial computer interaction. interactions 23, 3 (2016), 38–44.
+microaggressions, and campus racial climate: The experiences of African Ameri- [81] Hannah Young, Maggi Fenwick, Loretto Lambe, and James Hogg. 2011. Multi-
+can college students. Journal of Negro education (2000), 60–73. sensory storytelling as an aid to assisting people with profound intellectual
+[71] Derald Wing Sue. 2004. Whiteness and ethnocentric monoculturalism: making disabilities to cope with sensitive issues: A multiple research methods analysis
+the" invisible" visible. American psychologist 59, 8 (2004), 761. of engagement and outcomes. European Journal of Special Needs Education 26, 2
+[72] Derald Wing Sue, Sarah Alsaidi, Michael N Awad, Elizabeth Glaeser, Cassandra Z (2011), 127–142.
+Calle, and Narolyn Mendez. 2019. Disarming racial microaggressions: Microinter- [82] Xuhui Zhou, Hao Zhu, Leena Mathur, Ruohong Zhang, Haofei Yu, Zhengyang
+vention strategies for targets, White allies, and bystanders. American Psychologist Qi, Louis-Philippe Morency, Yonatan Bisk, Daniel Fried, Graham Neubig, and
+74, 1 (2019), 128. Maarten Sap. 2024. SOTOPIA: Interactive Evaluation for Social Intelligence in Lan-
+[73] Derald Wing Sue, Christina M Capodilupo, Gina C Torino, Jennifer M Bucceri, guage Agents. In The Twelfth International Conference on Learning Representations
+Aisha Holder, Kevin L Nadal, and Marta Esquilin. 2007. Racial microaggressions (ICLR). doi:10.48550/arXiv.2310.11667 Preprint available as arXiv:2310.11667.

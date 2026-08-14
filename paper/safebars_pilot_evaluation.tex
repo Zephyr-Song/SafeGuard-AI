@@ -1,0 +1,139 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Exploratory Pilot Evaluation -- SafeBARS ethical mirror "finds" ethical
+% blind spots. Structured after Taheri et al. (CHI'26), "I followed what
+% felt right, not what I was told": Autonomy, Coaching, and Recognizing
+% Bias Through AI-Mediated Dialogue.
+% HONESTY NOTE: n=2 pilot, real session archives only. No fabricated n.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Exploratory Pilot Evaluation: Does the Mirror Surface Blind Spots Researchers Miss?}
+\label{sec:pilot}
+
+Before scaling to a controlled study (\S\ref{sec:evaldesign}), we ran two
+exploratory pilot sessions to test the core mechanism claim: that the
+mirror surfaces ethical problems a researcher did \emph{not} include in their
+own written plan. This parallels the effectiveness question in Taheri et
+al.~\cite{taheri26} (whether AI-mediated dialogue improves recognition of
+bias), but where they measured recognition via pre/post vignette ratings, we
+measure \emph{discovery yield}---the count of distinct ethical items the
+mirror surfaces, the blind-spot rate, and the coverage gap against the
+researcher's plan---because at pilot scale ($n=2$) inference statistics are
+not meaningful. All counts and quotations below are drawn verbatim from the
+two real session archives.\footnote{Archives: \texttt{SafeBARS\_StudentTest/study\_bundle.json}
+(R1, full guided session) and \texttt{SafeBARS\_StudentTest\_2} (R2, Deep-audit
+verification run).}
+
+\paragraph{Method.}
+Two researchers (R1, R2) entered the mirror with their own un-reviewed
+research concepts: R1, \emph{fairness in shared dorm living} (an AI that
+reads smart-plug electricity and group-chat tone to label a ``free-riding''
+roommate and draft a private message); R2, \emph{campus mental-health
+crisis detection (CampusMind)} (an AI that scans anonymized forum/group-chat
+posts to quietly connect struggling students to a counseling center). Both
+followed the guided protocol (lens selection $\rightarrow$ role probes
+$\rightarrow$ stakeholder map $\rightarrow$ dissonance edges $\rightarrow$
+revision ledger); R2's session additionally ran the Deep-audit stress test.
+Materials were the nine-lens ethical framework and the Deep-audit module
+(internal-contradiction detection, additional dissonance edges, real-world
+failure analogues, forced-reflection lenses).
+
+\paragraph{5.1 Discovery yield (quantitative).}
+Table~\ref{tab:pilot} summarizes the real discovery counts. In both sessions
+the mirror surfaced \textbf{$\ge 9$ distinct ethical items}; of these,
+\textbf{$\ge 3$ were blind spots} absent from or merely declared (not
+action-linked) in the original plan. In R1's session, \textbf{6/9 lenses
+were not action-linked} in the plan (Figure~\ref{fig:pilotcov})---the mirror
+exposed gaps the researcher had left open. R2's Deep-audit additionally
+surfaced \textbf{1 internal contradiction + 3 extra dissonance edges + 5
+real-world failure analogues}---dimensions entirely absent from the written
+plan. R1 engaged with every tension the mirror raised (2/2 decisions,
+100\%).
+
+\begin{table}[t]
+  \centering
+  \small
+  \caption{Pilot discovery yield (real counts from two archived sessions).}
+  \label{tab:pilot}
+  \begin{tabular}{p{1.5cm}p{2.6cm}p{1.4cm}p{2.4cm}p{1.1cm}}
+    \toprule
+    Session & Research domain & Lenses surfaced & Blind spots vs. plan & Tension edges \\
+    \midrule
+    R1 Dorm & Shared-dorm fairness & 9 (2/4/2/1\textsuperscript{a}) & $\ge$3 (downstream misuse, redress, analogues) & 2 \\
+    R2 CampusMind & Crisis detection & 6 forced + 9 & $\ge$3 (no appeal, reuse cap, consent contradiction) & 4 \\
+    \bottomrule
+    \multicolumn{5}{l}{\footnotesize\textsuperscript{a} coverage states missing/claimed/reasoned/action-linked.}
+  \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.46\columnwidth]{fig_pilot_coverage.pdf}
+  \caption{Dorm pilot: coverage states of the 9 lenses the mirror derived from
+  the researcher's own plan. Red = missing, orange = claimed-only, blue =
+  reasoned, green = action-linked. 6/9 were not action-linked in the
+  original plan---i.e. the mirror surfaced ethical gaps the researcher had
+  not closed.}
+  \label{fig:pilotcov}
+\end{figure}
+
+\paragraph{5.2 Qualitative findings.}
+Reflexive thematic analysis of the two sessions yielded five themes;
+quotations are verbatim from the archives.
+
+\noindent\textbf{Theme A -- Downstream misuse \& scale spillover (plan gap).}
+The mirror flagged that R1's plan ignored repurposing of its outputs:
+\textit{``the plan does not consider how outputs (e.g., drafted messages,
+inferred `free-rider' labels) could be repurposed outside the intended
+context---e.g., shared with landlords, cited in conduct hearings, or
+integrated into university disciplinary systems''}
+(lens \texttt{downstream\_use\_misuse\_scale}, status = missing).
+
+\noindent\textbf{Theme B -- Contestability / appeal path missing.}
+R2's Deep-audit marked AUD-EDGE-003 (severity = elevated): \textit{``The plan
+monitors or flags people but states no appeal or redress path.''} and
+AUD-EDGE-002 (severity = high): \textit{``The system is built for one caring
+purpose but has no stated limit preventing administrative or disciplinary
+reuse.''} Neither safeguard appeared in the researcher's plan.
+
+\noindent\textbf{Theme C -- Internal contradiction the researcher missed.}
+R2's CNTR-001 exposed a logical conflict between the plan's promise of
+opt-out non-disclosure and its silent-notification behavior---a contradiction
+the original tool (which only reflects what is written) would have missed,
+and which Deep-audit's added capability caught.
+
+\noindent\textbf{Theme D -- Real-world failure analogues as evidence bridges.}
+The mirror automatically bridged five real failures, turning abstract worry
+into citable precedent, e.g. \textit{exam\_proctoring\_surveillance\_2020}:
+\textit{``Surveillance tooling aimed at `integrity' can punish the already
+marginalised. Offer a human-reviewed alternative and disclose the
+monitoring.''}; \textit{obermeyer\_health\_bias\_2019}: \textit{``A proxy
+variable that looks neutral can silently encode the very bias you are trying
+to avoid. Audit subgroup disparity, not just overall accuracy.''};
+\textit{uk\_a\_levels\_algorithm\_2020}: \textit{``When an algorithm
+overrides human assessment at scale, small model assumptions produce large,
+visible injustices and loss of public trust.''}
+
+\noindent\textbf{Theme E -- Researcher engagement with findings.}
+R1 acted on both tension edges: \texttt{EDGE-001} $\rightarrow$
+\texttt{add\_safeguard} (``Assign a specific role for post-update conflict
+auditing'') and \texttt{EDGE-002} $\rightarrow$ \texttt{consult\_stakeholders}.
+Decision rate 100\%, indicating the surfaced problems were received and
+responded to rather than ignored.
+
+\paragraph{What this pilot supports, and what it does not.}
+The pilot \textbf{supports} the claim that \emph{SafeBARS surfaces ethical
+problems researchers did not include or did not operationalize in their own
+plans}, evidenced by real per-session counts ($\ge$9 items, $\ge$3 blind
+spots, an internal contradiction, and five analogues) and verbatim
+quotations---structurally parallel to the qualitative findings in Taheri et
+al. A verbatim replay of R1's mirror conversation (Appendix~\ref{fig:replay})
+shows the AI surfacing each tension step by step from the researcher's own
+plan. It \textbf{does not yet support} a claim that the mirror \emph{corrects}
+behavior: R1's ledger recorded decisions but noted \textit{``No concise
+changed passage was recorded''}, i.e. the change to the plan text was not
+captured. That gap is exactly what the scaled Study~1 (\S\ref{sec:evaldesign})
+is designed to measure, by recording before/after plan diffs. Finally, with
+$n=2$ this pilot cannot support inferential conclusions; the controlled
+Study~1 (multimodal mirror vs.\ text-only baseline, $N=80$--$120$) will
+provide Taheri-style quantitative evidence (discovery-yield difference,
+blind-spot detection rate, effect sizes).

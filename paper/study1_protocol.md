@@ -64,6 +64,7 @@
 1. **列出受影响群体**：*"List the groups of people your design affects or could affect (e.g., users, non-users, vulnerable groups). List as many as you can."*（开放文本框，逐行）
 2. **自评伦理稳健度**（7 点）：*"How ethically robust do you think your current design is?"*（1=very weak, 7=very strong）
 3. **分配到的场景**：给参与者一个**真实研究计划文本**（统一材料，见 §G），或允许粘贴自己的计划（主研究用统一材料以控变异）。
+4. **【新增·计划 diff 仪】提交 `plan_before`**：让参与者粘贴/提交**将拿去跑 mirror 的研究计划全文**（自由文本）。这是 before/after 计划 diff 记录仪（`study1_plandiff_instrument.md`）的"前"侧，用于客观判定镜面指出的盲点是否被真正写进计划。
 
 ### C.3 干预（使用镜，约 10–15 分钟）
 - 打开分配到的链接（多模态臂 / `?cond=text` 文字臂）。
@@ -73,7 +74,8 @@
 ### C.4 Post-task（干预后，约 5 分钟）
 1. **重新列出受影响群体**：*"Now list again the groups your design affects or could affect."*（开放文本）
 2. **自由反思**：*"What, if anything, did you realize about your design that you had not considered before? Quote the moment if you can."*（开放文本）
-3. **填写后测量表**（§E，7 点 Likert + 操纵检验 + 开放题）。
+3. **【新增·计划 diff 仪】提交 `plan_after`**：让参与者粘贴/提交**经 mirror 协作修订后的研究计划全文**。另请其在每条修订处标注它响应了镜面的哪个发现（finding id）。这是 before/after 计划 diff 记录仪的"后"侧。
+4. **填写后测量表**（§E，7 点 Likert + 操纵检验 + 开放题）。
 
 ### C.5 Debrief（见 §H）
 - 解释研究目的、多模态 vs 文字操纵、自发现机制；提供联系人；感谢。
@@ -168,6 +170,16 @@
   - **SYSTEM**（系统归属）："the tool told me / the tool showed that…" 类表述 → 计 system_attributed。
 - **主行为 DV**：self_attributed_rate = self_attributed / (self_attributed + system_attributed)。
 - 与自陈 SD1–SD4 三角验证。
+
+### F.4 盲点纠正率（RQ4·行为，计划 diff 仪，新增）
+- **目的**：把 Pilot 暴露的"纠正证据缺失"（`No concise changed passage was recorded`）变成可测指标。详见 `study1_plandiff_instrument.md`。
+- **输入**：session 的 `plan_before` / `plan_after` / `revision_links`（§C.2/§C.4 捕获）。
+- **判定**：
+  - `was_blind`：finding 摘要不在 `plan_before` → 该发现是研究者未写下的盲点。
+  - `addressed`：`resolved_state == action_linked` 且 `revision_text` 出现在 `plan_after`。
+  - `corrected_blindspot_rate` = corrected / surfaced。
+- **主 DV（RQ4 纠正）**：多模态臂 vs 文字臂的 corrected_blindspot_rate（由 `study1_stats.py` 输出 `tab:h4corr`）。
+- **与 F.1 互补**：F.1 的 Δ群体数测"想到更多受影响群体"；F.4 测"把镜面盲点真的写进计划"——共同构成 RQ4 行为化心智改变，避免只靠自陈。
 
 ---
 

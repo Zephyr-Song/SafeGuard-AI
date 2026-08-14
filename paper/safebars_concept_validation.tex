@@ -1,0 +1,80 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Concept Validation -- SafeBARS mirror coverage across research domains.
+% HONESTY NOTE: SIMULATION (N=8 researcher personas, NOT human subjects).
+% Reports instrument tractability + blind-spot coverage only. No human-
+% subjects findings. Self-discovery attribution is fixed at SELF by
+% construction; arm comparisons are therefore uninformative. Does NOT
+% does not substitute for a human-subjects study (Section~\ref{sec:eval}).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Concept Validation: Cross-Domain Blind-Spot Surfacing (Simulation)}
+\label{sec:conceptval}
+
+\textbf{Status: simulation, not human subjects.} This subsection validates
+the plan-diff instrument's operational tractability and illustrates the
+\emph{range} of ethical blind spots the mirror surfaces across research
+domains. It reports \emph{no} human-subjects findings and does not
+substitute for a human-subjects study (Section~\ref{sec:eval}).
+
+\paragraph{Setup.}
+We exercised the full mirror pipeline (stakeholder map $\rightarrow$
+tension surfacing $\rightarrow$ self-discovery probes $\rightarrow$ AI
+scaffold $\rightarrow$ revision ledger) on a \emph{simulation} of
+$N=8$ researcher personas spanning four stances (junior graduate student,
+industry product lead, senior PI, ethics advocate) and eight research
+domains (AI teaching assistant, workplace-wellness wearable, civic-tech
+platform, hiring-bias audit, exam-prep tutor, meeting summarizer, epidemic
+early-warning, grassroots organizing platform). Each persona submitted a
+realistic research plan; the mirror returned a revised plan and a
+structured revision ledger. Source bundles:
+\texttt{results/study1\_sim\_20260813\_170531.\{json,csv\}}.
+
+\paragraph{Instrument tractability (enables RQ4).}
+In every simulated session the mirror produced 2--3 structured revision
+actions (mean 2.75; e.g.\ \texttt{add\_safeguard},
+\texttt{revise\_design}), each linked to a surfaced blind spot. This
+confirms that plan-diff is a viable, behavior-based primary dependent
+variable for RQ4: the mirror's effect is observable in the \emph{revised
+artifact}, not only in self-report.
+
+\paragraph{Cross-domain coverage.}
+Across the eight domains the mirror surfaced blind-spot themes beyond any
+single design (Table~\ref{tab:simthemes}). The spread---data
+secondary-use, vulnerable-group identification, chilling effects,
+re-identification, third-party consent, minor exploitation, moderator
+labor---indicates the mirror generalizes across research areas rather
+than over-fitting to one.
+
+\begin{table}[t]
+  \centering
+  \caption{Blind-spot themes surfaced across the 8 simulated domains
+    (simulation; counts are sessions out of 8 in which the theme
+    appeared).}
+  \begin{tabular}{l c}
+    \toprule
+    Blind-spot theme                    & Sessions (of 8) \\
+    \midrule
+    Data secondary-use / consent       & 5 \\
+    Vulnerable-group identification    & 5 \\
+    Chilling effect                    & 4 \\
+    Re-identification risk             & 3 \\
+    Third-party consent failure        & 3 \\
+    Commercial exploitation of minors  & 2 \\
+    Moderator-labor exploitation       & 1 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:simthemes}
+\end{table}
+
+\paragraph{Limitations and what this simulation does \emph{not} show.}
+Self-discovery attribution was fixed at SELF \emph{by construction}
+(plans were seeded with groups the mirror is designed to surface), so the
+resulting 100\% self-attributed rate is expected and \emph{must not} be
+read as evidence that the tool induces ownership in real researchers.
+Likewise, arm (multimodal vs.\ text) comparisons carry no signal in
+simulation. The primary RQ1 contrast---whether \emph{seeing} a gap rather
+than being \emph{told} it yields more self-attributed realization---requires
+the mixed SELF/SYSTEM attribution that only the human-subjects Study~1
+provides. The qualitative ``I didn't realize\ldots'' wording in the source
+ledgers is illustrative of the mirror's rhetoric, \emph{not} a transcript
+of real participant speech.

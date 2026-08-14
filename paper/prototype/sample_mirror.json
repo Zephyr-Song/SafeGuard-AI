@@ -1,0 +1,2335 @@
+{
+  "P01_campusmind": {
+    "passages": [
+      {
+        "id": "P-001",
+        "text": "CampusMind is a conversational agent for university students to reflect on stress and low mood.",
+        "fingerprint": "5a2532b268fdad2c"
+      },
+      {
+        "id": "P-002",
+        "text": "Students log in with their campus single sign-on.",
+        "fingerprint": "0c6ba08ee32e6e25"
+      },
+      {
+        "id": "P-003",
+        "text": "The bot asks daily check-in questions and offers coping suggestions drawn from a CBT library.",
+        "fingerprint": "89e744ff902866f4"
+      },
+      {
+        "id": "P-004",
+        "text": "When the bot detects signs of severe distress it sends a notification to the student's assigned counselor.",
+        "fingerprint": "af72dcacb0911e0d"
+      },
+      {
+        "id": "P-005",
+        "text": "Students can turn notifications off in settings.",
+        "fingerprint": "dd0d00be8fe28b2b"
+      },
+      {
+        "id": "P-006",
+        "text": "We will pilot with 200 students over one semester and measure engagement and self-reported wellbeing.",
+        "fingerprint": "51e0428bd6cd7eaa"
+      },
+      {
+        "id": "P-007",
+        "text": "The model is a fine-tuned Qwen chat model hosted on a university server.",
+        "fingerprint": "23720cce5a848db9"
+      },
+      {
+        "id": "P-008",
+        "text": "We store conversation logs for two years to improve the model.",
+        "fingerprint": "dc99d3b9dddc1ae7"
+      }
+    ],
+    "lenses": [
+      {
+        "id": "lifecycle_integration",
+        "label": "Lifecycle integration",
+        "prompt": "Where will unintended consequences be reconsidered before, during, and after design, evaluation, and deployment?",
+        "operational_definition": "The plan links consequence reflection to named stages, checkpoints, or triggers across the research lifecycle.",
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021"
+        ],
+        "boundary": "A lifecycle mention is not evidence that reflection will change a decision.",
+        "state": "Claimed",
+        "state_id": "claimed",
+        "state_rank": 1,
+        "evidence": [
+          {
+            "passage_id": "P-006",
+            "quote": "We will pilot with 200 students over one semester and measure engagement and self-reported wellbeing.",
+            "matched_terms": [
+              "pilot"
+            ]
+          }
+        ],
+        "rationale": "The plan mentions the topic, but does not yet connect it to a mechanism and actionable decision.",
+        "next_action": "Explain who is affected, the causal mechanism, and which assumption may fail.",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "benefit_harm_assumptions",
+        "label": "Benefit–harm assumptions",
+        "prompt": "Which promised benefits and harm assumptions could fail, for whom, and through what mechanism?",
+        "operational_definition": "The plan names anticipated benefits and plausible unintended harms, then explains assumptions or causal mechanisms behind both.",
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "jobin_ai_guidelines_2019"
+        ],
+        "boundary": "Listing generic benefits and risks does not establish their likelihood.",
+        "state": "Claimed",
+        "state_id": "claimed",
+        "state_rank": 1,
+        "evidence": [
+          {
+            "passage_id": "P-006",
+            "quote": "We will pilot with 200 students over one semester and measure engagement and self-reported wellbeing.",
+            "matched_terms": [
+              "wellbeing"
+            ]
+          }
+        ],
+        "rationale": "The plan mentions the topic, but does not yet connect it to a mechanism and actionable decision.",
+        "next_action": "Explain who is affected, the causal mechanism, and which assumption may fail.",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "affected_parties_distribution",
+        "label": "Affected parties and distribution",
+        "prompt": "Who may benefit, bear burdens, lose access, or be affected without being a direct user or study participant?",
+        "operational_definition": "The plan identifies direct and indirect affected parties, including subgroups, non-users, bystanders, and unequal distributions of benefit or burden.",
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "friedman_hendry_cards_2012",
+          "jobin_ai_guidelines_2019"
+        ],
+        "boundary": "A synthetic list of stakeholders is a hypothesis to validate, not representation.",
+        "state": "Claimed",
+        "state_id": "claimed",
+        "state_rank": 1,
+        "evidence": [
+          {
+            "passage_id": "P-001",
+            "quote": "CampusMind is a conversational agent for university students to reflect on stress and low mood.",
+            "matched_terms": [
+              "student"
+            ]
+          },
+          {
+            "passage_id": "P-002",
+            "quote": "Students log in with their campus single sign-on.",
+            "matched_terms": [
+              "student"
+            ]
+          },
+          {
+            "passage_id": "P-004",
+            "quote": "When the bot detects signs of severe distress it sends a notification to the student's assigned counselor.",
+            "matched_terms": [
+              "student"
+            ]
+          }
+        ],
+        "rationale": "The plan mentions the topic, but does not yet connect it to a mechanism and actionable decision.",
+        "next_action": "Explain who is affected, the causal mechanism, and which assumption may fail.",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "downstream_use_misuse_scale",
+        "label": "Downstream use, misuse, and scale",
+        "prompt": "How could the research output be repurposed, misused, combined with other systems, or deployed at a scale beyond the study?",
+        "operational_definition": "The plan considers intended and adversarial downstream uses, changed contexts, transfer to third parties, and consequences of scale.",
+        "source_ids": [
+          "do_chi_2023",
+          "friedman_hendry_cards_2012"
+        ],
+        "boundary": "Scenarios expose possibilities; they do not forecast misuse probabilities.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: How could the research output be repurposed, misused, combined with other systems, or deployed at a scale beyond the study?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "perspective_participation",
+        "label": "Perspective diversity and participation",
+        "prompt": "Whose situated knowledge is needed, and when will real affected people be able to challenge the team's assumptions?",
+        "operational_definition": "The plan names a concrete participation or consultation method, whose perspectives it includes, and how their input can alter the design.",
+        "source_ids": [
+          "do_chi_2023",
+          "friedman_hendry_cards_2012",
+          "salminen_personas_chi_2024"
+        ],
+        "boundary": "AI-generated roles never count as real stakeholder participation.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: Whose situated knowledge is needed, and when will real affected people be able to challenge the team's assumptions?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "responsibility_oversight_contestability",
+        "label": "Responsibility, oversight, and contestability",
+        "prompt": "Who remains accountable for AI-assisted decisions, and how can an affected person understand, challenge, override, or appeal them?",
+        "operational_definition": "The plan assigns a human decision owner and specifies review, override, explanation, contest, or appeal mechanisms.",
+        "source_ids": [
+          "do_chi_2023",
+          "jobin_ai_guidelines_2019"
+        ],
+        "boundary": "Human presence alone does not demonstrate meaningful oversight or accountability.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: Who remains accountable for AI-assisted decisions, and how can an affected person understand, challenge, override, or appeal them?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "evidence_analogues_horizon",
+        "label": "Prior cases and emerging-capability horizon",
+        "prompt": "Which prior incidents and current AI capabilities challenge the plan, and what new capability would trigger reassessment?",
+        "operational_definition": "The plan connects decisions to cited cases or evidence and names capability changes, model updates, or horizon triggers that require review.",
+        "source_ids": [
+          "do_chi_2023",
+          "friedman_hendry_cards_2012"
+        ],
+        "boundary": "A case analogy supports inquiry but does not prove the same outcome will occur.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: Which prior incidents and current AI capabilities challenge the plan, and what new capability would trigger reassessment?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "mitigation_design_commitment",
+        "label": "Mitigation and design-change commitment",
+        "prompt": "Which concrete feature, scope, method, safeguard, or stopping rule will change if the concern is credible?",
+        "operational_definition": "The plan binds a risk to an actionable design change, safeguard, scope limit, evaluation, fallback, or stopping condition.",
+        "source_ids": [
+          "bernstein_esr_2021",
+          "do_chi_2023",
+          "priolo_hypocrisy_2019"
+        ],
+        "boundary": "A proposed mitigation must still be tested; a commitment is not proof of effectiveness.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: Which concrete feature, scope, method, safeguard, or stopping rule will change if the concern is credible?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "monitoring_learning_redress",
+        "label": "Monitoring, learning, and redress",
+        "prompt": "How will the team detect harm, receive complaints, correct errors, support remedy, and learn after release or study completion?",
+        "operational_definition": "The plan specifies observable indicators, review cadence or trigger, incident response, correction, redress, and accountable follow-up.",
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "jobin_ai_guidelines_2019"
+        ],
+        "boundary": "Logging without a response owner or remedy path is not actionable monitoring.",
+        "state": "Claimed",
+        "state_id": "claimed",
+        "state_rank": 1,
+        "evidence": [
+          {
+            "passage_id": "P-002",
+            "quote": "Students log in with their campus single sign-on.",
+            "matched_terms": [
+              "log"
+            ]
+          },
+          {
+            "passage_id": "P-008",
+            "quote": "We store conversation logs for two years to improve the model.",
+            "matched_terms": [
+              "log"
+            ]
+          }
+        ],
+        "rationale": "The plan mentions the topic, but does not yet connect it to a mechanism and actionable decision.",
+        "next_action": "Explain who is affected, the causal mechanism, and which assumption may fail.",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      }
+    ],
+    "coverage": {
+      "type": "evidence_coverage_not_ethics_score",
+      "lens_count": 9,
+      "state_counts": {
+        "Missing": 5,
+        "Claimed": 4,
+        "Reasoned": 0,
+        "Action-linked": 0
+      },
+      "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved.",
+      "is_ethics_score": false
+    },
+    "scenarios": [
+      {
+        "id": "SCN-001",
+        "agent_id": "direct_user",
+        "agent_label": "Direct user",
+        "role_id": "direct_user",
+        "role_label": "Direct user",
+        "synthetic": true,
+        "boundary_notice": "Synthetic perspective probe — not testimony, lived experience, population evidence, or a substitute for participation by real affected people.",
+        "objective": "Experience one consequential interaction with the proposed app and surface an agency, comprehension, access, or contestability tension.",
+        "affected_party": "A person using the proposed app in a consequential moment",
+        "situation": "A direct user receives an AI-mediated recommendation or classification and must decide whether to rely on it. The object under review is the proposed AI-enabled research app.",
+        "consequence": "The output may shape the user's choice while its basis, uncertainty, or route to challenge the result remains unclear.",
+        "first_person_probe": "I can see what the app recommends, but I need to know what it used, what it may have missed, and how I can reject or correct the result.",
+        "assumption_challenged": "A useful or accurate-looking output automatically preserves user agency.",
+        "revision_lever": "Make uncertainty, human authority, correction, and appeal visible at the decision point.",
+        "plan_evidence": {
+          "passage_id": "P-001",
+          "quote": "CampusMind is a conversational agent for university students to reflect on stress and low mood."
+        },
+        "lens_ids": [
+          "affected_parties_distribution",
+          "responsibility_oversight_contestability",
+          "benefit_harm_assumptions"
+        ],
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "friedman_hendry_cards_2012",
+          "jobin_ai_guidelines_2019"
+        ],
+        "source_links": [
+          {
+            "id": "do_chi_2023",
+            "url": "https://doi.org/10.1145/3544548.3581347"
+          },
+          {
+            "id": "bernstein_esr_2021",
+            "url": "https://doi.org/10.1073/pnas.2117261118"
+          },
+          {
+            "id": "friedman_hendry_cards_2012",
+            "url": "https://doi.org/10.1145/2207676.2208562"
+          },
+          {
+            "id": "jobin_ai_guidelines_2019",
+            "url": "https://doi.org/10.1038/s42256-019-0088-2"
+          }
+        ],
+        "epistemic_status": "synthetic_hypothesis",
+        "generation_mode": "deterministic_bounded_fallback",
+        "bounded_trace": [
+          {
+            "step": 1,
+            "action": "Locate one relevant plan passage",
+            "result": "P-001"
+          },
+          {
+            "step": 2,
+            "action": "Apply one bounded affected-party perspective",
+            "result": "Direct user"
+          },
+          {
+            "step": 3,
+            "action": "Construct one consequence and one intervention point",
+            "result": "SCN-001"
+          },
+          {
+            "step": 4,
+            "action": "Stop and return control to the researcher",
+            "result": "stopped"
+          }
+        ],
+        "visualization": {
+          "kind": "scenario_storyboard",
+          "frames": [
+            {
+              "id": "SCN-001-F1",
+              "type": "research_design",
+              "label": "Plan",
+              "text": "CampusMind is a conversational agent for university students to reflect on stress and low mood."
+            },
+            {
+              "id": "SCN-001-F2",
+              "type": "encounter",
+              "label": "Encounter",
+              "text": "A direct user receives an AI-mediated recommendation or classification and must decide whether to rely on it."
+            },
+            {
+              "id": "SCN-001-F3",
+              "type": "affected_voice",
+              "label": "Synthetic perspective",
+              "text": "I can see what the app recommends, but I need to know what it used, what it may have missed, and how I can reject or correct the result."
+            },
+            {
+              "id": "SCN-001-F4",
+              "type": "intervention",
+              "label": "Possible design lever",
+              "text": "Make uncertainty, human authority, correction, and appeal visible at the decision point."
+            }
+          ]
+        }
+      },
+      {
+        "id": "SCN-002",
+        "agent_id": "affected_non_user",
+        "agent_label": "Affected non-user",
+        "role_id": "affected_non_user",
+        "role_label": "Affected non-user",
+        "synthetic": true,
+        "boundary_notice": "Synthetic perspective probe — not testimony, lived experience, population evidence, or a substitute for participation by real affected people.",
+        "objective": "Trace how a person who did not directly choose the app could still be represented, inferred about, excluded, or burdened.",
+        "affected_party": "A person represented in, inferred from, or indirectly affected by the system",
+        "situation": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed AI-enabled research app.",
+        "consequence": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens.",
+        "first_person_probe": "I was not the person using this app, but its assumptions or data still shaped how another person or institution treated me.",
+        "assumption_challenged": "Studying direct users captures everyone materially affected by the research output.",
+        "revision_lever": "Validate the affected-party map with real representatives and revise scope or safeguards.",
+        "plan_evidence": {
+          "passage_id": "P-001",
+          "quote": "CampusMind is a conversational agent for university students to reflect on stress and low mood."
+        },
+        "lens_ids": [
+          "affected_parties_distribution",
+          "perspective_participation",
+          "benefit_harm_assumptions"
+        ],
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "friedman_hendry_cards_2012",
+          "jobin_ai_guidelines_2019",
+          "salminen_personas_chi_2024"
+        ],
+        "source_links": [
+          {
+            "id": "do_chi_2023",
+            "url": "https://doi.org/10.1145/3544548.3581347"
+          },
+          {
+            "id": "bernstein_esr_2021",
+            "url": "https://doi.org/10.1073/pnas.2117261118"
+          },
+          {
+            "id": "friedman_hendry_cards_2012",
+            "url": "https://doi.org/10.1145/2207676.2208562"
+          },
+          {
+            "id": "jobin_ai_guidelines_2019",
+            "url": "https://doi.org/10.1038/s42256-019-0088-2"
+          },
+          {
+            "id": "salminen_personas_chi_2024",
+            "url": "https://doi.org/10.1145/3613904.3642036"
+          }
+        ],
+        "epistemic_status": "synthetic_hypothesis",
+        "generation_mode": "deterministic_bounded_fallback",
+        "bounded_trace": [
+          {
+            "step": 1,
+            "action": "Locate one relevant plan passage",
+            "result": "P-001"
+          },
+          {
+            "step": 2,
+            "action": "Apply one bounded affected-party perspective",
+            "result": "Affected non-user"
+          },
+          {
+            "step": 3,
+            "action": "Construct one consequence and one intervention point",
+            "result": "SCN-002"
+          },
+          {
+            "step": 4,
+            "action": "Stop and return control to the researcher",
+            "result": "stopped"
+          }
+        ],
+        "visualization": {
+          "kind": "scenario_storyboard",
+          "frames": [
+            {
+              "id": "SCN-002-F1",
+              "type": "research_design",
+              "label": "Plan",
+              "text": "CampusMind is a conversational agent for university students to reflect on stress and low mood."
+            },
+            {
+              "id": "SCN-002-F2",
+              "type": "encounter",
+              "label": "Encounter",
+              "text": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context."
+            },
+            {
+              "id": "SCN-002-F3",
+              "type": "affected_voice",
+              "label": "Synthetic perspective",
+              "text": "I was not the person using this app, but its assumptions or data still shaped how another person or institution treated me."
+            },
+            {
+              "id": "SCN-002-F4",
+              "type": "intervention",
+              "label": "Possible design lever",
+              "text": "Validate the affected-party map with real representatives and revise scope or safeguards."
+            }
+          ]
+        }
+      },
+      {
+        "id": "SCN-003",
+        "agent_id": "downstream_deployer",
+        "agent_label": "Downstream deployer",
+        "role_id": "downstream_deployer",
+        "role_label": "Downstream deployer",
+        "synthetic": true,
+        "boundary_notice": "Synthetic perspective probe — not testimony, lived experience, population evidence, or a substitute for participation by real affected people.",
+        "objective": "Move the research prototype into a different context or larger scale and inspect which assumptions and safeguards stop transferring.",
+        "affected_party": "A later operator deploying the prototype outside the original study",
+        "situation": "A downstream team reuses the prototype with a different population, institutional incentive, or level of scale. The object under review is the proposed AI-enabled research app.",
+        "consequence": "Safeguards and validity assumptions tied to the study context may disappear while the output gains greater authority or reach.",
+        "first_person_probe": "The prototype looks ready to reuse, but I cannot tell which claims, populations, or safeguards were limited to the original study.",
+        "assumption_challenged": "A design that is acceptable in a bounded study transfers safely to later contexts.",
+        "revision_lever": "Encode scope limits, deployment conditions, and reassessment triggers in the artefact.",
+        "plan_evidence": {
+          "passage_id": "P-006",
+          "quote": "We will pilot with 200 students over one semester and measure engagement and self-reported wellbeing."
+        },
+        "lens_ids": [
+          "downstream_use_misuse_scale",
+          "lifecycle_integration",
+          "mitigation_design_commitment"
+        ],
+        "source_ids": [
+          "do_chi_2023",
+          "friedman_hendry_cards_2012",
+          "bernstein_esr_2021",
+          "priolo_hypocrisy_2019"
+        ],
+        "source_links": [
+          {
+            "id": "do_chi_2023",
+            "url": "https://doi.org/10.1145/3544548.3581347"
+          },
+          {
+            "id": "friedman_hendry_cards_2012",
+            "url": "https://doi.org/10.1145/2207676.2208562"
+          },
+          {
+            "id": "bernstein_esr_2021",
+            "url": "https://doi.org/10.1073/pnas.2117261118"
+          },
+          {
+            "id": "priolo_hypocrisy_2019",
+            "url": "https://doi.org/10.1177/0146167219841621"
+          }
+        ],
+        "epistemic_status": "synthetic_hypothesis",
+        "generation_mode": "deterministic_bounded_fallback",
+        "bounded_trace": [
+          {
+            "step": 1,
+            "action": "Locate one relevant plan passage",
+            "result": "P-006"
+          },
+          {
+            "step": 2,
+            "action": "Apply one bounded affected-party perspective",
+            "result": "Downstream deployer"
+          },
+          {
+            "step": 3,
+            "action": "Construct one consequence and one intervention point",
+            "result": "SCN-003"
+          },
+          {
+            "step": 4,
+            "action": "Stop and return control to the researcher",
+            "result": "stopped"
+          }
+        ],
+        "visualization": {
+          "kind": "scenario_storyboard",
+          "frames": [
+            {
+              "id": "SCN-003-F1",
+              "type": "research_design",
+              "label": "Plan",
+              "text": "We will pilot with 200 students over one semester and measure engagement and self-reported wellbeing."
+            },
+            {
+              "id": "SCN-003-F2",
+              "type": "encounter",
+              "label": "Encounter",
+              "text": "A downstream team reuses the prototype with a different population, institutional incentive, or level of scale."
+            },
+            {
+              "id": "SCN-003-F3",
+              "type": "affected_voice",
+              "label": "Synthetic perspective",
+              "text": "The prototype looks ready to reuse, but I cannot tell which claims, populations, or safeguards were limited to the original study."
+            },
+            {
+              "id": "SCN-003-F4",
+              "type": "intervention",
+              "label": "Possible design lever",
+              "text": "Encode scope limits, deployment conditions, and reassessment triggers in the artefact."
+            }
+          ]
+        }
+      },
+      {
+        "id": "SCN-004",
+        "agent_id": "adversarial_reuser",
+        "agent_label": "Adversarial reuser",
+        "role_id": "adversarial_reuser",
+        "role_label": "Adversarial reuser",
+        "synthetic": true,
+        "boundary_notice": "Synthetic perspective probe — not testimony, lived experience, population evidence, or a substitute for participation by real affected people.",
+        "objective": "Probe one plausible misuse or repurposing path without providing operational instructions for abuse.",
+        "affected_party": "People exposed to a deliberately repurposed or misused version of the app",
+        "situation": "A reuser seeks to turn an intended capability, data flow, or output toward surveillance, manipulation, exclusion, or another harmful end. The object under review is the proposed AI-enabled research app.",
+        "consequence": "A capability designed for benefit may lower the cost of harmful use or allow misuse to scale beyond the research team's control.",
+        "first_person_probe": "The same capability can serve a different goal when access, data, or deployment constraints are removed.",
+        "assumption_challenged": "Stating the intended use meaningfully constrains how the research output can be reused.",
+        "revision_lever": "Reduce unnecessary capability, gate access, test abuse paths, and define a stop or response rule.",
+        "plan_evidence": {
+          "passage_id": "P-001",
+          "quote": "CampusMind is a conversational agent for university students to reflect on stress and low mood."
+        },
+        "lens_ids": [
+          "downstream_use_misuse_scale",
+          "mitigation_design_commitment",
+          "evidence_analogues_horizon"
+        ],
+        "source_ids": [
+          "do_chi_2023",
+          "friedman_hendry_cards_2012",
+          "bernstein_esr_2021",
+          "priolo_hypocrisy_2019"
+        ],
+        "source_links": [
+          {
+            "id": "do_chi_2023",
+            "url": "https://doi.org/10.1145/3544548.3581347"
+          },
+          {
+            "id": "friedman_hendry_cards_2012",
+            "url": "https://doi.org/10.1145/2207676.2208562"
+          },
+          {
+            "id": "bernstein_esr_2021",
+            "url": "https://doi.org/10.1073/pnas.2117261118"
+          },
+          {
+            "id": "priolo_hypocrisy_2019",
+            "url": "https://doi.org/10.1177/0146167219841621"
+          }
+        ],
+        "epistemic_status": "synthetic_hypothesis",
+        "generation_mode": "deterministic_bounded_fallback",
+        "bounded_trace": [
+          {
+            "step": 1,
+            "action": "Locate one relevant plan passage",
+            "result": "P-001"
+          },
+          {
+            "step": 2,
+            "action": "Apply one bounded affected-party perspective",
+            "result": "Adversarial reuser"
+          },
+          {
+            "step": 3,
+            "action": "Construct one consequence and one intervention point",
+            "result": "SCN-004"
+          },
+          {
+            "step": 4,
+            "action": "Stop and return control to the researcher",
+            "result": "stopped"
+          }
+        ],
+        "visualization": {
+          "kind": "scenario_storyboard",
+          "frames": [
+            {
+              "id": "SCN-004-F1",
+              "type": "research_design",
+              "label": "Plan",
+              "text": "CampusMind is a conversational agent for university students to reflect on stress and low mood."
+            },
+            {
+              "id": "SCN-004-F2",
+              "type": "encounter",
+              "label": "Encounter",
+              "text": "A reuser seeks to turn an intended capability, data flow, or output toward surveillance, manipulation, exclusion, or another harmful end."
+            },
+            {
+              "id": "SCN-004-F3",
+              "type": "affected_voice",
+              "label": "Synthetic perspective",
+              "text": "The same capability can serve a different goal when access, data, or deployment constraints are removed."
+            },
+            {
+              "id": "SCN-004-F4",
+              "type": "intervention",
+              "label": "Possible design lever",
+              "text": "Reduce unnecessary capability, gate access, test abuse paths, and define a stop or response rule."
+            }
+          ]
+        }
+      },
+      {
+        "id": "SCN-005",
+        "agent_id": "maintainer_auditor",
+        "agent_label": "Maintainer / auditor",
+        "role_id": "maintainer_auditor",
+        "role_label": "Maintainer / auditor",
+        "synthetic": true,
+        "boundary_notice": "Synthetic perspective probe — not testimony, lived experience, population evidence, or a substitute for participation by real affected people.",
+        "objective": "Inspect a later model, data, or context change and ask who detects failure, acts, documents the decision, and supports redress.",
+        "affected_party": "Future users and affected people after a model, data, or context change",
+        "situation": "A model update, new data source, or changed deployment context alters behavior after the initial evaluation. The object under review is the proposed AI-enabled research app.",
+        "consequence": "A previously acceptable result may drift or fail without a named monitoring trigger, decision owner, correction route, or remedy.",
+        "first_person_probe": "I can observe that the system changed, but I need a threshold for action, a responsible owner, and a way to repair affected outcomes.",
+        "assumption_challenged": "Initial evaluation remains sufficient as models, data, and contexts change.",
+        "revision_lever": "Bind monitoring indicators to an owner, review cadence, rollback, correction, and redress.",
+        "plan_evidence": {
+          "passage_id": "P-002",
+          "quote": "Students log in with their campus single sign-on."
+        },
+        "lens_ids": [
+          "monitoring_learning_redress",
+          "responsibility_oversight_contestability",
+          "evidence_analogues_horizon"
+        ],
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "jobin_ai_guidelines_2019",
+          "friedman_hendry_cards_2012"
+        ],
+        "source_links": [
+          {
+            "id": "do_chi_2023",
+            "url": "https://doi.org/10.1145/3544548.3581347"
+          },
+          {
+            "id": "bernstein_esr_2021",
+            "url": "https://doi.org/10.1073/pnas.2117261118"
+          },
+          {
+            "id": "jobin_ai_guidelines_2019",
+            "url": "https://doi.org/10.1038/s42256-019-0088-2"
+          },
+          {
+            "id": "friedman_hendry_cards_2012",
+            "url": "https://doi.org/10.1145/2207676.2208562"
+          }
+        ],
+        "epistemic_status": "synthetic_hypothesis",
+        "generation_mode": "deterministic_bounded_fallback",
+        "bounded_trace": [
+          {
+            "step": 1,
+            "action": "Locate one relevant plan passage",
+            "result": "P-002"
+          },
+          {
+            "step": 2,
+            "action": "Apply one bounded affected-party perspective",
+            "result": "Maintainer / auditor"
+          },
+          {
+            "step": 3,
+            "action": "Construct one consequence and one intervention point",
+            "result": "SCN-005"
+          },
+          {
+            "step": 4,
+            "action": "Stop and return control to the researcher",
+            "result": "stopped"
+          }
+        ],
+        "visualization": {
+          "kind": "scenario_storyboard",
+          "frames": [
+            {
+              "id": "SCN-005-F1",
+              "type": "research_design",
+              "label": "Plan",
+              "text": "Students log in with their campus single sign-on."
+            },
+            {
+              "id": "SCN-005-F2",
+              "type": "encounter",
+              "label": "Encounter",
+              "text": "A model update, new data source, or changed deployment context alters behavior after the initial evaluation."
+            },
+            {
+              "id": "SCN-005-F3",
+              "type": "affected_voice",
+              "label": "Synthetic perspective",
+              "text": "I can observe that the system changed, but I need a threshold for action, a responsible owner, and a way to repair affected outcomes."
+            },
+            {
+              "id": "SCN-005-F4",
+              "type": "intervention",
+              "label": "Possible design lever",
+              "text": "Bind monitoring indicators to an owner, review cadence, rollback, correction, and redress."
+            }
+          ]
+        }
+      }
+    ],
+    "dissonance_edges": [
+      {
+        "id": "EDGE-001",
+        "commitment": {
+          "id": "COM-001",
+          "text": "Counselors are notified only with student consent for high-risk cases."
+        },
+        "design_choice": {
+          "passage_id": "P-004",
+          "quote": "When the bot detects signs of severe distress it sends a notification to the student's assigned counselor.",
+          "interpretation": "This passage is treated as the current design evidence to inspect, not as a definitive statement of intent."
+        },
+        "scenario": {
+          "id": "SCN-002",
+          "agent_id": "affected_non_user",
+          "situation": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed AI-enabled research app.",
+          "synthetic": true
+        },
+        "consequence": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens.",
+        "affected_party": "A person represented in, inferred from, or indirectly affected by the system",
+        "relation": "evidence_gap",
+        "attention_required": true,
+        "attention_rule": "no_linked_lens_has_action_linked_evidence",
+        "attention_lens_ids": [
+          "affected_parties_distribution",
+          "perspective_participation",
+          "benefit_harm_assumptions"
+        ],
+        "attention_basis": "None of the 3 linked literature lenses contains Action-linked plan evidence: an action plus a condition, owner, timing cue, or trigger. This transparent coverage rule flags the path for closer inspection; it is not an ethics or severity score.",
+        "tension": "You committed to “Counselors are notified only with student consent for high-risk cases.”. Inspect whether the current design passage remains consistent with that commitment when a person represented in, inferred from, or indirectly affected by the system experiences this scenario.",
+        "status": "open",
+        "decision": null,
+        "status_reason": "No researcher resolution has been replayed yet.",
+        "provenance": {
+          "source_passage": {
+            "passage_id": "P-004",
+            "quote": "When the bot detects signs of severe distress it sends a notification to the student's assigned counselor.",
+            "interpretation": "This passage is treated as the current design evidence to inspect, not as a definitive statement of intent."
+          },
+          "lens_ids": [
+            "affected_parties_distribution",
+            "perspective_participation",
+            "benefit_harm_assumptions"
+          ],
+          "literature_ids": [
+            "do_chi_2023",
+            "bernstein_esr_2021",
+            "friedman_hendry_cards_2012",
+            "jobin_ai_guidelines_2019",
+            "salminen_personas_chi_2024"
+          ]
+        },
+        "epistemic_status": "researcher_commitment_plus_synthetic_probe",
+        "boundary_notice": "This visible mismatch is an invitation to inspect and choose, not a diagnosis that the researcher or project is unethical.",
+        "response_options": [
+          {
+            "id": "revise",
+            "label": "Revise the design",
+            "description": "Change a feature, scope, method, safeguard, or stopping rule."
+          },
+          {
+            "id": "contest_with_evidence",
+            "label": "Contest with evidence",
+            "description": "Explain why the scenario does not fit and cite inspectable evidence."
+          },
+          {
+            "id": "consult_stakeholder",
+            "label": "Consult real stakeholders",
+            "description": "Transfer the unresolved assumption to people with relevant lived or domain knowledge."
+          },
+          {
+            "id": "retain_with_rationale",
+            "label": "Retain with rationale",
+            "description": "Keep the design choice while recording the trade-off and reassessment trigger."
+          }
+        ],
+        "visual_path": [
+          {
+            "type": "commitment",
+            "label": "My commitment",
+            "text": "Counselors are notified only with student consent for high-risk cases."
+          },
+          {
+            "type": "design",
+            "label": "Current design evidence",
+            "text": "When the bot detects signs of severe distress it sends a notification to the student's assigned counselor."
+          },
+          {
+            "type": "scenario",
+            "label": "Synthetic encounter",
+            "text": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed AI-enabled research app."
+          },
+          {
+            "type": "party",
+            "label": "Affected party",
+            "text": "A person represented in, inferred from, or indirectly affected by the system"
+          },
+          {
+            "type": "consequence",
+            "label": "Possible consequence",
+            "text": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens."
+          },
+          {
+            "type": "choice",
+            "label": "Researcher decision",
+            "text": "Open"
+          }
+        ]
+      },
+      {
+        "id": "EDGE-002",
+        "commitment": {
+          "id": "COM-002",
+          "text": "Conversation data is anonymized before model training."
+        },
+        "design_choice": {
+          "passage_id": "P-008",
+          "quote": "We store conversation logs for two years to improve the model.",
+          "interpretation": "This passage is treated as the current design evidence to inspect, not as a definitive statement of intent."
+        },
+        "scenario": {
+          "id": "SCN-002",
+          "agent_id": "affected_non_user",
+          "situation": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed AI-enabled research app.",
+          "synthetic": true
+        },
+        "consequence": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens.",
+        "affected_party": "A person represented in, inferred from, or indirectly affected by the system",
+        "relation": "evidence_gap",
+        "attention_required": true,
+        "attention_rule": "no_linked_lens_has_action_linked_evidence",
+        "attention_lens_ids": [
+          "affected_parties_distribution",
+          "perspective_participation",
+          "benefit_harm_assumptions"
+        ],
+        "attention_basis": "None of the 3 linked literature lenses contains Action-linked plan evidence: an action plus a condition, owner, timing cue, or trigger. This transparent coverage rule flags the path for closer inspection; it is not an ethics or severity score.",
+        "tension": "You committed to “Conversation data is anonymized before model training.”. Inspect whether the current design passage remains consistent with that commitment when a person represented in, inferred from, or indirectly affected by the system experiences this scenario.",
+        "status": "open",
+        "decision": null,
+        "status_reason": "No researcher resolution has been replayed yet.",
+        "provenance": {
+          "source_passage": {
+            "passage_id": "P-008",
+            "quote": "We store conversation logs for two years to improve the model.",
+            "interpretation": "This passage is treated as the current design evidence to inspect, not as a definitive statement of intent."
+          },
+          "lens_ids": [
+            "affected_parties_distribution",
+            "perspective_participation",
+            "benefit_harm_assumptions"
+          ],
+          "literature_ids": [
+            "do_chi_2023",
+            "bernstein_esr_2021",
+            "friedman_hendry_cards_2012",
+            "jobin_ai_guidelines_2019",
+            "salminen_personas_chi_2024"
+          ]
+        },
+        "epistemic_status": "researcher_commitment_plus_synthetic_probe",
+        "boundary_notice": "This visible mismatch is an invitation to inspect and choose, not a diagnosis that the researcher or project is unethical.",
+        "response_options": [
+          {
+            "id": "revise",
+            "label": "Revise the design",
+            "description": "Change a feature, scope, method, safeguard, or stopping rule."
+          },
+          {
+            "id": "contest_with_evidence",
+            "label": "Contest with evidence",
+            "description": "Explain why the scenario does not fit and cite inspectable evidence."
+          },
+          {
+            "id": "consult_stakeholder",
+            "label": "Consult real stakeholders",
+            "description": "Transfer the unresolved assumption to people with relevant lived or domain knowledge."
+          },
+          {
+            "id": "retain_with_rationale",
+            "label": "Retain with rationale",
+            "description": "Keep the design choice while recording the trade-off and reassessment trigger."
+          }
+        ],
+        "visual_path": [
+          {
+            "type": "commitment",
+            "label": "My commitment",
+            "text": "Conversation data is anonymized before model training."
+          },
+          {
+            "type": "design",
+            "label": "Current design evidence",
+            "text": "We store conversation logs for two years to improve the model."
+          },
+          {
+            "type": "scenario",
+            "label": "Synthetic encounter",
+            "text": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed AI-enabled research app."
+          },
+          {
+            "type": "party",
+            "label": "Affected party",
+            "text": "A person represented in, inferred from, or indirectly affected by the system"
+          },
+          {
+            "type": "consequence",
+            "label": "Possible consequence",
+            "text": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens."
+          },
+          {
+            "type": "choice",
+            "label": "Researcher decision",
+            "text": "Open"
+          }
+        ]
+      }
+    ],
+    "dissonance_visualization": {
+      "kind": "commitment_consequence_graph",
+      "nodes": [
+        {
+          "id": "EDGE-001-N1",
+          "edge_id": "EDGE-001",
+          "type": "commitment",
+          "label": "My commitment",
+          "text": "Counselors are notified only with student consent for high-risk cases."
+        },
+        {
+          "id": "EDGE-001-N2",
+          "edge_id": "EDGE-001",
+          "type": "design",
+          "label": "Current design evidence",
+          "text": "When the bot detects signs of severe distress it sends a notification to the student's assigned counselor."
+        },
+        {
+          "id": "EDGE-001-N3",
+          "edge_id": "EDGE-001",
+          "type": "scenario",
+          "label": "Synthetic encounter",
+          "text": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed AI-enabled research app."
+        },
+        {
+          "id": "EDGE-001-N4",
+          "edge_id": "EDGE-001",
+          "type": "party",
+          "label": "Affected party",
+          "text": "A person represented in, inferred from, or indirectly affected by the system"
+        },
+        {
+          "id": "EDGE-001-N5",
+          "edge_id": "EDGE-001",
+          "type": "consequence",
+          "label": "Possible consequence",
+          "text": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens."
+        },
+        {
+          "id": "EDGE-001-N6",
+          "edge_id": "EDGE-001",
+          "type": "choice",
+          "label": "Researcher decision",
+          "text": "Open"
+        },
+        {
+          "id": "EDGE-002-N1",
+          "edge_id": "EDGE-002",
+          "type": "commitment",
+          "label": "My commitment",
+          "text": "Conversation data is anonymized before model training."
+        },
+        {
+          "id": "EDGE-002-N2",
+          "edge_id": "EDGE-002",
+          "type": "design",
+          "label": "Current design evidence",
+          "text": "We store conversation logs for two years to improve the model."
+        },
+        {
+          "id": "EDGE-002-N3",
+          "edge_id": "EDGE-002",
+          "type": "scenario",
+          "label": "Synthetic encounter",
+          "text": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed AI-enabled research app."
+        },
+        {
+          "id": "EDGE-002-N4",
+          "edge_id": "EDGE-002",
+          "type": "party",
+          "label": "Affected party",
+          "text": "A person represented in, inferred from, or indirectly affected by the system"
+        },
+        {
+          "id": "EDGE-002-N5",
+          "edge_id": "EDGE-002",
+          "type": "consequence",
+          "label": "Possible consequence",
+          "text": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens."
+        },
+        {
+          "id": "EDGE-002-N6",
+          "edge_id": "EDGE-002",
+          "type": "choice",
+          "label": "Researcher decision",
+          "text": "Open"
+        }
+      ],
+      "links": [
+        {
+          "source": "EDGE-001-N1",
+          "target": "EDGE-001-N2",
+          "edge_id": "EDGE-001"
+        },
+        {
+          "source": "EDGE-001-N2",
+          "target": "EDGE-001-N3",
+          "edge_id": "EDGE-001"
+        },
+        {
+          "source": "EDGE-001-N3",
+          "target": "EDGE-001-N4",
+          "edge_id": "EDGE-001"
+        },
+        {
+          "source": "EDGE-001-N4",
+          "target": "EDGE-001-N5",
+          "edge_id": "EDGE-001"
+        },
+        {
+          "source": "EDGE-001-N5",
+          "target": "EDGE-001-N6",
+          "edge_id": "EDGE-001"
+        },
+        {
+          "source": "EDGE-002-N1",
+          "target": "EDGE-002-N2",
+          "edge_id": "EDGE-002"
+        },
+        {
+          "source": "EDGE-002-N2",
+          "target": "EDGE-002-N3",
+          "edge_id": "EDGE-002"
+        },
+        {
+          "source": "EDGE-002-N3",
+          "target": "EDGE-002-N4",
+          "edge_id": "EDGE-002"
+        },
+        {
+          "source": "EDGE-002-N4",
+          "target": "EDGE-002-N5",
+          "edge_id": "EDGE-002"
+        },
+        {
+          "source": "EDGE-002-N5",
+          "target": "EDGE-002-N6",
+          "edge_id": "EDGE-002"
+        }
+      ],
+      "interaction_hint": "Select any node to inspect its plan passage, synthetic scenario, lens, literature provenance, and available researcher decisions.",
+      "interpretation_boundary": "Graph links are deliberation paths, not causal estimates or ethics scores."
+    },
+    "analysis_mode": {
+      "deterministic_analysis_completed": true,
+      "llm_requested": false,
+      "llm_used": false,
+      "llm_affects_evidence_states": false,
+      "llm_status": "not_requested",
+      "execution_model": "deterministic_bounded_fallback",
+      "role_probes": []
+    },
+    "lens_assessment_mode": {
+      "llm_requested": false,
+      "llm_used": false,
+      "llm_affects_evidence_states": false,
+      "llm_status": "not_requested",
+      "execution_model": "deterministic_keyword_fallback",
+      "lens_assessments": []
+    },
+    "_meta": {
+      "id": "P01_campusmind",
+      "title": "CampusMind — campus mental-health chatbot",
+      "plan": "CampusMind is a conversational agent for university students to reflect on stress and low mood. Students log in with their campus single sign-on. The bot asks daily check-in questions and offers coping suggestions drawn from a CBT library. When the bot detects signs of severe distress it sends a notification to the student's assigned counselor. Students can turn notifications off in settings. We will pilot with 200 students over one semester and measure engagement and self-reported wellbeing. The model is a fine-tuned Qwen chat model hosted on a university server. We store conversation logs for two years to improve the model.",
+      "commitments": [
+        "Counselors are notified only with student consent for high-risk cases.",
+        "Conversation data is anonymized before model training."
+      ]
+    }
+  },
+  "P05_carecompanion": {
+    "passages": [
+      {
+        "id": "P-001",
+        "text": "CareCompanion is a sensor suite and voice agent for older adults living alone.",
+        "fingerprint": "7459f5b880a195c9"
+      },
+      {
+        "id": "P-002",
+        "text": "It detects falls, missed medication, and unusual inactivity, and alerts a family caregiver or clinic.",
+        "fingerprint": "d08fe9bf9fcfc1bd"
+      },
+      {
+        "id": "P-003",
+        "text": "The voice agent holds daily conversational check-ins and reminds the person to take medication.",
+        "fingerprint": "7bfa40aca822bc48"
+      },
+      {
+        "id": "P-004",
+        "text": "We trial with 60 participants aged 75+ over six months and measure hospitalization avoidance.",
+        "fingerprint": "80092e71dc38b9cb"
+      },
+      {
+        "id": "P-005",
+        "text": "Audio is processed on-device but transcripts are uploaded for the agent to personalize reminders.",
+        "fingerprint": "0174f515fe97524a"
+      },
+      {
+        "id": "P-006",
+        "text": "Caregivers can listen to selected audio clips.",
+        "fingerprint": "a4ff8684aefa0cd9"
+      }
+    ],
+    "lenses": [
+      {
+        "id": "lifecycle_integration",
+        "label": "Lifecycle integration",
+        "prompt": "Where will unintended consequences be reconsidered before, during, and after design, evaluation, and deployment?",
+        "operational_definition": "The plan links consequence reflection to named stages, checkpoints, or triggers across the research lifecycle.",
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021"
+        ],
+        "boundary": "A lifecycle mention is not evidence that reflection will change a decision.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: Where will unintended consequences be reconsidered before, during, and after design, evaluation, and deployment?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "benefit_harm_assumptions",
+        "label": "Benefit–harm assumptions",
+        "prompt": "Which promised benefits and harm assumptions could fail, for whom, and through what mechanism?",
+        "operational_definition": "The plan names anticipated benefits and plausible unintended harms, then explains assumptions or causal mechanisms behind both.",
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "jobin_ai_guidelines_2019"
+        ],
+        "boundary": "Listing generic benefits and risks does not establish their likelihood.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: Which promised benefits and harm assumptions could fail, for whom, and through what mechanism?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "affected_parties_distribution",
+        "label": "Affected parties and distribution",
+        "prompt": "Who may benefit, bear burdens, lose access, or be affected without being a direct user or study participant?",
+        "operational_definition": "The plan identifies direct and indirect affected parties, including subgroups, non-users, bystanders, and unequal distributions of benefit or burden.",
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "friedman_hendry_cards_2012",
+          "jobin_ai_guidelines_2019"
+        ],
+        "boundary": "A synthetic list of stakeholders is a hypothesis to validate, not representation.",
+        "state": "Claimed",
+        "state_id": "claimed",
+        "state_rank": 1,
+        "evidence": [
+          {
+            "passage_id": "P-002",
+            "quote": "It detects falls, missed medication, and unusual inactivity, and alerts a family caregiver or clinic.",
+            "matched_terms": [
+              "caregiver"
+            ]
+          },
+          {
+            "passage_id": "P-004",
+            "quote": "We trial with 60 participants aged 75+ over six months and measure hospitalization avoidance.",
+            "matched_terms": [
+              "participant"
+            ]
+          },
+          {
+            "passage_id": "P-006",
+            "quote": "Caregivers can listen to selected audio clips.",
+            "matched_terms": [
+              "caregiver"
+            ]
+          }
+        ],
+        "rationale": "The plan mentions the topic, but does not yet connect it to a mechanism and actionable decision.",
+        "next_action": "Explain who is affected, the causal mechanism, and which assumption may fail.",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "downstream_use_misuse_scale",
+        "label": "Downstream use, misuse, and scale",
+        "prompt": "How could the research output be repurposed, misused, combined with other systems, or deployed at a scale beyond the study?",
+        "operational_definition": "The plan considers intended and adversarial downstream uses, changed contexts, transfer to third parties, and consequences of scale.",
+        "source_ids": [
+          "do_chi_2023",
+          "friedman_hendry_cards_2012"
+        ],
+        "boundary": "Scenarios expose possibilities; they do not forecast misuse probabilities.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: How could the research output be repurposed, misused, combined with other systems, or deployed at a scale beyond the study?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "perspective_participation",
+        "label": "Perspective diversity and participation",
+        "prompt": "Whose situated knowledge is needed, and when will real affected people be able to challenge the team's assumptions?",
+        "operational_definition": "The plan names a concrete participation or consultation method, whose perspectives it includes, and how their input can alter the design.",
+        "source_ids": [
+          "do_chi_2023",
+          "friedman_hendry_cards_2012",
+          "salminen_personas_chi_2024"
+        ],
+        "boundary": "AI-generated roles never count as real stakeholder participation.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: Whose situated knowledge is needed, and when will real affected people be able to challenge the team's assumptions?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "responsibility_oversight_contestability",
+        "label": "Responsibility, oversight, and contestability",
+        "prompt": "Who remains accountable for AI-assisted decisions, and how can an affected person understand, challenge, override, or appeal them?",
+        "operational_definition": "The plan assigns a human decision owner and specifies review, override, explanation, contest, or appeal mechanisms.",
+        "source_ids": [
+          "do_chi_2023",
+          "jobin_ai_guidelines_2019"
+        ],
+        "boundary": "Human presence alone does not demonstrate meaningful oversight or accountability.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: Who remains accountable for AI-assisted decisions, and how can an affected person understand, challenge, override, or appeal them?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "evidence_analogues_horizon",
+        "label": "Prior cases and emerging-capability horizon",
+        "prompt": "Which prior incidents and current AI capabilities challenge the plan, and what new capability would trigger reassessment?",
+        "operational_definition": "The plan connects decisions to cited cases or evidence and names capability changes, model updates, or horizon triggers that require review.",
+        "source_ids": [
+          "do_chi_2023",
+          "friedman_hendry_cards_2012"
+        ],
+        "boundary": "A case analogy supports inquiry but does not prove the same outcome will occur.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: Which prior incidents and current AI capabilities challenge the plan, and what new capability would trigger reassessment?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "mitigation_design_commitment",
+        "label": "Mitigation and design-change commitment",
+        "prompt": "Which concrete feature, scope, method, safeguard, or stopping rule will change if the concern is credible?",
+        "operational_definition": "The plan binds a risk to an actionable design change, safeguard, scope limit, evaluation, fallback, or stopping condition.",
+        "source_ids": [
+          "bernstein_esr_2021",
+          "do_chi_2023",
+          "priolo_hypocrisy_2019"
+        ],
+        "boundary": "A proposed mitigation must still be tested; a commitment is not proof of effectiveness.",
+        "state": "Missing",
+        "state_id": "missing",
+        "state_rank": 0,
+        "evidence": [],
+        "rationale": "No plan passage matched this lens. Absence is a prompt for review, not proof of neglect.",
+        "next_action": "Add a plan passage that answers: Which concrete feature, scope, method, safeguard, or stopping rule will change if the concern is credible?",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      },
+      {
+        "id": "monitoring_learning_redress",
+        "label": "Monitoring, learning, and redress",
+        "prompt": "How will the team detect harm, receive complaints, correct errors, support remedy, and learn after release or study completion?",
+        "operational_definition": "The plan specifies observable indicators, review cadence or trigger, incident response, correction, redress, and accountable follow-up.",
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "jobin_ai_guidelines_2019"
+        ],
+        "boundary": "Logging without a response owner or remedy path is not actionable monitoring.",
+        "state": "Claimed",
+        "state_id": "claimed",
+        "state_rank": 1,
+        "evidence": [
+          {
+            "passage_id": "P-002",
+            "quote": "It detects falls, missed medication, and unusual inactivity, and alerts a family caregiver or clinic.",
+            "matched_terms": [
+              "alert"
+            ]
+          }
+        ],
+        "rationale": "The plan mentions the topic, but does not yet connect it to a mechanism and actionable decision.",
+        "next_action": "Explain who is affected, the causal mechanism, and which assumption may fail.",
+        "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved."
+      }
+    ],
+    "coverage": {
+      "type": "evidence_coverage_not_ethics_score",
+      "lens_count": 9,
+      "state_counts": {
+        "Missing": 7,
+        "Claimed": 2,
+        "Reasoned": 0,
+        "Action-linked": 0
+      },
+      "interpretation_boundary": "Missing, Claimed, Reasoned, and Action-linked are evidence-coverage states. They are not an ethics score, approval decision, or proof that a risk has been resolved.",
+      "is_ethics_score": false
+    },
+    "scenarios": [
+      {
+        "id": "SCN-001",
+        "agent_id": "direct_user",
+        "agent_label": "Direct user",
+        "role_id": "direct_user",
+        "role_label": "Direct user",
+        "synthetic": true,
+        "boundary_notice": "Synthetic perspective probe — not testimony, lived experience, population evidence, or a substitute for participation by real affected people.",
+        "objective": "Experience one consequential interaction with the proposed app and surface an agency, comprehension, access, or contestability tension.",
+        "affected_party": "A person using the proposed app in a consequential moment",
+        "situation": "A direct user receives an AI-mediated recommendation or classification and must decide whether to rely on it. The object under review is the proposed research app.",
+        "consequence": "The output may shape the user's choice while its basis, uncertainty, or route to challenge the result remains unclear.",
+        "first_person_probe": "I can see what the app recommends, but I need to know what it used, what it may have missed, and how I can reject or correct the result.",
+        "assumption_challenged": "A useful or accurate-looking output automatically preserves user agency.",
+        "revision_lever": "Make uncertainty, human authority, correction, and appeal visible at the decision point.",
+        "plan_evidence": {
+          "passage_id": "P-002",
+          "quote": "It detects falls, missed medication, and unusual inactivity, and alerts a family caregiver or clinic."
+        },
+        "lens_ids": [
+          "affected_parties_distribution",
+          "responsibility_oversight_contestability",
+          "benefit_harm_assumptions"
+        ],
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "friedman_hendry_cards_2012",
+          "jobin_ai_guidelines_2019"
+        ],
+        "source_links": [
+          {
+            "id": "do_chi_2023",
+            "url": "https://doi.org/10.1145/3544548.3581347"
+          },
+          {
+            "id": "bernstein_esr_2021",
+            "url": "https://doi.org/10.1073/pnas.2117261118"
+          },
+          {
+            "id": "friedman_hendry_cards_2012",
+            "url": "https://doi.org/10.1145/2207676.2208562"
+          },
+          {
+            "id": "jobin_ai_guidelines_2019",
+            "url": "https://doi.org/10.1038/s42256-019-0088-2"
+          }
+        ],
+        "epistemic_status": "synthetic_hypothesis",
+        "generation_mode": "deterministic_bounded_fallback",
+        "bounded_trace": [
+          {
+            "step": 1,
+            "action": "Locate one relevant plan passage",
+            "result": "P-002"
+          },
+          {
+            "step": 2,
+            "action": "Apply one bounded affected-party perspective",
+            "result": "Direct user"
+          },
+          {
+            "step": 3,
+            "action": "Construct one consequence and one intervention point",
+            "result": "SCN-001"
+          },
+          {
+            "step": 4,
+            "action": "Stop and return control to the researcher",
+            "result": "stopped"
+          }
+        ],
+        "visualization": {
+          "kind": "scenario_storyboard",
+          "frames": [
+            {
+              "id": "SCN-001-F1",
+              "type": "research_design",
+              "label": "Plan",
+              "text": "It detects falls, missed medication, and unusual inactivity, and alerts a family caregiver or clinic."
+            },
+            {
+              "id": "SCN-001-F2",
+              "type": "encounter",
+              "label": "Encounter",
+              "text": "A direct user receives an AI-mediated recommendation or classification and must decide whether to rely on it."
+            },
+            {
+              "id": "SCN-001-F3",
+              "type": "affected_voice",
+              "label": "Synthetic perspective",
+              "text": "I can see what the app recommends, but I need to know what it used, what it may have missed, and how I can reject or correct the result."
+            },
+            {
+              "id": "SCN-001-F4",
+              "type": "intervention",
+              "label": "Possible design lever",
+              "text": "Make uncertainty, human authority, correction, and appeal visible at the decision point."
+            }
+          ]
+        }
+      },
+      {
+        "id": "SCN-002",
+        "agent_id": "affected_non_user",
+        "agent_label": "Affected non-user",
+        "role_id": "affected_non_user",
+        "role_label": "Affected non-user",
+        "synthetic": true,
+        "boundary_notice": "Synthetic perspective probe — not testimony, lived experience, population evidence, or a substitute for participation by real affected people.",
+        "objective": "Trace how a person who did not directly choose the app could still be represented, inferred about, excluded, or burdened.",
+        "affected_party": "A person represented in, inferred from, or indirectly affected by the system",
+        "situation": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed research app.",
+        "consequence": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens.",
+        "first_person_probe": "I was not the person using this app, but its assumptions or data still shaped how another person or institution treated me.",
+        "assumption_challenged": "Studying direct users captures everyone materially affected by the research output.",
+        "revision_lever": "Validate the affected-party map with real representatives and revise scope or safeguards.",
+        "plan_evidence": {
+          "passage_id": "P-002",
+          "quote": "It detects falls, missed medication, and unusual inactivity, and alerts a family caregiver or clinic."
+        },
+        "lens_ids": [
+          "affected_parties_distribution",
+          "perspective_participation",
+          "benefit_harm_assumptions"
+        ],
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "friedman_hendry_cards_2012",
+          "jobin_ai_guidelines_2019",
+          "salminen_personas_chi_2024"
+        ],
+        "source_links": [
+          {
+            "id": "do_chi_2023",
+            "url": "https://doi.org/10.1145/3544548.3581347"
+          },
+          {
+            "id": "bernstein_esr_2021",
+            "url": "https://doi.org/10.1073/pnas.2117261118"
+          },
+          {
+            "id": "friedman_hendry_cards_2012",
+            "url": "https://doi.org/10.1145/2207676.2208562"
+          },
+          {
+            "id": "jobin_ai_guidelines_2019",
+            "url": "https://doi.org/10.1038/s42256-019-0088-2"
+          },
+          {
+            "id": "salminen_personas_chi_2024",
+            "url": "https://doi.org/10.1145/3613904.3642036"
+          }
+        ],
+        "epistemic_status": "synthetic_hypothesis",
+        "generation_mode": "deterministic_bounded_fallback",
+        "bounded_trace": [
+          {
+            "step": 1,
+            "action": "Locate one relevant plan passage",
+            "result": "P-002"
+          },
+          {
+            "step": 2,
+            "action": "Apply one bounded affected-party perspective",
+            "result": "Affected non-user"
+          },
+          {
+            "step": 3,
+            "action": "Construct one consequence and one intervention point",
+            "result": "SCN-002"
+          },
+          {
+            "step": 4,
+            "action": "Stop and return control to the researcher",
+            "result": "stopped"
+          }
+        ],
+        "visualization": {
+          "kind": "scenario_storyboard",
+          "frames": [
+            {
+              "id": "SCN-002-F1",
+              "type": "research_design",
+              "label": "Plan",
+              "text": "It detects falls, missed medication, and unusual inactivity, and alerts a family caregiver or clinic."
+            },
+            {
+              "id": "SCN-002-F2",
+              "type": "encounter",
+              "label": "Encounter",
+              "text": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context."
+            },
+            {
+              "id": "SCN-002-F3",
+              "type": "affected_voice",
+              "label": "Synthetic perspective",
+              "text": "I was not the person using this app, but its assumptions or data still shaped how another person or institution treated me."
+            },
+            {
+              "id": "SCN-002-F4",
+              "type": "intervention",
+              "label": "Possible design lever",
+              "text": "Validate the affected-party map with real representatives and revise scope or safeguards."
+            }
+          ]
+        }
+      },
+      {
+        "id": "SCN-003",
+        "agent_id": "downstream_deployer",
+        "agent_label": "Downstream deployer",
+        "role_id": "downstream_deployer",
+        "role_label": "Downstream deployer",
+        "synthetic": true,
+        "boundary_notice": "Synthetic perspective probe — not testimony, lived experience, population evidence, or a substitute for participation by real affected people.",
+        "objective": "Move the research prototype into a different context or larger scale and inspect which assumptions and safeguards stop transferring.",
+        "affected_party": "A later operator deploying the prototype outside the original study",
+        "situation": "A downstream team reuses the prototype with a different population, institutional incentive, or level of scale. The object under review is the proposed research app.",
+        "consequence": "Safeguards and validity assumptions tied to the study context may disappear while the output gains greater authority or reach.",
+        "first_person_probe": "The prototype looks ready to reuse, but I cannot tell which claims, populations, or safeguards were limited to the original study.",
+        "assumption_challenged": "A design that is acceptable in a bounded study transfers safely to later contexts.",
+        "revision_lever": "Encode scope limits, deployment conditions, and reassessment triggers in the artefact.",
+        "plan_evidence": {
+          "passage_id": "P-001",
+          "quote": "CareCompanion is a sensor suite and voice agent for older adults living alone."
+        },
+        "lens_ids": [
+          "downstream_use_misuse_scale",
+          "lifecycle_integration",
+          "mitigation_design_commitment"
+        ],
+        "source_ids": [
+          "do_chi_2023",
+          "friedman_hendry_cards_2012",
+          "bernstein_esr_2021",
+          "priolo_hypocrisy_2019"
+        ],
+        "source_links": [
+          {
+            "id": "do_chi_2023",
+            "url": "https://doi.org/10.1145/3544548.3581347"
+          },
+          {
+            "id": "friedman_hendry_cards_2012",
+            "url": "https://doi.org/10.1145/2207676.2208562"
+          },
+          {
+            "id": "bernstein_esr_2021",
+            "url": "https://doi.org/10.1073/pnas.2117261118"
+          },
+          {
+            "id": "priolo_hypocrisy_2019",
+            "url": "https://doi.org/10.1177/0146167219841621"
+          }
+        ],
+        "epistemic_status": "synthetic_hypothesis",
+        "generation_mode": "deterministic_bounded_fallback",
+        "bounded_trace": [
+          {
+            "step": 1,
+            "action": "Locate one relevant plan passage",
+            "result": "P-001"
+          },
+          {
+            "step": 2,
+            "action": "Apply one bounded affected-party perspective",
+            "result": "Downstream deployer"
+          },
+          {
+            "step": 3,
+            "action": "Construct one consequence and one intervention point",
+            "result": "SCN-003"
+          },
+          {
+            "step": 4,
+            "action": "Stop and return control to the researcher",
+            "result": "stopped"
+          }
+        ],
+        "visualization": {
+          "kind": "scenario_storyboard",
+          "frames": [
+            {
+              "id": "SCN-003-F1",
+              "type": "research_design",
+              "label": "Plan",
+              "text": "CareCompanion is a sensor suite and voice agent for older adults living alone."
+            },
+            {
+              "id": "SCN-003-F2",
+              "type": "encounter",
+              "label": "Encounter",
+              "text": "A downstream team reuses the prototype with a different population, institutional incentive, or level of scale."
+            },
+            {
+              "id": "SCN-003-F3",
+              "type": "affected_voice",
+              "label": "Synthetic perspective",
+              "text": "The prototype looks ready to reuse, but I cannot tell which claims, populations, or safeguards were limited to the original study."
+            },
+            {
+              "id": "SCN-003-F4",
+              "type": "intervention",
+              "label": "Possible design lever",
+              "text": "Encode scope limits, deployment conditions, and reassessment triggers in the artefact."
+            }
+          ]
+        }
+      },
+      {
+        "id": "SCN-004",
+        "agent_id": "adversarial_reuser",
+        "agent_label": "Adversarial reuser",
+        "role_id": "adversarial_reuser",
+        "role_label": "Adversarial reuser",
+        "synthetic": true,
+        "boundary_notice": "Synthetic perspective probe — not testimony, lived experience, population evidence, or a substitute for participation by real affected people.",
+        "objective": "Probe one plausible misuse or repurposing path without providing operational instructions for abuse.",
+        "affected_party": "People exposed to a deliberately repurposed or misused version of the app",
+        "situation": "A reuser seeks to turn an intended capability, data flow, or output toward surveillance, manipulation, exclusion, or another harmful end. The object under review is the proposed research app.",
+        "consequence": "A capability designed for benefit may lower the cost of harmful use or allow misuse to scale beyond the research team's control.",
+        "first_person_probe": "The same capability can serve a different goal when access, data, or deployment constraints are removed.",
+        "assumption_challenged": "Stating the intended use meaningfully constrains how the research output can be reused.",
+        "revision_lever": "Reduce unnecessary capability, gate access, test abuse paths, and define a stop or response rule.",
+        "plan_evidence": {
+          "passage_id": "P-001",
+          "quote": "CareCompanion is a sensor suite and voice agent for older adults living alone."
+        },
+        "lens_ids": [
+          "downstream_use_misuse_scale",
+          "mitigation_design_commitment",
+          "evidence_analogues_horizon"
+        ],
+        "source_ids": [
+          "do_chi_2023",
+          "friedman_hendry_cards_2012",
+          "bernstein_esr_2021",
+          "priolo_hypocrisy_2019"
+        ],
+        "source_links": [
+          {
+            "id": "do_chi_2023",
+            "url": "https://doi.org/10.1145/3544548.3581347"
+          },
+          {
+            "id": "friedman_hendry_cards_2012",
+            "url": "https://doi.org/10.1145/2207676.2208562"
+          },
+          {
+            "id": "bernstein_esr_2021",
+            "url": "https://doi.org/10.1073/pnas.2117261118"
+          },
+          {
+            "id": "priolo_hypocrisy_2019",
+            "url": "https://doi.org/10.1177/0146167219841621"
+          }
+        ],
+        "epistemic_status": "synthetic_hypothesis",
+        "generation_mode": "deterministic_bounded_fallback",
+        "bounded_trace": [
+          {
+            "step": 1,
+            "action": "Locate one relevant plan passage",
+            "result": "P-001"
+          },
+          {
+            "step": 2,
+            "action": "Apply one bounded affected-party perspective",
+            "result": "Adversarial reuser"
+          },
+          {
+            "step": 3,
+            "action": "Construct one consequence and one intervention point",
+            "result": "SCN-004"
+          },
+          {
+            "step": 4,
+            "action": "Stop and return control to the researcher",
+            "result": "stopped"
+          }
+        ],
+        "visualization": {
+          "kind": "scenario_storyboard",
+          "frames": [
+            {
+              "id": "SCN-004-F1",
+              "type": "research_design",
+              "label": "Plan",
+              "text": "CareCompanion is a sensor suite and voice agent for older adults living alone."
+            },
+            {
+              "id": "SCN-004-F2",
+              "type": "encounter",
+              "label": "Encounter",
+              "text": "A reuser seeks to turn an intended capability, data flow, or output toward surveillance, manipulation, exclusion, or another harmful end."
+            },
+            {
+              "id": "SCN-004-F3",
+              "type": "affected_voice",
+              "label": "Synthetic perspective",
+              "text": "The same capability can serve a different goal when access, data, or deployment constraints are removed."
+            },
+            {
+              "id": "SCN-004-F4",
+              "type": "intervention",
+              "label": "Possible design lever",
+              "text": "Reduce unnecessary capability, gate access, test abuse paths, and define a stop or response rule."
+            }
+          ]
+        }
+      },
+      {
+        "id": "SCN-005",
+        "agent_id": "maintainer_auditor",
+        "agent_label": "Maintainer / auditor",
+        "role_id": "maintainer_auditor",
+        "role_label": "Maintainer / auditor",
+        "synthetic": true,
+        "boundary_notice": "Synthetic perspective probe — not testimony, lived experience, population evidence, or a substitute for participation by real affected people.",
+        "objective": "Inspect a later model, data, or context change and ask who detects failure, acts, documents the decision, and supports redress.",
+        "affected_party": "Future users and affected people after a model, data, or context change",
+        "situation": "A model update, new data source, or changed deployment context alters behavior after the initial evaluation. The object under review is the proposed research app.",
+        "consequence": "A previously acceptable result may drift or fail without a named monitoring trigger, decision owner, correction route, or remedy.",
+        "first_person_probe": "I can observe that the system changed, but I need a threshold for action, a responsible owner, and a way to repair affected outcomes.",
+        "assumption_challenged": "Initial evaluation remains sufficient as models, data, and contexts change.",
+        "revision_lever": "Bind monitoring indicators to an owner, review cadence, rollback, correction, and redress.",
+        "plan_evidence": {
+          "passage_id": "P-002",
+          "quote": "It detects falls, missed medication, and unusual inactivity, and alerts a family caregiver or clinic."
+        },
+        "lens_ids": [
+          "monitoring_learning_redress",
+          "responsibility_oversight_contestability",
+          "evidence_analogues_horizon"
+        ],
+        "source_ids": [
+          "do_chi_2023",
+          "bernstein_esr_2021",
+          "jobin_ai_guidelines_2019",
+          "friedman_hendry_cards_2012"
+        ],
+        "source_links": [
+          {
+            "id": "do_chi_2023",
+            "url": "https://doi.org/10.1145/3544548.3581347"
+          },
+          {
+            "id": "bernstein_esr_2021",
+            "url": "https://doi.org/10.1073/pnas.2117261118"
+          },
+          {
+            "id": "jobin_ai_guidelines_2019",
+            "url": "https://doi.org/10.1038/s42256-019-0088-2"
+          },
+          {
+            "id": "friedman_hendry_cards_2012",
+            "url": "https://doi.org/10.1145/2207676.2208562"
+          }
+        ],
+        "epistemic_status": "synthetic_hypothesis",
+        "generation_mode": "deterministic_bounded_fallback",
+        "bounded_trace": [
+          {
+            "step": 1,
+            "action": "Locate one relevant plan passage",
+            "result": "P-002"
+          },
+          {
+            "step": 2,
+            "action": "Apply one bounded affected-party perspective",
+            "result": "Maintainer / auditor"
+          },
+          {
+            "step": 3,
+            "action": "Construct one consequence and one intervention point",
+            "result": "SCN-005"
+          },
+          {
+            "step": 4,
+            "action": "Stop and return control to the researcher",
+            "result": "stopped"
+          }
+        ],
+        "visualization": {
+          "kind": "scenario_storyboard",
+          "frames": [
+            {
+              "id": "SCN-005-F1",
+              "type": "research_design",
+              "label": "Plan",
+              "text": "It detects falls, missed medication, and unusual inactivity, and alerts a family caregiver or clinic."
+            },
+            {
+              "id": "SCN-005-F2",
+              "type": "encounter",
+              "label": "Encounter",
+              "text": "A model update, new data source, or changed deployment context alters behavior after the initial evaluation."
+            },
+            {
+              "id": "SCN-005-F3",
+              "type": "affected_voice",
+              "label": "Synthetic perspective",
+              "text": "I can observe that the system changed, but I need a threshold for action, a responsible owner, and a way to repair affected outcomes."
+            },
+            {
+              "id": "SCN-005-F4",
+              "type": "intervention",
+              "label": "Possible design lever",
+              "text": "Bind monitoring indicators to an owner, review cadence, rollback, correction, and redress."
+            }
+          ]
+        }
+      }
+    ],
+    "dissonance_edges": [
+      {
+        "id": "EDGE-001",
+        "commitment": {
+          "id": "COM-001",
+          "text": "The adult gives explicit consent and can disable any sensor at any time."
+        },
+        "design_choice": {
+          "passage_id": "P-001",
+          "quote": "CareCompanion is a sensor suite and voice agent for older adults living alone.",
+          "interpretation": "This passage is treated as the current design evidence to inspect, not as a definitive statement of intent."
+        },
+        "scenario": {
+          "id": "SCN-002",
+          "agent_id": "affected_non_user",
+          "situation": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed research app.",
+          "synthetic": true
+        },
+        "consequence": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens.",
+        "affected_party": "A person represented in, inferred from, or indirectly affected by the system",
+        "relation": "evidence_gap",
+        "attention_required": true,
+        "attention_rule": "no_linked_lens_has_action_linked_evidence",
+        "attention_lens_ids": [
+          "affected_parties_distribution",
+          "perspective_participation",
+          "benefit_harm_assumptions"
+        ],
+        "attention_basis": "None of the 3 linked literature lenses contains Action-linked plan evidence: an action plus a condition, owner, timing cue, or trigger. This transparent coverage rule flags the path for closer inspection; it is not an ethics or severity score.",
+        "tension": "You committed to “The adult gives explicit consent and can disable any sensor at any time.”. Inspect whether the current design passage remains consistent with that commitment when a person represented in, inferred from, or indirectly affected by the system experiences this scenario.",
+        "status": "open",
+        "decision": null,
+        "status_reason": "No researcher resolution has been replayed yet.",
+        "provenance": {
+          "source_passage": {
+            "passage_id": "P-001",
+            "quote": "CareCompanion is a sensor suite and voice agent for older adults living alone.",
+            "interpretation": "This passage is treated as the current design evidence to inspect, not as a definitive statement of intent."
+          },
+          "lens_ids": [
+            "affected_parties_distribution",
+            "perspective_participation",
+            "benefit_harm_assumptions"
+          ],
+          "literature_ids": [
+            "do_chi_2023",
+            "bernstein_esr_2021",
+            "friedman_hendry_cards_2012",
+            "jobin_ai_guidelines_2019",
+            "salminen_personas_chi_2024"
+          ]
+        },
+        "epistemic_status": "researcher_commitment_plus_synthetic_probe",
+        "boundary_notice": "This visible mismatch is an invitation to inspect and choose, not a diagnosis that the researcher or project is unethical.",
+        "response_options": [
+          {
+            "id": "revise",
+            "label": "Revise the design",
+            "description": "Change a feature, scope, method, safeguard, or stopping rule."
+          },
+          {
+            "id": "contest_with_evidence",
+            "label": "Contest with evidence",
+            "description": "Explain why the scenario does not fit and cite inspectable evidence."
+          },
+          {
+            "id": "consult_stakeholder",
+            "label": "Consult real stakeholders",
+            "description": "Transfer the unresolved assumption to people with relevant lived or domain knowledge."
+          },
+          {
+            "id": "retain_with_rationale",
+            "label": "Retain with rationale",
+            "description": "Keep the design choice while recording the trade-off and reassessment trigger."
+          }
+        ],
+        "visual_path": [
+          {
+            "type": "commitment",
+            "label": "My commitment",
+            "text": "The adult gives explicit consent and can disable any sensor at any time."
+          },
+          {
+            "type": "design",
+            "label": "Current design evidence",
+            "text": "CareCompanion is a sensor suite and voice agent for older adults living alone."
+          },
+          {
+            "type": "scenario",
+            "label": "Synthetic encounter",
+            "text": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed research app."
+          },
+          {
+            "type": "party",
+            "label": "Affected party",
+            "text": "A person represented in, inferred from, or indirectly affected by the system"
+          },
+          {
+            "type": "consequence",
+            "label": "Possible consequence",
+            "text": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens."
+          },
+          {
+            "type": "choice",
+            "label": "Researcher decision",
+            "text": "Open"
+          }
+        ]
+      },
+      {
+        "id": "EDGE-002",
+        "commitment": {
+          "id": "COM-002",
+          "text": "Only clinically relevant clips are shared with caregivers, not whole days."
+        },
+        "design_choice": {
+          "passage_id": "P-006",
+          "quote": "Caregivers can listen to selected audio clips.",
+          "interpretation": "This passage is treated as the current design evidence to inspect, not as a definitive statement of intent."
+        },
+        "scenario": {
+          "id": "SCN-002",
+          "agent_id": "affected_non_user",
+          "situation": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed research app.",
+          "synthetic": true
+        },
+        "consequence": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens.",
+        "affected_party": "A person represented in, inferred from, or indirectly affected by the system",
+        "relation": "evidence_gap",
+        "attention_required": true,
+        "attention_rule": "no_linked_lens_has_action_linked_evidence",
+        "attention_lens_ids": [
+          "affected_parties_distribution",
+          "perspective_participation",
+          "benefit_harm_assumptions"
+        ],
+        "attention_basis": "None of the 3 linked literature lenses contains Action-linked plan evidence: an action plus a condition, owner, timing cue, or trigger. This transparent coverage rule flags the path for closer inspection; it is not an ethics or severity score.",
+        "tension": "You committed to “Only clinically relevant clips are shared with caregivers, not whole days.”. Inspect whether the current design passage remains consistent with that commitment when a person represented in, inferred from, or indirectly affected by the system experiences this scenario.",
+        "status": "open",
+        "decision": null,
+        "status_reason": "No researcher resolution has been replayed yet.",
+        "provenance": {
+          "source_passage": {
+            "passage_id": "P-006",
+            "quote": "Caregivers can listen to selected audio clips.",
+            "interpretation": "This passage is treated as the current design evidence to inspect, not as a definitive statement of intent."
+          },
+          "lens_ids": [
+            "affected_parties_distribution",
+            "perspective_participation",
+            "benefit_harm_assumptions"
+          ],
+          "literature_ids": [
+            "do_chi_2023",
+            "bernstein_esr_2021",
+            "friedman_hendry_cards_2012",
+            "jobin_ai_guidelines_2019",
+            "salminen_personas_chi_2024"
+          ]
+        },
+        "epistemic_status": "researcher_commitment_plus_synthetic_probe",
+        "boundary_notice": "This visible mismatch is an invitation to inspect and choose, not a diagnosis that the researcher or project is unethical.",
+        "response_options": [
+          {
+            "id": "revise",
+            "label": "Revise the design",
+            "description": "Change a feature, scope, method, safeguard, or stopping rule."
+          },
+          {
+            "id": "contest_with_evidence",
+            "label": "Contest with evidence",
+            "description": "Explain why the scenario does not fit and cite inspectable evidence."
+          },
+          {
+            "id": "consult_stakeholder",
+            "label": "Consult real stakeholders",
+            "description": "Transfer the unresolved assumption to people with relevant lived or domain knowledge."
+          },
+          {
+            "id": "retain_with_rationale",
+            "label": "Retain with rationale",
+            "description": "Keep the design choice while recording the trade-off and reassessment trigger."
+          }
+        ],
+        "visual_path": [
+          {
+            "type": "commitment",
+            "label": "My commitment",
+            "text": "Only clinically relevant clips are shared with caregivers, not whole days."
+          },
+          {
+            "type": "design",
+            "label": "Current design evidence",
+            "text": "Caregivers can listen to selected audio clips."
+          },
+          {
+            "type": "scenario",
+            "label": "Synthetic encounter",
+            "text": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed research app."
+          },
+          {
+            "type": "party",
+            "label": "Affected party",
+            "text": "A person represented in, inferred from, or indirectly affected by the system"
+          },
+          {
+            "type": "consequence",
+            "label": "Possible consequence",
+            "text": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens."
+          },
+          {
+            "type": "choice",
+            "label": "Researcher decision",
+            "text": "Open"
+          }
+        ]
+      }
+    ],
+    "dissonance_visualization": {
+      "kind": "commitment_consequence_graph",
+      "nodes": [
+        {
+          "id": "EDGE-001-N1",
+          "edge_id": "EDGE-001",
+          "type": "commitment",
+          "label": "My commitment",
+          "text": "The adult gives explicit consent and can disable any sensor at any time."
+        },
+        {
+          "id": "EDGE-001-N2",
+          "edge_id": "EDGE-001",
+          "type": "design",
+          "label": "Current design evidence",
+          "text": "CareCompanion is a sensor suite and voice agent for older adults living alone."
+        },
+        {
+          "id": "EDGE-001-N3",
+          "edge_id": "EDGE-001",
+          "type": "scenario",
+          "label": "Synthetic encounter",
+          "text": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed research app."
+        },
+        {
+          "id": "EDGE-001-N4",
+          "edge_id": "EDGE-001",
+          "type": "party",
+          "label": "Affected party",
+          "text": "A person represented in, inferred from, or indirectly affected by the system"
+        },
+        {
+          "id": "EDGE-001-N5",
+          "edge_id": "EDGE-001",
+          "type": "consequence",
+          "label": "Possible consequence",
+          "text": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens."
+        },
+        {
+          "id": "EDGE-001-N6",
+          "edge_id": "EDGE-001",
+          "type": "choice",
+          "label": "Researcher decision",
+          "text": "Open"
+        },
+        {
+          "id": "EDGE-002-N1",
+          "edge_id": "EDGE-002",
+          "type": "commitment",
+          "label": "My commitment",
+          "text": "Only clinically relevant clips are shared with caregivers, not whole days."
+        },
+        {
+          "id": "EDGE-002-N2",
+          "edge_id": "EDGE-002",
+          "type": "design",
+          "label": "Current design evidence",
+          "text": "Caregivers can listen to selected audio clips."
+        },
+        {
+          "id": "EDGE-002-N3",
+          "edge_id": "EDGE-002",
+          "type": "scenario",
+          "label": "Synthetic encounter",
+          "text": "The app's data or output influences someone who never directly used the prototype or agreed to its decision context. The object under review is the proposed research app."
+        },
+        {
+          "id": "EDGE-002-N4",
+          "edge_id": "EDGE-002",
+          "type": "party",
+          "label": "Affected party",
+          "text": "A person represented in, inferred from, or indirectly affected by the system"
+        },
+        {
+          "id": "EDGE-002-N5",
+          "edge_id": "EDGE-002",
+          "type": "consequence",
+          "label": "Possible consequence",
+          "text": "Benefits may accrue to direct users while an unconsulted non-user bears privacy, exclusion, stigma, or allocation burdens."
+        },
+        {
+          "id": "EDGE-002-N6",
+          "edge_id": "EDGE-002",
+          "type": "choice",
+          "label": "Researcher decision",
+          "text": "Open"
+        }
+      ],
+      "links": [
+        {
+          "source": "EDGE-001-N1",
+          "target": "EDGE-001-N2",
+          "edge_id": "EDGE-001"
+        },
+        {
+          "source": "EDGE-001-N2",
+          "target": "EDGE-001-N3",
+          "edge_id": "EDGE-001"
+        },
+        {
+          "source": "EDGE-001-N3",
+          "target": "EDGE-001-N4",
+          "edge_id": "EDGE-001"
+        },
+        {
+          "source": "EDGE-001-N4",
+          "target": "EDGE-001-N5",
+          "edge_id": "EDGE-001"
+        },
+        {
+          "source": "EDGE-001-N5",
+          "target": "EDGE-001-N6",
+          "edge_id": "EDGE-001"
+        },
+        {
+          "source": "EDGE-002-N1",
+          "target": "EDGE-002-N2",
+          "edge_id": "EDGE-002"
+        },
+        {
+          "source": "EDGE-002-N2",
+          "target": "EDGE-002-N3",
+          "edge_id": "EDGE-002"
+        },
+        {
+          "source": "EDGE-002-N3",
+          "target": "EDGE-002-N4",
+          "edge_id": "EDGE-002"
+        },
+        {
+          "source": "EDGE-002-N4",
+          "target": "EDGE-002-N5",
+          "edge_id": "EDGE-002"
+        },
+        {
+          "source": "EDGE-002-N5",
+          "target": "EDGE-002-N6",
+          "edge_id": "EDGE-002"
+        }
+      ],
+      "interaction_hint": "Select any node to inspect its plan passage, synthetic scenario, lens, literature provenance, and available researcher decisions.",
+      "interpretation_boundary": "Graph links are deliberation paths, not causal estimates or ethics scores."
+    },
+    "analysis_mode": {
+      "deterministic_analysis_completed": true,
+      "llm_requested": false,
+      "llm_used": false,
+      "llm_affects_evidence_states": false,
+      "llm_status": "not_requested",
+      "execution_model": "deterministic_bounded_fallback",
+      "role_probes": []
+    },
+    "lens_assessment_mode": {
+      "llm_requested": false,
+      "llm_used": false,
+      "llm_affects_evidence_states": false,
+      "llm_status": "not_requested",
+      "execution_model": "deterministic_keyword_fallback",
+      "lens_assessments": []
+    },
+    "_meta": {
+      "id": "P05_carecompanion",
+      "title": "CareCompanion — elder independent-living monitor",
+      "plan": "CareCompanion is a sensor suite and voice agent for older adults living alone. It detects falls, missed medication, and unusual inactivity, and alerts a family caregiver or clinic. The voice agent holds daily conversational check-ins and reminds the person to take medication. We trial with 60 participants aged 75+ over six months and measure hospitalization avoidance. Audio is processed on-device but transcripts are uploaded for the agent to personalize reminders. Caregivers can listen to selected audio clips.",
+      "commitments": [
+        "The adult gives explicit consent and can disable any sensor at any time.",
+        "Only clinically relevant clips are shared with caregivers, not whole days."
+      ]
+    }
+  }
+}
