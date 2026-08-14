@@ -75,6 +75,7 @@ characterized via simulation.
 \ccsdesc[300]{Computers and Society~Public Policy Issues}
 \keywords{ethical AI; value-sensitive design; critical reflection; multimodal interfaces; LLM agents}
 
+\emergencystretch=3em
 \begin{document}
 \maketitle
 
@@ -221,14 +222,14 @@ mechanisms. The left column lists the original papers' goals (rapport,
 relationship, felt agreement); the right column lists our inverted
 refinements (critical distance, non-sycophancy, user-owned realization).
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{fig2_mechanism_map.pdf}
 \caption{Borrowing and inverting rapport-building mechanisms from CHI'26
 anchors. We reuse each paper's mechanism while reversing its goal: a
 critical-reflection tool must resist sycophancy and preserve critical distance.}
 \label{fig:mechanisms}
-\end{figure}
+\end{figure*}
 
 % ---------------------------------------------------------------------------
 \section{SafeBARS: The Multimodal Ethical Mirror}
@@ -274,20 +275,20 @@ Figure~\ref{fig:ui}):
 \begin{figure}[t]
 \centering
 \begin{subfigure}{0.48\columnwidth}
-\includegraphics[width=\columnwidth]{shot_step2_lenses.png}
+\includegraphics[width=\linewidth]{shot_step2_lenses.png}
 \caption{Lens selection.}
 \end{subfigure}\hfill
 \begin{subfigure}{0.48\columnwidth}
-\includegraphics[width=\columnwidth]{shot_step3_roles.png}
+\includegraphics[width=\linewidth]{shot_step3_roles.png}
 \caption{Role probes.}
 \end{subfigure}
 
 \begin{subfigure}{0.48\columnwidth}
-\includegraphics[width=\columnwidth]{shot_step4_map.png}
+\includegraphics[width=\linewidth]{shot_step4_map.png}
 \caption{Stakeholder map.}
 \end{subfigure}\hfill
 \begin{subfigure}{0.48\columnwidth}
-\includegraphics[width=\columnwidth]{shot_step6_ledger.png}
+\includegraphics[width=\linewidth]{shot_step6_ledger.png}
 \caption{Revision ledger.}
 \end{subfigure}
 \caption{Selected interface views of the deployed SafeBARS mirror.}
@@ -437,7 +438,7 @@ researcher} to respond to every tension. This characterizes how engine choice
 shapes surfaced tensions and critical-distance behavior (RQ5). It is a system
 characterization, \emph{not} a human-outcome claim.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
 \caption{Simulated researcher engagement by persona. The graded engagement
 score assigns 0 to add\_safeguard, 1 to revise\_design, and 2 to
@@ -453,7 +454,7 @@ senior\_pi & 24 & 11 & 7 & 6 & 0.79 \\
 ethics\_advocate & 18 & 9 & 6 & 3 & 0.67 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 We instantiated four personas with different ethical stances: a junior
 graduate, an industry lead, a senior PI, and an ethics advocate. For each
@@ -522,13 +523,13 @@ We ran both the pre-deep-audit mirror and the mirror with the deep-audit layer
 on the \emph{identical} CampusMind plan. Table~\ref{tab:ablation} reports the
 discovery cues each version produced.
 
-\begin{table}[t]
+\begin{table*}[t]
   \centering
   \caption{Discovery coverage on the CampusMind plan. Counts are the tool's
   actual outputs on identical input; the deep-audit layer adds eight classes
   of cue the prior version missed.}
   \label{tab:ablation}
-  \begin{tabular}{lcc}
+  \begin{tabular}{p{0.6\textwidth}cc}
     \toprule
     Discovery cue & Pre-deep-audit & + deep-audit \\
     \midrule
@@ -542,7 +543,7 @@ discovery cues each version produced.
     Evidence-bridge types & 0 & 5 \\
     \bottomrule
   \end{tabular}
-\end{table}
+\end{table*}
 
 The single most consequential addition is an \textbf{internal contradiction}
 (CNTR-001): the plan claims ``monitoring is opt-out, not hidden,'' yet the
