@@ -619,22 +619,38 @@ a:focus-visible {
 .companion-panel .actions .text-button { width: 100%; justify-content: center; }
 
 /* Issue gallery picker (replaces "Describe a different issue") */
-.issue-gallery { margin-top: 4px; }
-.issue-gallery .gallery-hint {
+/* AI-driven concern panel (replaces the old hardcoded gallery) */
+.ai-badge {
+  display: inline-block;
+  font-family: var(--font-rounded);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--navy);
+  background: var(--yellow);
+  border: 2px solid var(--navy);
+  border-radius: 999px;
+  padding: 2px 9px;
+  margin-left: 8px;
+  vertical-align: middle;
+  box-shadow: 2px 2px 0 var(--navy);
+}
+.ai-related { margin-top: 14px; }
+.related-hint {
   display: block;
   font-size: 12.5px;
   font-weight: 700;
   color: var(--muted);
   margin-bottom: 8px;
-  text-align: center;
 }
-.issue-gallery .gallery-chips {
+.gallery-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  justify-content: center;
+  justify-content: flex-start;
 }
-.issue-gallery .gallery-chips button {
+.gallery-chips button {
   font-family: var(--font-body);
   font-size: 12px;
   font-weight: 700;
@@ -644,19 +660,46 @@ a:focus-visible {
   background: var(--white);
   color: var(--ink);
   cursor: pointer;
+  text-align: left;
   transition: transform .12s, border-color .12s, background .12s, box-shadow .12s;
 }
-.issue-gallery .gallery-chips button:hover,
-.issue-gallery .gallery-chips button:focus-visible {
+.gallery-chips button:hover,
+.gallery-chips button:focus-visible {
   border-color: var(--hero-blue);
   background: var(--soft-blue);
   color: var(--hero-blue-dark);
   transform: translateY(-1px);
   box-shadow: 2px 2px 0 var(--hero-blue);
 }
-.issue-gallery .gallery-chips button:active {
+.gallery-chips button:active {
   transform: translateY(0);
   box-shadow: none;
+}
+.re-analyze { margin-top: 16px; }
+.re-analyze label {
+  display: block;
+  font-family: var(--font-rounded);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--navy-2);
+  margin-bottom: 6px;
+}
+.re-analyze-row { display: flex; gap: 8px; }
+.re-analyze-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 9px 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--ink);
+}
+.re-analyze-row input:focus-visible {
+  outline: none;
+  border-color: var(--hero-blue);
+  box-shadow: 0 0 0 3px var(--soft-blue);
 }
 
 /* ============ INTRO SCREENS ============ */

@@ -6,6 +6,7 @@ that the experimental intervention can be versioned and analysed independently.
 
 from __future__ import annotations
 
+import json
 import random
 from typing import Any, Dict, Tuple
 
@@ -21,6 +22,7 @@ from .mirror_study_data import (
 )
 from .mirror_study_store import MirrorStudyStore
 from .ratelimit import rate_limit
+from .llm_client import LLMClient
 
 
 mirror_study_api = Blueprint(
@@ -30,6 +32,117 @@ mirror_study_api = Blueprint(
 )
 
 mirror_study_store = MirrorStudyStore()
+
+# AI analysis client (mirrors the transition-companion architecture: a server-side
+# endpoint proxies an LLM and returns structured JSON the front end renders).
+_LLM: Any = None
+
+
+def _get_llm() -> Any:
+    global _LLM
+    if _LLM is None:
+        _LLM = LLMClient()
+    return _LLM
+
+
+# Image ids the AI is allowed to pick from (keeps the visual grounded in the
+# curated, paper-ready illustration set rather than generating images on the fly).
+_IMAGE_IDS = [item["id"] for item in ISSUE_GALLERY if item["id"] != "default"]
+_IMAGE_BY_ID = {item["id"]: item for item in ISSUE_GALLERY}
+
+_ANALYZE_SYSTEM = (
+    "You are Mirror, an ethical-research companion for the SafeBARS StressLens study. "
+    "A graduate researcher will describe a real ethical concern from their own AI/ML research. "
+    "Your job is to help them reflect, not to judge their design. Respond with ONLY a JSON "
+    "object (no markdown, no code fences) using exactly these keys:\n"
+    "- summary: one warm, non-judgemental sentence that acknowledges the concern\n"
+    "- reflection: 2-3 sentences that surface the key ethical tension(s) and why they "
+    "matter for someone designing an ethics protocol\n"
+    "- theme_label: a short 3-8 word label for the concern\n"
+    "- suggested_image_id: the id from this list that BEST matches the concern: "
+    f"{', '.join(_IMAGE_IDS)}\n"
+    "- related_concerns: an array of exactly 3 short concern phrases (4-8 words each), "
+    "each a DIFFERENT facet the researcher might also want to consider\n"
+    "- ethical_dimensions: an array of 2-4 short ethical-dimension labels (2-4 words each) "
+    "that apply to this concern\n"
+    "Be concise, specific and genuinely useful. Never invent an image id outside the list."
+)
+
+
+def _extract_json(text: str) -> Any:
+    """Best-effort JSON extraction from an LLM response."""
+    if not text:
+        return None
+    text = text.strip()
+    if text.startswith("```"):
+        parts = text.split("```", 2)
+        if len(parts) >= 2:
+            text = parts[1]
+            if text.lower().startswith("json"):
+                text = text[4:]
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end <= start:
+        return None
+    try:
+        return json.loads(text[start : end + 1])
+    except Exception:
+        return None
+
+
+def _normalize_analysis(data: Dict[str, Any], issue: str) -> Dict[str, Any]:
+    suggested = data.get("suggested_image_id")
+    if suggested not in _IMAGE_BY_ID:
+        suggested = classify_issue(issue)["id"]
+    theme = _IMAGE_BY_ID.get(suggested, ISSUE_GALLERY[-1])
+    related = [str(x).strip() for x in data.get("related_concerns", []) if str(x).strip()][:3]
+    dims = [str(x).strip() for x in data.get("ethical_dimensions", []) if str(x).strip()][:4]
+    return {
+        "issue": issue,
+        "summary": str(data.get("summary", "")).strip()[:400],
+        "reflection": str(data.get("reflection", "")).strip()[:1200],
+        "theme_label": str(data.get("theme_label", theme["label"])).strip()[:120],
+        "theme_id": theme["id"],
+        "image_url": _image_url(theme["image"]),
+        "related_concerns": related,
+        "ethical_dimensions": dims,
+    }
+
+
+def _fallback_analysis(issue: str) -> Dict[str, Any]:
+    theme = classify_issue(issue)
+    others = [t["label"] for t in ISSUE_GALLERY if t["id"] not in (theme["id"], "default")]
+    return {
+        "issue": issue,
+        "summary": "Thanks for sharing that — it is worth thinking through carefully.",
+        "reflection": theme["reflection"],
+        "theme_label": theme["label"],
+        "theme_id": theme["id"],
+        "image_url": _image_url(theme["image"]),
+        "related_concerns": others[:3],
+        "ethical_dimensions": [],
+    }
+
+
+def _analyze_with_llm(issue: str) -> Dict[str, Any]:
+    """Call the LLM and return a normalized analysis, or None on any failure."""
+    llm = _get_llm()
+    if not (llm and llm.is_configured()):
+        return None
+    try:
+        resp = llm.chat(
+            [
+                {"role": "system", "content": _ANALYZE_SYSTEM},
+                {"role": "user", "content": f"Researcher's concern: {issue}"},
+            ],
+            temperature=0.4,
+        )
+        data = _extract_json(resp) if resp else None
+        if data and data.get("reflection") and isinstance(data.get("related_concerns"), list):
+            return _normalize_analysis(data, issue)
+    except Exception:
+        current_app.logger.exception("Mirror /analyze LLM call failed")
+    return None
 
 
 def _json_object() -> Tuple[Dict[str, Any], Any]:
@@ -123,6 +236,37 @@ def issue_image():
     })
 
 
+@mirror_study_api.post("/analyze")
+@rate_limit(max_requests=15, window_seconds=60, scope="mirror_study_analyze")
+def analyze():
+    """AI-analyse a researcher's free-text concern and return structured content.
+
+    This mirrors the transition-companion architecture: the server proxies an LLM
+    and returns structured JSON (reflection, theme, related concerns, ethical
+    dimensions) that the front end renders. When no LLM key is configured it
+    degrades gracefully to the deterministic classifier so the study still works.
+
+    Body: {"issue": "free-text description of the ethical concern"}
+    Response: {"success": true, "source": "ai"|"fallback", "theme_label", ...}
+    """
+    payload, error = _json_object()
+    if error:
+        return error
+
+    issue = (payload.get("issue") or "").strip()
+    if not issue:
+        return jsonify({"success": False, "error": "'issue' text is required."}), 400
+    if len(issue) > 2000:
+        return jsonify({"success": False, "error": "Issue text is too long (max 2000 chars)."}), 400
+
+    analysis = _analyze_with_llm(issue)
+    source = "ai" if analysis is not None else "fallback"
+    if analysis is None:
+        analysis = _fallback_analysis(issue)
+
+    return jsonify({"success": True, "source": source, **analysis})
+
+
 @mirror_study_api.post("/sessions")
 @rate_limit(max_requests=20, window_seconds=60, scope="mirror_study_create")
 def create_session():
@@ -146,7 +290,14 @@ def create_session():
 
     condition = _condition_with_urls(CONDITIONS[condition_id])
     issue_text = (payload.get("issue") or "").strip()
-    issue_theme = classify_issue(issue_text) if issue_text else None
+    req_theme = payload.get("theme_id")
+    if issue_text:
+        issue_theme = (
+            next((t for t in ISSUE_GALLERY if t["id"] == req_theme), None)
+            or classify_issue(issue_text)
+        )
+    else:
+        issue_theme = None
     session_payload = {
         "condition_id": condition_id,
         "condition_label": condition["label"],

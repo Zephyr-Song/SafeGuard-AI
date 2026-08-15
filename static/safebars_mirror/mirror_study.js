@@ -11,7 +11,7 @@
     config: null,
     session: null,
     issue: null,
-    issueTheme: null,
+    analysis: null,
     currentView: 'entry',
     frameIndex: 0,
     roleIndex: 0,
@@ -187,7 +187,6 @@
       setLoading(true, 'Loading the study…');
       state.config = await api('/config');
       renderFixes();
-      populateIssueGallery();
     } catch (err) {
       console.error('Could not load study config', err);
       companionSay('#entry-speech', 'Could not load the study. Please refresh the page.');
@@ -225,24 +224,49 @@
   }
 
   async function startWithIssue(issue) {
+    issue = (issue || '').trim();
     state.issue = issue;
-    setLoading(true, 'Matching an image…');
-    try {
-      let matched;
-      if (issue) {
-        matched = await api('/issue-image', {
-          method: 'POST',
-          body: { issue },
-        });
-        if (!matched.success) throw new Error(matched.error);
-        state.issueTheme = matched;
-      }
+    if (!issue) {
+      state.analysis = null;
       switchView('image');
+      renderIssueImage();
+      return;
+    }
+    try {
+      await analyzeIssue(issue);
+    } catch (err) {
+      console.error(err);
+      alert('Sorry, we could not analyse that right now. Please try again.');
+    }
+  }
+
+  // ---------- AI analysis (mirrors the transition-companion AI navigator) ----------
+  async function analyzeIssue(issue) {
+    issue = (issue || '').trim();
+    if (!issue) return;
+    setLoading(true, 'Mirror is analysing…');
+    try {
+      const data = await api('/analyze', { method: 'POST', body: { issue } });
+      if (!data || !data.success) throw new Error((data && data.error) || 'analyze failed');
+      state.issue = issue;
+      state.analysis = {
+        source: data.source,
+        summary: data.summary || '',
+        reflection: data.reflection || '',
+        theme_label: data.theme_label || '',
+        theme_id: data.theme_id || 'default',
+        image_url: data.image_url || '',
+        related_concerns: Array.isArray(data.related_concerns) ? data.related_concerns : [],
+        ethical_dimensions: Array.isArray(data.ethical_dimensions) ? data.ethical_dimensions : [],
+      };
+      if (state.currentView === 'entry' || !state.currentView) {
+        switchView('image');
+      }
       renderIssueImage();
       sparkleBurst($('.card-layout'), 9);
     } catch (err) {
       console.error(err);
-      alert('Sorry, we could not match an image right now. Please try again.');
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -254,49 +278,46 @@
     const label = $('#theme-label');
     const reflection = $('#reflection-text');
     const ribbon = $('#theme-ribbon');
+    const aiBadge = $('#ai-badge');
+    const related = $('#ai-related');
+    const relatedChips = $('#related-chips');
 
-    if (state.issueTheme) {
-      img.src = state.issueTheme.image_url;
-      label.textContent = state.issueTheme.theme_label;
-      ribbon.textContent = state.issueTheme.theme_label;
-      reflection.textContent = state.issueTheme.reflection;
-      companionSay('#image-speech',
-        `This looks related to "${state.issueTheme.theme_label}". ${state.issueTheme.reflection}`);
+    const a = state.analysis;
+    if (a) {
+      img.src = a.image_url;
+      label.textContent = a.theme_label;
+      ribbon.textContent = a.theme_label;
+      reflection.textContent = a.reflection;
+      if (aiBadge) {
+        if (a.source === 'ai') aiBadge.hidden = false;
+        else aiBadge.hidden = true;
+      }
+      companionSay('#image-speech', (a.summary ? a.summary + ' ' : '') + a.reflection);
+      // AI-surfaced related concerns (clickable -> re-analyse)
+      relatedChips.innerHTML = '';
+      if (a.related_concerns && a.related_concerns.length) {
+        a.related_concerns.forEach((c) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = c;
+          btn.dataset.concern = c;
+          relatedChips.appendChild(btn);
+        });
+        related.hidden = false;
+      } else {
+        related.hidden = true;
+      }
     } else {
       const theme = state.config.issue_gallery.find((t) => t.id === 'data_collection');
       img.src = theme.image_url;
       label.textContent = 'StressLens study';
       ribbon.textContent = 'StressLens study';
       reflection.textContent = state.config.vignette.setting;
+      if (aiBadge) aiBadge.hidden = true;
+      related.hidden = true;
       companionSay('#image-speech',
         'Let’s walk through the StressLens study together. It is a useful example even if your own issue is different.');
     }
-  }
-
-  function setIssueTheme(theme) {
-    state.issue = theme.label;
-    state.issueTheme = {
-      theme_id: theme.id,
-      theme_label: theme.label,
-      image_url: theme.image_url,
-      reflection: theme.reflection,
-    };
-    renderIssueImage();
-  }
-
-  function populateIssueGallery() {
-    const chips = $('#gallery-chips');
-    if (!chips || !state.config) return;
-    chips.innerHTML = '';
-    state.config.issue_gallery
-      .filter((t) => t.id !== 'default')
-      .forEach((theme) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = theme.label;
-        btn.dataset.themeId = theme.id;
-        chips.appendChild(btn);
-      });
   }
 
   function bindImageView() {
@@ -304,11 +325,21 @@
       await createSession();
       showVignette();
     });
-    $('#gallery-chips').addEventListener('click', (e) => {
+    $('#btn-re-analyze').addEventListener('click', () => {
+      const v = $('#re-issue-input').value.trim();
+      if (!v) return;
+      analyzeIssue(v).catch(() => alert('Could not analyse that. Please try again.'));
+    });
+    $('#re-issue-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); $('#btn-re-analyze').click(); }
+    });
+    $('#related-chips').addEventListener('click', (e) => {
       if (e.target.tagName === 'BUTTON') {
-        const id = e.target.dataset.themeId;
-        const theme = state.config.issue_gallery.find((t) => t.id === id);
-        if (theme) setIssueTheme(theme);
+        const c = e.target.dataset.concern;
+        if (c) {
+          $('#re-issue-input').value = c;
+          analyzeIssue(c).catch(() => alert('Could not analyse that. Please try again.'));
+        }
       }
     });
   }
@@ -318,7 +349,7 @@
     try {
       const body = {};
       if (state.issue) body.issue = state.issue;
-      if (state.issueTheme) body.theme_id = state.issueTheme.theme_id;
+      if (state.analysis) body.theme_id = state.analysis.theme_id;
       state.session = await api('/sessions', { method: 'POST', body });
     } catch (err) {
       console.error(err);
@@ -680,7 +711,7 @@
         config: state.config,
         session: null,
         issue: null,
-        issueTheme: null,
+        analysis: null,
         currentView: 'entry',
         frameIndex: 0,
         roleIndex: 0,

@@ -63,7 +63,7 @@
 
               <button type="submit" class="yellow-button" id="btn-start">
                 <span class="btn-text">Start reflecting</span>
-                <span class="btn-loading" hidden>Matching an image...</span>
+                <span class="btn-loading" hidden>Mirror is analysing…</span>
               </button>
               <button type="button" id="btn-skip-issue" class="text-button">Or jump to the StressLens vignette</button>
             </form>
@@ -144,6 +144,7 @@
             </div>
             <div class="image-caption">
               <span class="eyebrow" id="theme-label"></span>
+              <span class="ai-badge" id="ai-badge" hidden>AI-generated reflection</span>
               <p id="reflection-text"></p>
             </div>
           </div>
@@ -168,9 +169,16 @@
             <div class="companion-speech large" id="image-speech"></div>
             <div class="actions">
               <button id="btn-explore-stresslens" class="primary-button">Explore the StressLens study</button>
-              <div class="issue-gallery" id="issue-gallery">
-                <span class="gallery-hint">Or explore another concern</span>
-                <div class="gallery-chips" id="gallery-chips"></div>
+            </div>
+            <div class="ai-related" id="ai-related" hidden>
+              <span class="related-hint">Mirror also surfaced these angles — tap any to explore</span>
+              <div class="gallery-chips" id="related-chips"></div>
+            </div>
+            <div class="re-analyze">
+              <label for="re-issue-input">Have a different concern?</label>
+              <div class="re-analyze-row">
+                <input id="re-issue-input" type="text" placeholder="Describe it in a few words…" maxlength="2000" autocomplete="off">
+                <button id="btn-re-analyze" type="button" class="text-button">Analyze</button>
               </div>
             </div>
           </div>
