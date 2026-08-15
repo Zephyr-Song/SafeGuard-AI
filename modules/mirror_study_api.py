@@ -126,11 +126,18 @@ def _fallback_analysis(issue: str) -> Dict[str, Any]:
 
 
 def _call_deepseek(api_key: str, issue: str) -> Dict[str, Any]:
-    """Direct OpenAI-compatible DeepSeek call (mirrors the Transition Companion)."""
+    """Direct OpenAI-compatible DeepSeek call (mirrors the Transition Companion).
+
+    Defaults to the Aliyun MaaS DeepSeek endpoint/model the prototype uses; override
+    with DEEPSEEK_BASE_URL / DEEPSEEK_MODEL for a standard api.deepseek.com key.
+    """
     import requests
 
-    base = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
-    model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+    base = os.getenv(
+        "DEEPSEEK_BASE_URL",
+        "https://ws-rpz6r7sem6fuiceu.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+    ).rstrip("/")
+    model = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-pro")
     resp = requests.post(
         f"{base}/chat/completions",
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
@@ -141,10 +148,11 @@ def _call_deepseek(api_key: str, issue: str) -> Dict[str, Any]:
                 {"role": "user", "content": f"Researcher's concern: {issue}"},
             ],
             "response_format": {"type": "json_object"},
+            "enable_thinking": False,
             "temperature": 0.4,
-            "max_tokens": 600,
+            "max_tokens": 700,
         },
-        timeout=40,
+        timeout=35,
     )
     resp.raise_for_status()
     text = resp.json()["choices"][0]["message"]["content"]
@@ -176,23 +184,19 @@ def _analyze_with_llm(issue: str) -> Tuple[Optional[Dict[str, Any]], str]:
             current_app.logger.exception("Mirror /analyze DeepSeek call failed")
 
     llm = _get_llm()
-    if llm and llm.is_configured():
-        order = []
-        if llm.active_provider_id:
-            order.append(llm.active_provider_id)
-        order += [pid for pid in llm.providers if pid != llm.active_provider_id]
-        for pid in order:
-            try:
-                resp = llm.chat_with_provider(pid, messages, temperature=0.4)
-                if resp and resp.get("ok") and resp.get("text"):
-                    data = _extract_json(resp["text"])
-                    if data and data.get("reflection") and isinstance(data.get("related_concerns"), list):
-                        return _normalize_analysis(data, issue), ""
-                else:
-                    errors.append(f"{pid}:{(resp or {}).get('error_type','?')}")
-            except Exception as exc:
-                errors.append(f"{pid}:{type(exc).__name__}")
-                current_app.logger.exception(f"Mirror /analyze {pid} failed")
+    if llm and llm.is_configured() and llm.active_provider_id:
+        pid = llm.active_provider_id
+        try:
+            resp = llm.chat_with_provider(pid, messages, temperature=0.4, timeout=20)
+            if resp and resp.get("ok") and resp.get("text"):
+                data = _extract_json(resp["text"])
+                if data and data.get("reflection") and isinstance(data.get("related_concerns"), list):
+                    return _normalize_analysis(data, issue), ""
+            else:
+                errors.append(f"{pid}:{(resp or {}).get('error_type','?')}")
+        except Exception as exc:
+            errors.append(f"{pid}:{type(exc).__name__}")
+            current_app.logger.exception(f"Mirror /analyze {pid} failed")
 
     return None, " | ".join(errors)[:300]
 
