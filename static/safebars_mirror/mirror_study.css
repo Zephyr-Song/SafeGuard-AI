@@ -232,8 +232,8 @@ a:focus-visible {
 }
 .yellow-button:hover:not(:disabled) {
   background: linear-gradient(180deg, #fff0a0, var(--yellow-light));
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 var(--yellow-deep);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 0 var(--yellow-deep), 0 12px 24px rgba(255, 220, 0, 0.30);
 }
 .yellow-button:active:not(:disabled) {
   transform: translateY(1px);
@@ -258,8 +258,8 @@ a:focus-visible {
 }
 .primary-button:hover:not(:disabled) {
   background: linear-gradient(180deg, #2a87ff, var(--hero-blue));
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 var(--navy-3);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 0 var(--navy-3), 0 12px 24px rgba(11, 115, 246, 0.34);
 }
 .primary-button:active:not(:disabled) {
   transform: translateY(1px);
@@ -290,6 +290,7 @@ a:focus-visible {
 
 /* ============ ENTRY ============ */
 .entry-layout {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
   gap: clamp(28px, 5vw, 72px);
@@ -1043,16 +1044,40 @@ a:focus-visible {
   border-radius: var(--panel-radius);
   box-shadow: var(--shadow-sticker);
 }
-.loading-card .spinner {
-  width: 46px;
-  height: 46px;
-  border: 5px solid var(--line);
-  border-top-color: var(--hero-blue);
-  border-radius: 50%;
-  animation: spin 800ms linear infinite;
+.loading-card .loader-orbit {
+  position: relative;
+  width: 56px;
+  height: 56px;
 }
+.loading-card .orbit-dot {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  box-shadow: 1px 1px 0 rgba(5, 10, 75, 0.25);
+}
+.loading-card .orbit-dot.d1 { background: var(--yellow); animation: orbit 1.4s linear infinite; }
+.loading-card .orbit-dot.d2 { background: var(--hero-blue); animation: orbit 1.4s linear infinite; animation-delay: -.47s; }
+.loading-card .orbit-dot.d3 { background: var(--teal); animation: orbit 1.4s linear infinite; animation-delay: -.94s; }
+.loading-card .orbit-core {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--coral);
+  box-shadow: 1px 1px 0 rgba(5, 10, 75, 0.25);
+  animation: orbitPulse 1.2s ease-in-out infinite;
+}
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(22px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(22px) rotate(-360deg); }
+}
+@keyframes orbitPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.28); } }
 .loading-card .label { font-family: var(--font-rounded); font-weight: 800; color: var(--navy-2); font-size: 14px; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ============ MASCOT ANIMATIONS ============ */
 @keyframes floatY {
@@ -1072,6 +1097,57 @@ a:focus-visible {
 }
 .mascot-wave { transform-origin: 80% 80%; animation: wave 2.4s ease-in-out infinite; }
 
+/* ============ REFINEMENT PASS (exceed sticker prototype) ============ */
+
+/* floating sticker doodles around the entry hero */
+.doodle-layer { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.entry-doodle {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 2px solid var(--navy);
+  border-radius: 10px;
+  font-family: var(--font-rounded);
+  font-weight: 800;
+  font-size: 12.5px;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sticker-sm);
+  animation: doodleFloat 5s ease-in-out infinite;
+}
+.entry-doodle svg { width: 15px; height: 15px; }
+.entry-doodle.d1 { top: -14px; left: 5%; background: var(--yellow); color: var(--navy); --rot: -5deg; transform: rotate(-5deg); }
+.entry-doodle.d2 { top: 41%; right: -10px; background: var(--white); color: var(--coral); --rot: 4deg; transform: rotate(4deg); }
+.entry-doodle.d3 { bottom: -12px; left: 1%; background: #57c7ad; color: var(--navy); --rot: 3deg; transform: rotate(3deg); }
+.entry-doodle.d2 { animation-delay: .8s; }
+.entry-doodle.d3 { animation-delay: 1.6s; }
+@keyframes doodleFloat {
+  0%, 100% { transform: rotate(var(--rot, 0deg)); }
+  50% { transform: translateY(-9px) rotate(var(--rot, 0deg)); }
+}
+
+/* wavy underlines on key headings (signature neobrutalist / academic flair) */
+.study-panel h2,
+.condition-intro h2,
+.entry-copy h1 {
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--hero-blue);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 9px;
+}
+
+/* companion "speaks" wiggle */
+.speaking { animation: speechWiggle 460ms cubic-bezier(.36, .07, .19, .97) both; }
+@keyframes speechWiggle {
+  0% { transform: rotate(0); }
+  18% { transform: rotate(-1.4deg); }
+  42% { transform: rotate(1.4deg); }
+  66% { transform: rotate(-0.8deg); }
+  100% { transform: rotate(0); }
+}
+
 /* ============ RESPONSIVE ============ */
 @media (max-width: 920px) {
   .entry-layout,
@@ -1079,6 +1155,7 @@ a:focus-visible {
   .entry-mascot { order: -1; }
   .companion-panel { position: static; }
   .companion { flex-direction: row; align-items: center; text-align: left; }
+  .doodle-layer { display: none; }
 }
 @media (max-width: 560px) {
   .brand-header { flex-wrap: wrap; gap: 8px; padding: 12px var(--gutter); min-height: auto; }

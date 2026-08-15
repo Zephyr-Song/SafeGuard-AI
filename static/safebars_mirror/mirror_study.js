@@ -97,13 +97,19 @@
   function companionSay(id, text, typing = true) {
     const el = $(id);
     if (!el) return;
-    if (!typing || REDUCED_MOTION) { el.textContent = text; el.style.opacity = '1'; return; }
+    const wiggle = () => {
+      if (REDUCED_MOTION) return;
+      el.classList.remove('speaking');
+      void el.offsetWidth; /* restart animation */
+      el.classList.add('speaking');
+    };
+    if (!typing || REDUCED_MOTION) { el.textContent = text; el.style.opacity = '1'; wiggle(); return; }
     el.style.opacity = '1';
     el.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
     clearTimeout(el._sayT);
     el._sayT = setTimeout(() => {
       el.style.opacity = '0';
-      setTimeout(() => { el.textContent = text; el.style.opacity = '1'; }, 170);
+      setTimeout(() => { el.textContent = text; el.style.opacity = '1'; wiggle(); }, 170);
     }, 620);
   }
 
