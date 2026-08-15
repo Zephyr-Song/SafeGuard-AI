@@ -153,6 +153,37 @@ a:focus-visible {
 }
 .wordmark span { color: var(--yellow); }
 
+.brand-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--white);
+  cursor: pointer;
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+.back-button:not([hidden]):hover,
+.back-button:not([hidden]):focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateX(-2px);
+}
+.back-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.back-button svg { width: 20px; height: 20px; }
+
 .header-nav {
   display: flex;
   gap: 4px;
@@ -514,11 +545,15 @@ a:focus-visible {
   position: relative;
   background: var(--mist);
   overflow: hidden;
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
 }
 .image-card img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
   background: var(--mist);
 }
 .image-card .theme-ribbon {
@@ -582,6 +617,47 @@ a:focus-visible {
 .companion-panel .actions { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
 .companion-panel .actions .primary-button,
 .companion-panel .actions .text-button { width: 100%; justify-content: center; }
+
+/* Issue gallery picker (replaces "Describe a different issue") */
+.issue-gallery { margin-top: 4px; }
+.issue-gallery .gallery-hint {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-align: center;
+}
+.issue-gallery .gallery-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.issue-gallery .gallery-chips button {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform .12s, border-color .12s, background .12s, box-shadow .12s;
+}
+.issue-gallery .gallery-chips button:hover,
+.issue-gallery .gallery-chips button:focus-visible {
+  border-color: var(--hero-blue);
+  background: var(--soft-blue);
+  color: var(--hero-blue-dark);
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 0 var(--hero-blue);
+}
+.issue-gallery .gallery-chips button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
 
 /* ============ INTRO SCREENS ============ */
 .condition-intro {
@@ -658,7 +734,8 @@ a:focus-visible {
 .fix-card img,
 .role-card img {
   width: 100%;
-  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: contain;
   border-radius: 10px;
   border: 2px solid var(--line);
   background: var(--mist);

@@ -19,6 +19,7 @@
     fixRanks: {},
     responses: {},
   };
+  let history = [];
 
   // DOM helpers
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -85,13 +86,34 @@
   }
 
   function switchView(name) {
+    if (state.currentView && state.currentView !== name) {
+      history.push(state.currentView);
+    }
     state.currentView = name;
     $$('.view').forEach((v) => v.classList.remove('active'));
     const viewEl = $(`#view-${name}`);
     viewEl.classList.add('active');
     setProgress(name);
     if (REVEAL[name]) stagger(REVEAL[name].join(','), viewEl);
+    updateBackButton();
     window.scrollTo({ top: 0, behavior: REDUCED_MOTION ? 'auto' : 'smooth' });
+  }
+
+  function updateBackButton() {
+    const btn = $('#btn-back');
+    if (!btn) return;
+    if (history.length && state.currentView !== 'entry' && state.currentView !== 'thank-you') {
+      btn.removeAttribute('hidden');
+    } else {
+      btn.setAttribute('hidden', '');
+    }
+  }
+
+  function goBack() {
+    if (!history.length) return;
+    const prev = history.pop();
+    state.currentView = prev;
+    switchView(prev);
   }
 
   function companionSay(id, text, typing = true) {
@@ -142,6 +164,7 @@
 
   function init() {
     loadConfig();
+    bindBack();
     bindEntry();
     bindImageView();
     bindVignette();
@@ -155,11 +178,16 @@
     bindDifficulty();
   }
 
+  function bindBack() {
+    $('#btn-back').addEventListener('click', () => goBack());
+  }
+
   async function loadConfig() {
     try {
       setLoading(true, 'Loading the study…');
       state.config = await api('/config');
       renderFixes();
+      populateIssueGallery();
     } catch (err) {
       console.error('Could not load study config', err);
       companionSay('#entry-speech', 'Could not load the study. Please refresh the page.');
@@ -245,14 +273,43 @@
     }
   }
 
+  function setIssueTheme(theme) {
+    state.issue = theme.label;
+    state.issueTheme = {
+      theme_id: theme.id,
+      theme_label: theme.label,
+      image_url: theme.image_url,
+      reflection: theme.reflection,
+    };
+    renderIssueImage();
+  }
+
+  function populateIssueGallery() {
+    const chips = $('#gallery-chips');
+    if (!chips || !state.config) return;
+    chips.innerHTML = '';
+    state.config.issue_gallery
+      .filter((t) => t.id !== 'default')
+      .forEach((theme) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = theme.label;
+        btn.dataset.themeId = theme.id;
+        chips.appendChild(btn);
+      });
+  }
+
   function bindImageView() {
     $('#btn-explore-stresslens').addEventListener('click', async () => {
       await createSession();
       showVignette();
     });
-    $('#btn-new-issue').addEventListener('click', () => {
-      $('#issue-input').value = '';
-      switchView('entry');
+    $('#gallery-chips').addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON') {
+        const id = e.target.dataset.themeId;
+        const theme = state.config.issue_gallery.find((t) => t.id === id);
+        if (theme) setIssueTheme(theme);
+      }
     });
   }
 
@@ -631,6 +688,7 @@
         fixRanks: {},
         responses: {},
       };
+      history.length = 0;
       $('#issue-input').value = '';
       $('#frame-input') && ($('#frame-input').value = '');
       $('#veil-input').value = '';

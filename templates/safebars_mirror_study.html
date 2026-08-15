@@ -13,12 +13,17 @@
 <body>
   <div class="app-shell">
     <header class="brand-header">
-      <a class="wordmark" href="/safebars/mirror">
+      <div class="brand-left">
+        <button type="button" id="btn-back" class="back-button" hidden aria-label="Go back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </button>
+        <a class="wordmark" href="/safebars/mirror">
         <span class="brand-mark" aria-hidden="true">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6"/><path d="M5 9.5V20h14V9.5"/><circle cx="12" cy="14.5" r="2.4"/></svg>
         </span>
         <span>Safe</span>BARS Mirror
       </a>
+      </div>
       <nav class="header-nav">
         <a href="/safebars/mirror">Ethical Mirror</a>
         <a href="/safebars/mirror-study" class="active">StressLens Study</a>
@@ -33,7 +38,6 @@
         <div class="entry-layout">
           <div class="doodle-layer" aria-hidden="true">
             <span class="entry-doodle d1"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 6.9L21 9.2l-5.6 4.6L17.8 21 12 16.9 6.2 21l2.4-7.2L3 9.2l6.6-.3z"/></svg>CHI 2027</span>
-            <span class="entry-doodle d2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M15 14.5c3 0 5 2 5 4.5"/></svg>15 participants</span>
             <span class="entry-doodle d3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="M4 17l5-4 4 3 3-2 4 3"/></svg>AI illustrations</span>
           </div>
           <div class="entry-copy">
@@ -164,7 +168,10 @@
             <div class="companion-speech large" id="image-speech"></div>
             <div class="actions">
               <button id="btn-explore-stresslens" class="primary-button">Explore the StressLens study</button>
-              <button id="btn-new-issue" class="text-button">Describe a different issue</button>
+              <div class="issue-gallery" id="issue-gallery">
+                <span class="gallery-hint">Or explore another concern</span>
+                <div class="gallery-chips" id="gallery-chips"></div>
+              </div>
             </div>
           </div>
         </div>
