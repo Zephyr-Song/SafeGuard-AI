@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import os
 import random
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from flask import Blueprint, current_app, jsonify, request, url_for
 
@@ -128,9 +128,10 @@ def _fallback_analysis(issue: str) -> Dict[str, Any]:
 def _call_deepseek(api_key: str, issue: str) -> Dict[str, Any]:
     """Direct OpenAI-compatible DeepSeek call (mirrors the Transition Companion).
 
-    Tries the user-configured DEEPSEEK_BASE_URL first, then both well-known DeepSeek
-    endpoints (Aliyun MaaS and api.deepseek.com) so it works no matter which key the
-    user supplied. `enable_thinking` is only sent to the Aliyun MaaS endpoint.
+    Uses the exact endpoint/model/flags the reference prototype relies on
+    (Aliyun MaaS `deepseek-v4-pro`, `enable_thinking: false`, `response_format: json_object`)
+    and falls back to a user-configured DEEPSEEK_BASE_URL or standard api.deepseek.com.
+    Captures the real HTTP status so a bad key vs. wrong model is diagnosable.
     """
     import requests
 
@@ -147,6 +148,7 @@ def _call_deepseek(api_key: str, issue: str) -> Dict[str, Any]:
             candidates.append(base)
 
     last_err: Any = RuntimeError("DeepSeek unavailable")
+    last_detail: str = ""
     for base in candidates:
         try:
             payload = {
@@ -156,18 +158,19 @@ def _call_deepseek(api_key: str, issue: str) -> Dict[str, Any]:
                     {"role": "user", "content": f"Researcher's concern: {issue}"},
                 ],
                 "response_format": {"type": "json_object"},
+                "enable_thinking": False,
                 "temperature": 0.4,
                 "max_tokens": 700,
             }
-            if "maas.aliyuncs.com" in base:
-                payload["enable_thinking"] = False
             resp = requests.post(
                 f"{base}/chat/completions",
                 headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
                 json=payload,
                 timeout=25,
             )
-            resp.raise_for_status()
+            if resp.status_code != 200:
+                last_detail = f"HTTP {resp.status_code}: {resp.text[:180]}"
+                raise RuntimeError(last_detail)
             text = resp.json()["choices"][0]["message"]["content"]
             data = _extract_json(text)
             if not data or not data.get("reflection") or not isinstance(data.get("related_concerns"), list):
@@ -176,15 +179,17 @@ def _call_deepseek(api_key: str, issue: str) -> Dict[str, Any]:
         except Exception as exc:  # try next candidate endpoint
             last_err = exc
             continue
-    raise last_err
+    detail = f" ({last_detail})" if last_detail else ""
+    raise RuntimeError(f"{type(last_err).__name__}{detail}")
 
 
 def _analyze_with_llm(issue: str) -> Tuple[Optional[Dict[str, Any]], str]:
     """Call an LLM and return (normalized_analysis, error_string).
 
     Prefers a dedicated DeepSeek key (matching the Transition Companion prototype),
-    then tries every configured SafeBARS provider in turn. Returns (None, errors)
-    if all attempts fail.
+    then tries EVERY configured SafeBARS provider (active one first) in OpenAI-compatible
+    JSON mode. Returns (None, errors) if all attempts fail. Errors are kept detailed
+    enough to diagnose a bad key vs. a wrong model vs. a network issue.
     """
     messages = [
         {"role": "system", "content": _ANALYZE_SYSTEM},
@@ -192,30 +197,44 @@ def _analyze_with_llm(issue: str) -> Tuple[Optional[Dict[str, Any]], str]:
     ]
     errors: List[str] = []
 
+    # 1) Dedicated DeepSeek key (mirrors the Transition Companion prototype).
     ds_key = os.getenv("DEEPSEEK_API_KEY")
     if ds_key:
         try:
             return _call_deepseek(ds_key, issue), ""
         except Exception as exc:
-            errors.append(f"deepseek:{type(exc).__name__}")
+            errors.append(f"deepseek:{exc}")
             current_app.logger.exception("Mirror /analyze DeepSeek call failed")
 
+    # 2) Every configured SafeBARS provider (active first), JSON mode.
     llm = _get_llm()
-    if llm and llm.is_configured() and llm.active_provider_id:
-        pid = llm.active_provider_id
-        try:
-            resp = llm.chat_with_provider(pid, messages, temperature=0.4, timeout=20)
-            if resp and resp.get("ok") and resp.get("text"):
-                data = _extract_json(resp["text"])
-                if data and data.get("reflection") and isinstance(data.get("related_concerns"), list):
-                    return _normalize_analysis(data, issue), ""
-            else:
-                errors.append(f"{pid}:{(resp or {}).get('error_type','?')}")
-        except Exception as exc:
-            errors.append(f"{pid}:{type(exc).__name__}")
-            current_app.logger.exception(f"Mirror /analyze {pid} failed")
+    if llm and llm.is_configured():
+        order: List[str] = []
+        if llm.active_provider_id:
+            order.append(llm.active_provider_id)
+        order += [pid for pid in llm.providers if pid not in order]
+        for pid in order:
+            try:
+                resp = llm.chat_with_provider_detailed(
+                    pid,
+                    messages,
+                    temperature=0.4,
+                    timeout=20,
+                    response_format={"type": "json_object"},
+                )
+                if resp and resp.get("ok") and resp.get("text"):
+                    data = _extract_json(resp["text"])
+                    if data and data.get("reflection") and isinstance(data.get("related_concerns"), list):
+                        return _normalize_analysis(data, issue), ""
+                else:
+                    status = resp.get("status_code") if resp else None
+                    err_type = (resp or {}).get("error_type", "?")
+                    errors.append(f"{pid}:{err_type}" + (f"[{status}]" if status else ""))
+            except Exception as exc:
+                errors.append(f"{pid}:{type(exc).__name__}")
+                current_app.logger.exception(f"Mirror /analyze {pid} failed")
 
-    return None, " | ".join(errors)[:300]
+    return None, " | ".join(errors)[:400]
 
 
 def _json_object() -> Tuple[Dict[str, Any], Any]:

@@ -161,6 +161,7 @@ class LLMClient:
         temperature: float = 0.4,
         timeout: int = 35,
         max_tokens: int = 700,
+        response_format: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         provider = self.providers.get(provider_id)
         if not provider:
@@ -184,6 +185,8 @@ class LLMClient:
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+        if response_format:
+            payload["response_format"] = response_format
         # DashScope qwen3 models require enable_thinking=false for non-streaming calls.
         if "qwen3" in (provider.model or ""):
             payload["enable_thinking"] = False
