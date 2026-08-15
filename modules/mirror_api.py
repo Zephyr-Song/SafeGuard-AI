@@ -7,7 +7,6 @@ from typing import Any, Dict, Tuple
 from flask import Blueprint, current_app, jsonify, request
 
 from .mirror_engine import MirrorEngine
-from .mirror_guide import MirrorGuide, MirrorResolutionGuide, guide_dimensions
 from .mirror_literature import (
     EVIDENCE_STATE_NOTICE,
     LENS_SYNTHESIS_NOTICE,
@@ -21,8 +20,6 @@ mirror_api = Blueprint(
     url_prefix="/api/safebars/mirror",
 )
 mirror_engine = MirrorEngine()
-mirror_guide = MirrorGuide(mirror_engine.llm_client)
-mirror_resolution_guide = MirrorResolutionGuide(mirror_engine.llm_client)
 
 
 def _json_object() -> Tuple[Dict[str, Any], Any]:
@@ -69,127 +66,6 @@ def get_literature():
             "interpretation_boundary": EVIDENCE_STATE_NOTICE,
         }
     )
-
-
-@mirror_api.get("/guide/dimensions")
-def get_guide_dimensions():
-    """Return the ethical dimensions the conversational guide weaves through."""
-
-    return jsonify({"success": True, "dimensions": guide_dimensions()})
-
-
-@mirror_api.post("/guide")
-@rate_limit(max_requests=40, window_seconds=120, scope="mirror_guide")
-def guide_turn():
-    """Run one conversational-guide turn.
-
-    Body:
-      {"action": "start" | "reply" | "finalize",
-       "message": str,            # user text for "reply"
-       "history": [{"role","content"}, ...]}  # front end owns history
-    Returns the updated history, the next assistant reply, a coverage map, and
-    (for "finalize") a structured research plan + value commitments.
-    """
-
-    payload, error = _json_object()
-    if error:
-        return error
-    action = (payload.get("action") or "reply").lower()
-    history = payload.get("history") or []
-    if not isinstance(history, list):
-        history = []
-
-    llm_error = None
-    try:
-        if action == "start":
-            reply = mirror_guide.start()
-            history = [{"role": "assistant", "content": reply}]
-            structured = None
-        elif action == "finalize":
-            structured = mirror_guide.finalize(history)
-            reply = (
-                "Here's the plan I'll hand to the mirror. Review it on the next step — "
-                "you can revise anything before building the consequence map."
-            )
-            history = list(history) + [{"role": "assistant", "content": reply}]
-        else:  # reply
-            message = (payload.get("message") or "").strip()
-            if message:
-                history = list(history) + [{"role": "user", "content": message}]
-            reply, llm_error = mirror_guide.reply_detailed(history)
-            if reply is None:
-                if mirror_guide.llm_available():
-                    reply = (
-                        "I'm having trouble reaching the language model right now. You can "
-                        "keep writing your thoughts here, or switch to the 'Guided questions' "
-                        "tab to continue. Nothing you've shared is lost."
-                    )
-                else:
-                    reply = (
-                        "The AI guide isn't connected to a language model on this deployment. "
-                        "Switch to the 'Guided questions' tab for the full structured walkthrough."
-                    )
-            history = list(history) + [{"role": "assistant", "content": reply}]
-            structured = None
-    except Exception as exc:
-        return _unexpected("run the conversational guide", exc)
-
-    coverage = mirror_guide.track_coverage(history)
-    return jsonify(
-        {
-            "success": True,
-            "action": action,
-            "reply": reply,
-            "history": history,
-            "coverage": coverage,
-            "structured": structured,
-            "llm_available": mirror_guide.llm_available(),
-            "llm_error": llm_error,
-        }
-    )
-
-
-@mirror_api.get("/guide/debug-llm")
-def debug_llm():
-    """Non-sensitive LLM wiring diagnostics (no API key is exposed)."""
-    llm = mirror_engine.llm_client
-    return jsonify({
-        "is_configured": bool(llm and llm.is_configured()),
-        "provider_ids": list(llm.providers.keys()) if llm else [],
-        "active_provider_id": getattr(llm, "active_provider_id", None),
-        "feature_enabled": mirror_engine._llm_feature_enabled,
-        "guide_llm_available": mirror_guide.llm_available(),
-    })
-
-
-@mirror_api.get("/guide/probe-providers")
-def probe_providers():
-    """Ping every configured provider once to expose reachability (no key leaked).
-
-    Each provider gets a trivial prompt with a short timeout so the deployment
-    can report which Chinese LLM endpoints are reachable from its region.
-    """
-    llm = mirror_engine.llm_client
-    if not llm or not llm.is_configured():
-        return jsonify({"success": True, "probed": False, "results": []})
-    probe_msg = [{"role": "user", "content": "Reply with the single word: ok"}]
-    results = []
-    for pid in llm.providers:
-        det = llm.chat_with_provider_detailed(pid, probe_msg, temperature=0.0, timeout=12)
-        results.append({
-            "provider": pid,
-            "ok": bool(det.get("ok")),
-            "error_type": det.get("error_type"),
-            "status_code": det.get("status_code"),
-            "model": det.get("model"),
-        })
-    reachable = [r["provider"] for r in results if r["ok"]]
-    return jsonify({
-        "success": True,
-        "probed": True,
-        "results": results,
-        "reachable": reachable,
-    })
 
 
 @mirror_api.post("/sessions")
@@ -247,37 +123,11 @@ def add_revision(session_id: str):
             session_id,
             revised_plan=payload.get("revised_plan", ""),
             resolutions=payload.get("resolutions", []),
-            self_discovery=payload.get("self_discovery"),
         )
     except ValueError as exc:
         return jsonify({"success": False, "error": str(exc)}), 400
     except Exception as exc:
         return _unexpected("save the research-plan revision", exc)
-    if not session:
-        return jsonify({"success": False, "error": "Session not found."}), 404
-    return jsonify({"success": True, "session": session})
-
-
-@mirror_api.post("/sessions/<session_id>/self-discovery")
-def save_self_discovery(session_id: str):
-    """Persist the participant's self-discovery reflection to the server.
-
-    The Step-4 discovery save is independent of the Step-5 revision submit, so a
-    participant who realizes a blind spot but never submits a revision would
-    otherwise leave no server-side trace. This endpoint guarantees the reflection
-    is captured (and carries the assigned condition trio for analysis)."""
-    payload, error = _json_object()
-    if error:
-        return error
-    try:
-        session = mirror_engine.save_self_discovery(
-            session_id,
-            data=payload.get("self_discovery") or payload,
-        )
-    except ValueError as exc:
-        return jsonify({"success": False, "error": str(exc)}), 400
-    except Exception as exc:
-        return _unexpected("save the self-discovery reflection", exc)
     if not session:
         return jsonify({"success": False, "error": "Session not found."}), 404
     return jsonify({"success": True, "session": session})
@@ -302,6 +152,48 @@ def replay_session(session_id: str):
     if not session:
         return jsonify({"success": False, "error": "Session not found."}), 404
     return jsonify({"success": True, "session": session})
+
+
+@mirror_api.post("/sessions/<session_id>/decisions")
+def record_decision(session_id: str):
+    """Record a per-issue redesign decision (Condition B: visualization mode)."""
+
+    payload, error = _json_object()
+    if error:
+        return error
+    choice = payload.get("choice")
+    if choice not in ("fix", "accept_risk", "defer"):
+        return jsonify(
+            {"success": False, "error": "choice must be fix, accept_risk, or defer."}
+        ), 400
+    try:
+        session = mirror_engine.record_issue_decision(
+            session_id,
+            issue_id=payload.get("issue_id", ""),
+            choice=choice,
+            rationale=payload.get("rationale", ""),
+            tradeoff=payload.get("tradeoff"),
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as exc:
+        return _unexpected("record the issue decision", exc)
+    if not session:
+        return jsonify({"success": False, "error": "Session not found."}), 404
+    return jsonify({"success": True, "session": session})
+
+
+@mirror_api.get("/sessions/<session_id>/redesign")
+def redesign_summary(session_id: str):
+    """Return the derived Day-1 -> Day-7 design-evolution visualization."""
+
+    try:
+        summary = mirror_engine.redesign_summary(session_id)
+    except Exception as exc:
+        return _unexpected("build the redesign summary", exc)
+    if summary is None:
+        return jsonify({"success": False, "error": "Session not found."}), 404
+    return jsonify({"success": True, **summary})
 
 
 @mirror_api.post("/sessions/<session_id>/export-application")
@@ -335,83 +227,3 @@ def export_application(session_id: str):
             )
         },
     )
-
-
-@mirror_api.post("/sessions/<session_id>/guide-resolution")
-@rate_limit(max_requests=40, window_seconds=120, scope="mirror_resolution_guide")
-def guide_resolution(session_id: str):
-    """Conversational step-5 revision guide.
-
-    Body:
-      {"action": "start" | "reply" | "finalize",
-       "message": str,             # user text for "reply"
-       "history": [{"role","content"}, ...]}
-    Returns the next assistant reply (start/reply) or, on "finalize", saves the
-    extracted revisions and returns the updated session + parsed resolutions.
-    """
-
-    payload, error = _json_object()
-    if error:
-        return error
-    session = mirror_engine.get_session(session_id)
-    if not session:
-        return jsonify({"success": False, "error": "Session not found."}), 404
-    tensions = session.get("dissonance_edges", [])
-    action = (payload.get("action") or "reply").lower()
-    guide = mirror_resolution_guide
-
-    if action == "start":
-        opener = guide.start(tensions)
-        return jsonify({
-            "success": True,
-            "reply": opener,
-            "history": [{"role": "assistant", "content": opener}],
-            "tensions": tensions,
-            "llm_available": guide.llm_available(),
-        })
-
-    history = payload.get("history") or []
-    if action == "reply":
-        text, llm_error = guide.reply(tensions, history)
-        if text is None:
-            text = (
-                "I'm having trouble reaching the language model right now. You can keep "
-                "writing your thoughts here — nothing you've shared is lost."
-            )
-        return jsonify({
-            "success": True,
-            "reply": text,
-            "history": history + [{"role": "assistant", "content": text}],
-            "llm_error": llm_error,
-        })
-
-    if action == "finalize":
-        parsed, llm_error = guide.finalize(
-            tensions, history, session.get("research_plan", "")
-        )
-        revised_plan = (parsed.get("revised_plan") or "").strip()
-        if len(revised_plan) < 20:
-            revised_plan = (session.get("research_plan") or "") + (
-                "\n\n" + revised_plan if revised_plan else ""
-            )
-        resolutions = parsed.get("resolutions") or []
-        try:
-            saved = mirror_engine.add_revision(
-                session_id, revised_plan=revised_plan, resolutions=resolutions
-            )
-        except ValueError as exc:
-            return jsonify(
-                {"success": False, "error": str(exc), "parsed": parsed}
-            ), 400
-        except Exception as exc:
-            return _unexpected("save the conversational revision", exc)
-        if not saved:
-            return jsonify({"success": False, "error": "Session not found."}), 404
-        return jsonify({
-            "success": True,
-            "session": saved,
-            "parsed": parsed,
-            "llm_error": llm_error,
-        })
-
-    return jsonify({"success": False, "error": f"Unknown action: {action}"}), 400
