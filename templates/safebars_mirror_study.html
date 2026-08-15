@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeBARS Ethical Mirror · StressLens Study</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='safebars_mirror/mirror_study.css') }}">
+</head>
+<body>
+  <header class="ms-header">
+    <div class="ms-brand">SafeBARS <span class="ms-pipe">|</span> Ethical Mirror</div>
+    <nav class="ms-nav">
+      <a href="/safebars">SafeBARS</a>
+      <a href="/safebars/mirror">Original Mirror</a>
+      <a href="/safebars/mirror-study" class="active">StressLens Study</a>
+    </nav>
+  </header>
+
+  <main id="ms-app" class="ms-app">
+    <!-- Step 0: Landing -->
+    <section id="step-landing" class="ms-step ms-step--active">
+      <div class="ms-hero">
+        <h1>StressLens</h1>
+        <p class="ms-lead">
+          A short reflection task about a student stress-monitoring study.
+          You will read a scenario, see what could go wrong, and choose three
+          concrete fixes.
+        </p>
+        <p class="ms-meta">Estimated time: 6–10 minutes</p>
+        <button id="btn-start" class="ms-btn ms-btn--primary">Start</button>
+      </div>
+      <div class="ms-notice">
+        <strong>Research notice:</strong> The images below are AI-generated
+        editorial illustrations. They are designed to help you imagine
+        plausible consequences, not to report real events or real people.
+      </div>
+    </section>
+
+    <!-- Step 1: Shared Vignette -->
+    <section id="step-vignette" class="ms-step">
+      <div class="ms-progress"><span style="width: 15%"></span></div>
+      <h2>The Study</h2>
+      <div class="ms-card">
+        <p id="vignette-setting"></p>
+        <p id="vignette-participants"></p>
+      </div>
+      <h3>What participants are <em>not</em> clearly told</h3>
+      <ul id="vignette-hidden" class="ms-hidden-list"></ul>
+      <div class="ms-card ms-card--warn">
+        <p id="vignette-dilemma"></p>
+      </div>
+      <div class="ms-actions">
+        <button id="btn-vignette-next" class="ms-btn ms-btn--primary">Continue</button>
+      </div>
+    </section>
+
+    <!-- Step 2: Condition Intro -->
+    <section id="step-condition-intro" class="ms-step">
+      <div class="ms-progress"><span style="width: 25%"></span></div>
+      <div id="condition-intro-content"></div>
+      <div class="ms-actions">
+        <button id="btn-condition-start" class="ms-btn ms-btn--primary">Begin</button>
+      </div>
+    </section>
+
+    <!-- Step 3a: C1 Timeline -->
+    <section id="step-c1-timeline" class="ms-step">
+      <div class="ms-progress"><span id="c1-progress" style="width: 30%"></span></div>
+      <div id="c1-frame-container"></div>
+      <div class="ms-actions">
+        <button id="btn-c1-prev" class="ms-btn ms-btn--ghost">Previous</button>
+        <button id="btn-c1-next" class="ms-btn ms-btn--primary">Next</button>
+      </div>
+    </section>
+
+    <!-- Step 3b: C2 Veil + Roles -->
+    <section id="step-c2-veil" class="ms-step">
+      <div class="ms-progress"><span style="width: 30%"></span></div>
+      <div class="ms-card ms-card--accent">
+        <h3>Behind the veil</h3>
+        <p id="c2-veil-text"></p>
+      </div>
+      <div class="ms-actions">
+        <button id="btn-c2-veil-next" class="ms-btn ms-btn--primary">Draw a role</button>
+      </div>
+    </section>
+
+    <section id="step-c2-roles" class="ms-step">
+      <div class="ms-progress"><span id="c2-progress" style="width: 35%"></span></div>
+      <div id="c2-role-container"></div>
+      <div class="ms-actions">
+        <button id="btn-c2-prev" class="ms-btn ms-btn--ghost">Previous</button>
+        <button id="btn-c2-next" class="ms-btn ms-btn--primary">Next</button>
+      </div>
+    </section>
+
+    <!-- Step 4: Fix Selection -->
+    <section id="step-fixes" class="ms-step">
+      <div class="ms-progress"><span style="width: 75%"></span></div>
+      <h2>Choose three fixes</h2>
+      <p class="ms-instruction">
+        You can only implement three before launch. Select the ones you think
+        matter most, then rank them 1–3.
+      </p>
+      <div id="fixes-grid" class="ms-fixes-grid"></div>
+      <div id="fix-rank-panel" class="ms-rank-panel">
+        <h4>Your ranking</h4>
+        <ol id="fix-rank-list"></ol>
+      </div>
+      <div class="ms-actions">
+        <button id="btn-fixes-next" class="ms-btn ms-btn--primary" disabled>Continue</button>
+      </div>
+    </section>
+
+    <!-- Step 5: Trade-off -->
+    <section id="step-tradeoff" class="ms-step">
+      <div class="ms-progress"><span style="width: 85%"></span></div>
+      <h2>Effort vs. risk</h2>
+      <p class="ms-instruction">
+        You had to leave two fixes out. Which unselected fix would have reduced
+        the most risk, and why did you drop it?
+      </p>
+      <div id="tradeoff-options" class="ms-tradeoff-options"></div>
+      <label class="ms-field">
+        <span>Explain your trade-off in one or two sentences.</span>
+        <textarea id="tradeoff-text" rows="3" maxlength="500"></textarea>
+      </label>
+      <div class="ms-actions">
+        <button id="btn-tradeoff-next" class="ms-btn ms-btn--primary" disabled>Continue</button>
+      </div>
+    </section>
+
+    <!-- Step 6: Final -->
+    <section id="step-final" class="ms-step">
+      <div class="ms-progress"><span style="width: 95%"></span></div>
+      <h2>Final questions</h2>
+      <div class="ms-field">
+        <span>How emotionally difficult was this reflection?</span>
+        <div class="ms-likert" id="difficulty-likert">
+          <button data-value="1">1<br><small>Not at all</small></button>
+          <button data-value="2">2</button>
+          <button data-value="3">3</button>
+          <button data-value="4">4</button>
+          <button data-value="5">5<br><small>Very</small></button>
+        </div>
+      </div>
+      <div class="ms-field">
+        <span>Any final comment? (optional)</span>
+        <textarea id="final-comment" rows="3" maxlength="800"></textarea>
+      </div>
+      <div class="ms-actions">
+        <button id="btn-submit" class="ms-btn ms-btn--primary">Submit</button>
+      </div>
+    </section>
+
+    <!-- Step 7: Done -->
+    <section id="step-done" class="ms-step">
+      <div class="ms-hero">
+        <h1>Thank you</h1>
+        <p class="ms-lead">Your responses have been recorded.</p>
+        <p id="done-session-id" class="ms-meta"></p>
+        <a href="/safebars/mirror-study" class="ms-btn ms-btn--ghost">Start another</a>
+      </div>
+    </section>
+
+    <div id="ms-error" class="ms-error" role="alert"></div>
+  </main>
+
+  <footer class="ms-footer">
+    SafeBARS Ethical Mirror · StressLens CHI 2027 study prototype
+  </footer>
+
+  <script src="{{ url_for('static', filename='safebars_mirror/mirror_study.js') }}"></script>
+</body>
+</html>

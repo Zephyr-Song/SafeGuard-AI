@@ -14,13 +14,11 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import hashlib
 import json
-import logging
 import os
 import re
 import secrets
 import threading
-
-logger = logging.getLogger(__name__)
+import time
 
 from .mirror_literature import (
     EVIDENCE_STATE_NOTICE,
@@ -30,8 +28,6 @@ from .mirror_literature import (
     literature_by_id,
     literature_registry,
 )
-from .mirror_audit import run_deep_audit
-from .mirror_viz import derive_evolution, extract_issues, record_decision as _viz_record_decision
 from .mirror_store import MirrorStore, utc_now
 
 
@@ -423,9 +419,6 @@ class MirrorEngine:
             "scenarios": [],
             "dissonance_edges": [],
             "dissonance_visualization": {},
-            "deep_audit": {},
-            "issues": [],
-            "design_evolution": [],
             "revisions": [],
             "pending_revision_id": None,
             "replay_history": [],
@@ -446,7 +439,7 @@ class MirrorEngine:
                 "plan_fingerprint": self._fingerprint(plan),
             },
         )
-        bundle = self._analyze(plan, commitments, use_llm=False, intake_answers=intake_answers)
+        bundle = self._analyze(plan, commitments, use_llm=False)
         self._apply_bundle(session, bundle)
         self._append_ledger(
             session,
@@ -477,16 +470,12 @@ class MirrorEngine:
             session = self.get_session(session_id)
             if not session:
                 return None
-            prev_issues = session.get("issues", []) or []
-            prev_evolution = session.get("design_evolution", []) or []
             bundle = self._analyze(
                 session["research_plan"],
                 session["value_commitments"],
                 use_llm=bool(use_llm),
-                intake_answers=session.get("intake_answers"),
             )
             self._apply_bundle(session, bundle)
-            self._preserve_issue_decisions(session, prev_issues, prev_evolution)
             self._append_ledger(
                 session,
                 "analysis_completed",
@@ -507,6 +496,7 @@ class MirrorEngine:
         session_id: str,
         revised_plan: str,
         resolutions: Optional[Any] = None,
+        self_discovery: Optional[Any] = None,
     ) -> Optional[Dict[str, Any]]:
         revised = _clean_text(revised_plan, MAX_PLAN_CHARS)
         if len(revised) < 20:
@@ -547,6 +537,8 @@ class MirrorEngine:
             }
             session.setdefault("revisions", []).append(revision)
             session["pending_revision_id"] = revision_id
+            if self_discovery is not None:
+                session["self_discovery"] = self_discovery
             self._append_ledger(
                 session,
                 "revision_added",
@@ -565,6 +557,45 @@ class MirrorEngine:
                 "revision_added",
                 session["ledger"][-1]["details"],
             )
+            return session
+
+    def save_self_discovery(
+        self,
+        session_id: str,
+        data: Optional[Any] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Persist the Step-4 self-discovery reflection independent of revision submit.
+
+        Guarantees the participant's realization is captured server-side even if
+        they never reach / complete Step 5. Merges into any existing
+        self_discovery so repeated saves accumulate (e.g. per-tension realizations)."""
+        if data is None:
+            return self.get_session(session_id)
+        with self._lock:
+            session = self.get_session(session_id)
+            if not session:
+                return None
+            existing = session.get("self_discovery") or {}
+            if isinstance(data, dict):
+                # Merge realizations so split-mode per-tension saves accumulate.
+                merged = dict(existing)
+                for k, v in data.items():
+                    if k == "realizations" and isinstance(v, dict) and isinstance(merged.get("realizations"), dict):
+                        merged["realizations"] = {**merged.get("realizations", {}), **v}
+                    else:
+                        merged[k] = v
+                session["self_discovery"] = merged
+            else:
+                session["self_discovery"] = data
+            self._append_ledger(
+                session,
+                "self_discovery_saved",
+                "researcher",
+                {"has_realized": bool((session["self_discovery"] or {}).get("realized"))},
+            )
+            self._touch(session)
+            self.store.save(session)
+            self.store.log(session["id"], "self_discovery_saved", {"has_realized": True})
             return session
 
     def replay_session(
@@ -593,7 +624,6 @@ class MirrorEngine:
                 candidate_plan,
                 session["value_commitments"],
                 use_llm=bool(use_llm),
-                intake_answers=session.get("intake_answers"),
             )
             self._apply_resolution_statuses(
                 bundle["dissonance_edges"],
@@ -651,55 +681,6 @@ class MirrorEngine:
             return session
 
     # ------------------------------------------------------------------
-    # Ethical Redesign Studio (Condition B)
-    # ------------------------------------------------------------------
-
-    def record_issue_decision(
-        self,
-        session_id: str,
-        issue_id: str,
-        choice: str,
-        rationale: str = "",
-        tradeoff: Optional[int] = None,
-    ) -> Optional[Dict[str, Any]]:
-        """Record a researcher's per-issue redesign decision and log it."""
-
-        with self._lock:
-            session = self.get_session(session_id)
-            if not session:
-                return None
-            _viz_record_decision(
-                session, issue_id, choice, rationale=rationale, tradeoff=tradeoff
-            )
-            self._append_ledger(
-                session,
-                "issue_decision",
-                "researcher",
-                {
-                    "issue_id": issue_id,
-                    "choice": choice,
-                    "tradeoff": tradeoff,
-                    "has_rationale": bool(rationale and rationale.strip()),
-                },
-            )
-            self._touch(session)
-            self.store.save(session)
-            self.store.log(
-                session["id"],
-                "issue_decision",
-                session["ledger"][-1]["details"],
-            )
-            return session
-
-    def redesign_summary(self, session_id: str) -> Optional[Dict[str, Any]]:
-        """Return the derived Day-1 → Day-7 design-evolution visualization."""
-
-        session = self.get_session(session_id)
-        if not session:
-            return None
-        return derive_evolution(session)
-
-    # ------------------------------------------------------------------
     # Deterministic analysis
     # ------------------------------------------------------------------
 
@@ -708,37 +689,22 @@ class MirrorEngine:
         plan: str,
         commitments: Sequence[str],
         use_llm: bool = False,
-        intake_answers: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         passages = self._build_passages(plan)
         lenses = self._assess_lenses(passages)
         lens_llm = self._assess_lenses_with_llm(plan, lenses, bool(use_llm))
         self._apply_llm_lens_states(lenses, lens_llm)
         scenarios = self._build_scenarios(plan, passages, lenses)
+        # Optional gap between the two LLM calls so free/rate-limited tiers
+        # are not hit with a burst (default 0 keeps production latency intact).
+        _call_gap = float(os.getenv("SAFEBARS_MIRROR_LLM_CALL_GAP", "0") or "0")
+        if _call_gap > 0:
+            time.sleep(_call_gap)
         analysis_mode = self._optional_llm_probe(plan, scenarios, bool(use_llm))
         self._apply_llm_role_probes(scenarios, analysis_mode)
         edges = self._build_dissonance_edges(commitments, passages, lenses, scenarios)
         if lens_llm.get("llm_used"):
             analysis_mode["llm_affects_evidence_states"] = True
-        # Deep-audit layer: discovery cues beyond the researcher's own plan.
-        # Kept deterministic in the analyze path so it never consumes the LLM
-        # budget reserved for lens/role probing; an optional LLM contradiction
-        # scan remains available via run_deep_audit(use_llm=True).
-        try:
-            deep_audit = run_deep_audit(
-                plan,
-                commitments,
-                passages,
-                lenses,
-                scenarios,
-                intake_answers=intake_answers,
-                use_llm=False,
-                llm_client=self.llm_client,
-                dissonance_edges=edges,
-            )
-        except Exception as exc:  # deep audit must never break core analysis
-            logger.warning("deep audit failed: %s", exc)
-            deep_audit = {}
         return {
             "passages": passages,
             "lenses": lenses,
@@ -748,12 +714,6 @@ class MirrorEngine:
             "dissonance_visualization": self._build_dissonance_visualization(edges),
             "analysis_mode": analysis_mode,
             "lens_assessment_mode": lens_llm,
-            "deep_audit": deep_audit,
-            "issues": extract_issues(
-                deep_audit,
-                dissonance_edges=edges,
-                plan=plan,
-            ),
         }
 
     @staticmethod
@@ -1782,10 +1742,11 @@ class MirrorEngine:
             f"{plan[:7000]}\n\nROLE CONTRACTS:\n"
             f"{json.dumps(role_contract, ensure_ascii=False)}"
         )
-        # Five role probes are requested in one bounded call.  Some configured
-        # providers need slightly longer than a chat-style single sentence, so
-        # use the existing hard cap as the default instead of timing out early.
-        timeout = min(18, max(4, int(os.getenv("SAFEBARS_MIRROR_LLM_TIMEOUT", "18"))))
+        # Five role probes are requested in one bounded call.  Slower providers
+        # (e.g. larger models on free tiers) need more than a chat-style timeout,
+        # so allow the shared env timeout up to 60s instead of failing silently
+        # and dropping the role-probe enrichment.
+        timeout = min(60, max(4, int(os.getenv("SAFEBARS_MIRROR_LLM_TIMEOUT", "30"))))
         messages = [
             {
                 "role": "system",
@@ -1810,6 +1771,7 @@ class MirrorEngine:
                     messages,
                     temperature=0.2,
                     timeout=timeout,
+                    max_tokens=2000,
                 )
             except Exception:
                 provider_attempts.append(
@@ -2028,38 +1990,8 @@ class MirrorEngine:
             "dissonance_visualization",
             "analysis_mode",
             "lens_assessment_mode",
-            "deep_audit",
-            "issues",
         ):
             session[key] = bundle[key]
-
-    @staticmethod
-    def _preserve_issue_decisions(
-        session: Dict[str, Any],
-        previous_issues: Sequence[Dict[str, Any]],
-        previous_evolution: Sequence[Dict[str, Any]],
-    ) -> None:
-        """Carry recorded decisions across a re-analysis.
-
-        Re-running analysis rebuilds the ``issues`` list (ids are stable per
-        run), so any decision the researcher already made is copied back by id
-        and the evolution log is kept when the issue ids still match.
-        """
-
-        if not previous_issues:
-            return
-        prev_by_id = {i.get("id"): i for i in previous_issues}
-        kept = []
-        for issue in session.get("issues", []):
-            prev = prev_by_id.get(issue.get("id"))
-            if prev and prev.get("decision"):
-                issue["decision"] = prev["decision"]
-                kept.append(issue["id"])
-        if kept and previous_evolution:
-            # Keep the log only for issues that still exist.
-            session["design_evolution"] = [
-                e for e in previous_evolution if e.get("issue_id") in kept
-            ]
 
     @staticmethod
     def _analysis_event_payload(session: Dict[str, Any]) -> Dict[str, Any]:
@@ -2070,8 +2002,6 @@ class MirrorEngine:
             "scenario_count": len(session.get("scenarios", [])),
             "edge_count": len(session.get("dissonance_edges", [])),
             "llm_status": session.get("analysis_mode", {}).get("llm_status"),
-            "deep_audit": session.get("deep_audit", {}).get("counts"),
-            "issue_count": len(session.get("issues", []) or []),
             "not_an_ethics_score": True,
         }
 

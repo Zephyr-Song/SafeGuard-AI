@@ -28,6 +28,7 @@ from modules.reflection_dashboard import ReflectionDashboard
 from modules.rehearsal_logger import RehearsalLogger
 from modules.encounter_api import encounter_api
 from modules.mirror_api import mirror_api
+from modules.mirror_study_api import mirror_study_api
 from modules.ratelimit import rate_limit
 from modules.framework_selector import select_framework_path
 from config import FRAUD_CATEGORIES, DIFFICULTY_LEVELS, SAFETY_CONFIG, ACTIVE_MODEL
@@ -52,6 +53,7 @@ app.config["SAFEBARS_REQUIRE_ROLE_AUTH"] = os.getenv(
 ) == "1"
 app.register_blueprint(encounter_api)
 app.register_blueprint(mirror_api)
+app.register_blueprint(mirror_study_api)
 
 
 # ---------------------------------------------------------------------------
@@ -183,6 +185,12 @@ def safebars_mirror_page():
 def safebars_mirror_study_page():
     """SafeBARS Ethical Mirror study mode."""
     return render_template('safebars_mirror.html', study_mode=True)
+
+
+@app.route('/safebars/mirror-study')
+def safebars_mirror_study_intervention_page():
+    """StressLens CHI 2027 two-condition study interface."""
+    return render_template('safebars_mirror_study.html')
 
 
 @app.route('/safebars/v1')

@@ -75,7 +75,7 @@ def _add_esr_section(document: Document, session: Dict[str, Any]) -> None:
     """ESR-style societal / subgroup / global risk statement (Bernstein 2021)."""
 
     document.add_heading(
-        "5. Societal & community risk statement (Ethics and Society Review)",
+        "4. Societal & community risk statement (Ethics and Society Review)",
         level=1,
     )
     paragraph = document.add_paragraph()
@@ -142,92 +142,6 @@ def _add_esr_section(document: Document, session: Dict[str, Any]) -> None:
                 f"{_text(lens.get('label') or lens.get('id'), 'Lens')} "
                 f"[{_text(lens.get('status'))}] — {_text(lens.get('evidence') or lens.get('interpretation'))}"
             ))
-
-
-def _add_deep_audit_section(document: Document, session: Dict[str, Any]) -> None:
-    """Surface the deep-audit discovery cues in the committee draft.
-
-    These cues are hypothesis-generating: they surface risks the plan did not
-    state, using real failure cases, curated patterns, and signal checks. They
-    are not findings or approval.
-    """
-    document.add_heading("4. Deep-audit discovery cues", level=1)
-    da = session.get("deep_audit") or {}
-    if not da or not da.get("counts"):
-        document.add_paragraph(
-            "No deep-audit cues were generated for this plan."
-        )
-        return
-    document.add_paragraph(
-        "The Ethical Mirror's deep-audit layer surfaces blind spots beyond what "
-        "the submitted plan states. These are discovery cues, not ethics "
-        "findings. Each still requires human judgement and real-stakeholder "
-        "verification before submission."
-    )
-
-    domains = (da.get("domain_flags") or {}).get("matched_domains") or []
-    if domains:
-        document.add_paragraph().add_run(
-            "Detected high-risk domains (with auto-injected checklist):"
-        ).bold = True
-        for d in domains:
-            item = document.add_paragraph(style="List Bullet")
-            _set_run(item.add_run(f"{_text(d.get('label'))} [{_text(d.get('severity'))}]: "), bold=True)
-            item.add_run(_text(d.get("matched_terms")))
-        for c in (da.get("domain_flags") or {}).get("injected_checklist") or []:
-            item = document.add_paragraph(style="List Bullet 2")
-            _set_run(item.add_run(f"{_text(c.get('title'))} ({_text(c.get('regulation'))}): "), bold=True)
-            item.add_run(_text(c.get("detail")))
-
-    ctr = da.get("internal_contradictions") or []
-    if ctr:
-        document.add_paragraph().add_run("Internal contradictions in the plan:").bold = True
-        for c in ctr:
-            item = document.add_paragraph(style="List Bullet")
-            _set_run(item.add_run(f"{_text(c.get('id'))} — {_text(c.get('explanation'))} "), bold=True)
-            item.add_run(f"Commitment: “{_text(c.get('commitment_text'))}”. Fix: {_text(c.get('suggested_action'))}")
-
-    gaps = (da.get("severity_weighted_gaps") or {}).get("prioritized_gaps") or []
-    if gaps:
-        document.add_paragraph().add_run("Severity-weighted coverage gaps (prioritise):").bold = True
-        for g in gaps:
-            item = document.add_paragraph(style="List Bullet")
-            _set_run(item.add_run(f"{_text(g.get('label'))} [{_text(g.get('severity'))}]"), bold=True)
-            if g.get("reasons"):
-                item.add_run(f" — {_text(g.get('reasons'))}")
-
-    edges = da.get("additional_dissonance_edges") or []
-    if edges:
-        document.add_paragraph().add_run("Discovery tensions:").bold = True
-        for e in edges:
-            item = document.add_paragraph(style="List Bullet")
-            _set_run(item.add_run(f"{_text(e.get('id'))} [{_text(e.get('rule'))}]: "), bold=True)
-            item.add_run(_text(e.get("tension")))
-
-    analogues = da.get("analogues") or []
-    if analogues:
-        document.add_paragraph().add_run("Real systems that failed in this space (read before submission):").bold = True
-        for a in analogues:
-            item = document.add_paragraph(style="List Bullet")
-            _set_run(item.add_run(f"{_text(a.get('title'))} ({_text(a.get('year'))}, {_text(a.get('source_name'))}): "), bold=True)
-            item.add_run(f"{_text(a.get('lesson'))} {_text(a.get('source_url'))}")
-
-    patterns = da.get("patterns") or []
-    if patterns:
-        document.add_paragraph().add_run("Patterns researchers like you often miss:").bold = True
-        for p in patterns:
-            item = document.add_paragraph(style="List Bullet")
-            _set_run(item.add_run(f"{_text(p.get('pattern'))} "), bold=True)
-            item.add_run(f"Usually missed: {_text(p.get('usually_missed'))} Ask: {_text(p.get('prompt'))}")
-
-    bridge = da.get("real_evidence_bridge")
-    if bridge:
-        document.add_paragraph().add_run("Convert synthetic probes into real evidence:").bold = True
-        document.add_paragraph(_text(bridge.get("notice")))
-        for t in bridge.get("evidence_types") or []:
-            item = document.add_paragraph(style="List Bullet")
-            _set_run(item.add_run(f"{_text(t.get('label'))}: "), bold=True)
-            item.add_run(_text(t.get("description")))
 
 
 def build_committee_application_docx(session: Dict[str, Any]) -> bytes:
@@ -341,14 +255,11 @@ def build_committee_application_docx(session: Dict[str, Any]) -> bytes:
             _set_run(item.add_run(f"{label} [{status}]: "), bold=True)
             item.add_run(rationale)
 
-    # 4. Deep-audit discovery cues -----------------------------------------
-    _add_deep_audit_section(document, session)
-
-    # 5. ESR societal & community risk statement ---------------------------
+    # 4. ESR societal & community risk statement ---------------------------
     _add_esr_section(document, session)
 
-    # 6. Researcher revisions and decisions --------------------------------
-    document.add_heading("6. Researcher revisions and decisions", level=1)
+    # 5. Researcher revisions and decisions --------------------------------
+    document.add_heading("5. Researcher revisions and decisions", level=1)
     revisions = session.get("revisions") or []
     if revisions:
         for revision in revisions:
@@ -365,8 +276,8 @@ def build_committee_application_docx(session: Dict[str, Any]) -> bytes:
             "section and the change ledger."
         )
 
-    # 7. References ---------------------------------------------------------
-    document.add_heading("7. References", level=1)
+    # 6. References ---------------------------------------------------------
+    document.add_heading("6. References", level=1)
     references = [
         "Bernstein, M. S., Levi, M., Magnus, D., Rajala, B. A., Satz, D., & "
         "Waeiss, C. (2021). Ethics and society review: Ethics reflection as a "
