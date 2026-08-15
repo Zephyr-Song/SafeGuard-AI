@@ -154,6 +154,48 @@ def replay_session(session_id: str):
     return jsonify({"success": True, "session": session})
 
 
+@mirror_api.post("/sessions/<session_id>/decisions")
+def record_decision(session_id: str):
+    """Record a per-issue redesign decision (Condition B: visualization mode)."""
+
+    payload, error = _json_object()
+    if error:
+        return error
+    choice = payload.get("choice")
+    if choice not in ("fix", "accept_risk", "defer"):
+        return jsonify(
+            {"success": False, "error": "choice must be fix, accept_risk, or defer."}
+        ), 400
+    try:
+        session = mirror_engine.record_issue_decision(
+            session_id,
+            issue_id=payload.get("issue_id", ""),
+            choice=choice,
+            rationale=payload.get("rationale", ""),
+            tradeoff=payload.get("tradeoff"),
+        )
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as exc:
+        return _unexpected("record the issue decision", exc)
+    if not session:
+        return jsonify({"success": False, "error": "Session not found."}), 404
+    return jsonify({"success": True, "session": session})
+
+
+@mirror_api.get("/sessions/<session_id>/redesign")
+def redesign_summary(session_id: str):
+    """Return the derived Day-1 -> Day-7 design-evolution visualization."""
+
+    try:
+        summary = mirror_engine.redesign_summary(session_id)
+    except Exception as exc:
+        return _unexpected("build the redesign summary", exc)
+    if summary is None:
+        return jsonify({"success": False, "error": "Session not found."}), 404
+    return jsonify({"success": True, **summary})
+
+
 @mirror_api.post("/sessions/<session_id>/export-application")
 def export_application(session_id: str):
     """Return a DOCX ethics-application draft built from the Mirror session."""

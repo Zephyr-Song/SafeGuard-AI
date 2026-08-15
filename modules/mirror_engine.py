@@ -31,6 +31,7 @@ from .mirror_literature import (
     literature_registry,
 )
 from .mirror_audit import run_deep_audit
+from .mirror_viz import derive_evolution, extract_issues, record_decision as _viz_record_decision
 from .mirror_store import MirrorStore, utc_now
 
 
@@ -423,6 +424,8 @@ class MirrorEngine:
             "dissonance_edges": [],
             "dissonance_visualization": {},
             "deep_audit": {},
+            "issues": [],
+            "design_evolution": [],
             "revisions": [],
             "pending_revision_id": None,
             "replay_history": [],
@@ -474,6 +477,8 @@ class MirrorEngine:
             session = self.get_session(session_id)
             if not session:
                 return None
+            prev_issues = session.get("issues", []) or []
+            prev_evolution = session.get("design_evolution", []) or []
             bundle = self._analyze(
                 session["research_plan"],
                 session["value_commitments"],
@@ -481,6 +486,7 @@ class MirrorEngine:
                 intake_answers=session.get("intake_answers"),
             )
             self._apply_bundle(session, bundle)
+            self._preserve_issue_decisions(session, prev_issues, prev_evolution)
             self._append_ledger(
                 session,
                 "analysis_completed",
@@ -645,6 +651,55 @@ class MirrorEngine:
             return session
 
     # ------------------------------------------------------------------
+    # Ethical Redesign Studio (Condition B)
+    # ------------------------------------------------------------------
+
+    def record_issue_decision(
+        self,
+        session_id: str,
+        issue_id: str,
+        choice: str,
+        rationale: str = "",
+        tradeoff: Optional[int] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Record a researcher's per-issue redesign decision and log it."""
+
+        with self._lock:
+            session = self.get_session(session_id)
+            if not session:
+                return None
+            _viz_record_decision(
+                session, issue_id, choice, rationale=rationale, tradeoff=tradeoff
+            )
+            self._append_ledger(
+                session,
+                "issue_decision",
+                "researcher",
+                {
+                    "issue_id": issue_id,
+                    "choice": choice,
+                    "tradeoff": tradeoff,
+                    "has_rationale": bool(rationale and rationale.strip()),
+                },
+            )
+            self._touch(session)
+            self.store.save(session)
+            self.store.log(
+                session["id"],
+                "issue_decision",
+                session["ledger"][-1]["details"],
+            )
+            return session
+
+    def redesign_summary(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """Return the derived Day-1 → Day-7 design-evolution visualization."""
+
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        return derive_evolution(session)
+
+    # ------------------------------------------------------------------
     # Deterministic analysis
     # ------------------------------------------------------------------
 
@@ -694,6 +749,11 @@ class MirrorEngine:
             "analysis_mode": analysis_mode,
             "lens_assessment_mode": lens_llm,
             "deep_audit": deep_audit,
+            "issues": extract_issues(
+                deep_audit,
+                dissonance_edges=edges,
+                plan=plan,
+            ),
         }
 
     @staticmethod
@@ -1969,8 +2029,37 @@ class MirrorEngine:
             "analysis_mode",
             "lens_assessment_mode",
             "deep_audit",
+            "issues",
         ):
             session[key] = bundle[key]
+
+    @staticmethod
+    def _preserve_issue_decisions(
+        session: Dict[str, Any],
+        previous_issues: Sequence[Dict[str, Any]],
+        previous_evolution: Sequence[Dict[str, Any]],
+    ) -> None:
+        """Carry recorded decisions across a re-analysis.
+
+        Re-running analysis rebuilds the ``issues`` list (ids are stable per
+        run), so any decision the researcher already made is copied back by id
+        and the evolution log is kept when the issue ids still match.
+        """
+
+        if not previous_issues:
+            return
+        prev_by_id = {i.get("id"): i for i in previous_issues}
+        kept = []
+        for issue in session.get("issues", []):
+            prev = prev_by_id.get(issue.get("id"))
+            if prev and prev.get("decision"):
+                issue["decision"] = prev["decision"]
+                kept.append(issue["id"])
+        if kept and previous_evolution:
+            # Keep the log only for issues that still exist.
+            session["design_evolution"] = [
+                e for e in previous_evolution if e.get("issue_id") in kept
+            ]
 
     @staticmethod
     def _analysis_event_payload(session: Dict[str, Any]) -> Dict[str, Any]:
@@ -1982,6 +2071,7 @@ class MirrorEngine:
             "edge_count": len(session.get("dissonance_edges", [])),
             "llm_status": session.get("analysis_mode", {}).get("llm_status"),
             "deep_audit": session.get("deep_audit", {}).get("counts"),
+            "issue_count": len(session.get("issues", []) or []),
             "not_an_ethics_score": True,
         }
 

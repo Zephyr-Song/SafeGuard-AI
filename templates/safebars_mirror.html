@@ -78,6 +78,14 @@
                     </span>
                     <span class="step-state" aria-hidden="true"></span>
                 </button>
+                <button class="step-nav-item" type="button" data-step-target="7" data-rs-nav aria-disabled="true" hidden>
+                    <span class="step-number">07</span>
+                    <span class="step-nav-copy">
+                        <strong>Redesign studio</strong>
+                        <small>Fix · accept · defer</small>
+                    </span>
+                    <span class="step-state" aria-hidden="true"></span>
+                </button>
             </nav>
 
             <div class="rail-legend">
@@ -109,6 +117,13 @@
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.34-5.66M4 4v6h6M12 8v5l3 2"/></svg>
                     </button>
                     <button class="quiet-button" id="methodTopBtn" type="button">How it works</button>
+                    <label class="condition-switch" title="Study condition (A = text only, B = with visualization)">
+                        <span class="sr-only">Study condition</span>
+                        <select id="conditionToggle" aria-label="Study condition">
+                            <option value="b">Visualization (B)</option>
+                            <option value="a">Text only (A)</option>
+                        </select>
+                    </label>
                     <a class="quiet-button" id="openWorkspaceLink" href="/safebars">Open SafeBARS workspace</a>
                 </div>
             </header>
@@ -286,7 +301,7 @@
                             <div>
                                 <p class="eyebrow">Deep audit · discovery cues</p>
                                 <h2 id="deepAuditTitle">Risks the plan did not state</h2>
-                                <p class="step-lead">These cues surface blind spots using real cases, curated patterns, and signal checks. They are hypotheses, not findings or approval.</p>
+                                <p class="step-lead">These cues surface blind spots using real cases and signal checks. Hypotheses, not findings or approval.</p>
                             </div>
                             <span class="deep-audit-badge" id="deepAuditBadge"></span>
                         </div>
@@ -436,7 +451,7 @@
                         <div>
                             <p class="eyebrow">Step 5 · Revision sandbox</p>
                             <h1 id="step5Title">Change the design—or explain why the argument does not hold.</h1>
-                            <p class="step-lead">SafeBARS offers four legitimate responses. You retain authorship and may contest an AI-generated concern with evidence.</p>
+                            <p class="step-lead">Four legitimate responses. You keep authorship and can contest any concern with evidence.</p>
                         </div>
                         <span class="autosave-state" id="revisionSaveState">Not yet saved</span>
                     </div>
@@ -522,7 +537,7 @@
                         <div>
                             <p class="eyebrow">Step 6 · Revision evidence</p>
                             <h1 id="step6Title">What changed, what remains, and why.</h1>
-                            <p class="step-lead">The ledger preserves the chain from original plan evidence to possible consequence, researcher response, and revised design. It does not turn reflection into a pass/fail certificate.</p>
+                            <p class="step-lead">The ledger preserves the chain from plan evidence to consequence, your response, and revised design. It does not turn reflection into a pass/fail certificate.</p>
                             <p class="lock-hint" id="step6LockHint" hidden>
                                 <strong>Locked.</strong> This step opens after you respond to at least one tension in Step 5 — choose <em>Revise</em>, <em>Add safeguard</em>, <em>Contest</em>, or <em>Consult</em> on a tension in the map.
                             </p>
@@ -586,6 +601,43 @@
                     <div class="step-footer">
                         <button class="back-button" type="button" data-go-step="5">Back to revision</button>
                         <button class="primary-button" id="newMirrorBtn" type="button">Start another research plan</button>
+                    </div>
+                </section>
+
+                <section class="workflow-step" data-step-panel="7" id="redesignStep" aria-labelledby="step7Title" hidden>
+                    <div class="step-heading compact">
+                        <div>
+                            <p class="eyebrow">Step 7 · Redesign studio</p>
+                            <h1 id="step7Title">Decide, issue by issue — and see two futures.</h1>
+                            <p class="step-lead">The mirror found issues in a plan that is almost done and not entirely wrong. For each one, weigh the effort to fix against the risk of leaving it, then record your call. You stay in charge.</p>
+                        </div>
+                    </div>
+
+                    <div class="rs-stats surface" id="redesignStats" aria-live="polite"></div>
+
+                    <div class="rs-layout">
+                        <aside class="rs-issues surface">
+                            <div class="card-heading">
+                                <div>
+                                    <p class="eyebrow">Issues, one by one</p>
+                                    <h2>What the mirror found</h2>
+                                </div>
+                            </div>
+                            <p class="card-intro">Select an issue to see its two futures and the role swap, then decide.</p>
+                            <div class="rs-issue-list" id="redesignIssueList" role="listbox" aria-label="Identified issues"></div>
+                        </aside>
+
+                        <div class="rs-detail-wrap surface" id="redesignDetail"></div>
+                    </div>
+
+                    <section class="rs-week-panel surface" aria-labelledby="rsWeekTitle">
+                        <h2 id="rsWeekTitle">Your 1-week redesign timeline</h2>
+                        <div id="redesignWeek"></div>
+                    </section>
+
+                    <div class="step-footer">
+                        <button class="back-button" type="button" data-go-step="6">Back to review</button>
+                        <button class="primary-button" id="rsStartOverBtn" type="button">Start another research plan</button>
                     </div>
                 </section>
             </main>

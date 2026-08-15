@@ -337,6 +337,8 @@
         intakeIndex: 0,
         intakeAnswers: {},
         intakeComplete: false,
+        condition: "b",
+        selectedIssueId: null,
     };
 
     const dom = {};
@@ -364,6 +366,8 @@
             "downloadBundleBtn", "exportApplicationBtn", "printLedgerBtn", "literatureDialog", "literatureList", "methodDialog",
             "boundaryDialog", "loadingLayer", "loadingEyebrow", "loadingTitle", "loadingDetail",
             "loadingSteps", "toastRegion",
+            "conditionToggle", "redesignStep", "redesignStats", "redesignIssueList",
+            "redesignDetail", "redesignWeek", "rsStartOverBtn",
         ].forEach((id) => {
             dom[id] = document.getElementById(id);
         });
@@ -1466,6 +1470,7 @@
         renderGraph();
         renderTensions();
         renderLedger();
+        renderRedesignStudio();
         updateProgress();
         updateRevisionStats();
         dom.literatureCount.textContent = String(state.literature.length);
@@ -2669,7 +2674,9 @@
             4: hasEdges || hasScenarios,
             5: hasEdges,
             6: hasLedger,
+            7: state.condition === "b" && hasAnalysis,
         };
+        const hasRedesignDecisions = Boolean(state.session?.design_evolution?.length);
         const complete = {
             1: hasSession,
             2: Boolean(state.session?.lenses?.length),
@@ -2677,9 +2684,14 @@
             4: hasEdges,
             5: hasResponses,
             6: Boolean(state.session?.ledger?.length || state.session?.replayed_at),
+            7: hasRedesignDecisions,
         };
         dom.stepNavItems.forEach((button) => {
             const step = Number(button.dataset.stepTarget);
+            if (step === 7) {
+                button.hidden = state.condition !== "b";
+                if (state.condition !== "b") return;
+            }
             button.setAttribute("aria-disabled", String(!unlocked[step]));
             button.classList.toggle("is-complete", complete[step]);
             button.classList.toggle("is-active", step === state.activeStep);
@@ -2695,8 +2707,262 @@
         return button && button.getAttribute("aria-disabled") !== "true";
     }
 
+    // ----------------------------------------------------------------------
+    // Redesign Studio (Condition B: visualization mode)
+    // ----------------------------------------------------------------------
+    const STATUS_LABEL = {
+        open: "Open",
+        fix: "Fixed",
+        accept_risk: "Risk accepted",
+        defer: "Deferred",
+    };
+
+    function applyCondition() {
+        const params = new URLSearchParams(window.location.search);
+        const fromUrl = params.get("condition");
+        let stored = null;
+        try { stored = localStorage.getItem("safeBARS_condition"); } catch {}
+        const value = (fromUrl === "a" || fromUrl === "b") ? fromUrl
+            : (stored === "a" || stored === "b") ? stored : "b";
+        setConditionState(value);
+    }
+
+    function setConditionState(value) {
+        state.condition = value;
+        try { localStorage.setItem("safeBARS_condition", value); } catch {}
+        if (dom.conditionToggle) dom.conditionToggle.value = value;
+        const rsNav = document.querySelector("[data-rs-nav]");
+        if (rsNav) rsNav.hidden = value !== "b";
+        if (value !== "b" && dom.redesignStep) {
+            dom.redesignStep.hidden = true;
+            if (state.activeStep === 7) navigateToStep(6, true);
+        }
+        updateProgress();
+    }
+
+    function setCondition(value) {
+        if (value !== "a" && value !== "b") return;
+        setConditionState(value);
+        renderAll();
+        toast(
+            value === "b" ? "Visualization mode (B)" : "Text-only mode (A)",
+            "Tip: open with ?condition=a or ?condition=b to lock it for a study."
+        );
+    }
+
+    function weekDay(iso, firstIso) {
+        if (!iso || !firstIso) return 1;
+        const a = new Date(iso);
+        const b = new Date(firstIso);
+        if (isNaN(a.getTime()) || isNaN(b.getTime())) return 1;
+        const days = Math.max(0, (a.getTime() - b.getTime()) / 86400000);
+        return Math.max(1, Math.min(7, Math.floor(days) + 1));
+    }
+
+    function redesignEvolution() {
+        const issues = state.session?.issues || [];
+        const status = {};
+        issues.forEach((i) => { status[i.id] = i.decision ? i.decision.choice : "open"; });
+        const counts = { open: 0, fix: 0, accept_risk: 0, defer: 0 };
+        issues.forEach((i) => { counts[status[i.id]] = (counts[status[i.id]] || 0) + 1; });
+        const evo = state.session?.design_evolution || [];
+        const firstAt = evo.length ? evo[0].at : null;
+        const markers = evo.map((e, idx) => {
+            const issue = issues.find((i) => i.id === e.issue_id) || {};
+            return {
+                index: e.index || idx + 1,
+                issue_id: e.issue_id,
+                issue_label: issue.label || e.issue_id,
+                choice: e.choice,
+                day: weekDay(e.at, firstAt),
+                at: e.at,
+            };
+        });
+        return { total: issues.length, counts, markers, status };
+    }
+
+    function rsBeat(b) {
+        if (!b) return "";
+        const prompt = b.img_prompt || "";
+        return `
+            <div class="rs-beat">
+                <span class="rs-beat-t">${escapeHtml(b.t)}</span>
+                <p>${escapeHtml(b.scenario || "")}</p>
+                ${prompt ? `<details class="rs-imgprompt"><summary>AI image prompt (for paper)</summary><code>${escapeHtml(prompt)}</code></details>` : ""}
+            </div>
+        `;
+    }
+
+    function renderRedesignStudio() {
+        const panel = dom.redesignStep;
+        if (!panel) return;
+        if (state.condition !== "b") { panel.hidden = true; return; }
+        const issues = state.session?.issues || [];
+        if (!state.session || !state.session.id || !issues.length) {
+            panel.hidden = true;
+            return;
+        }
+        panel.hidden = false;
+
+        const evo = redesignEvolution();
+        dom.redesignStats.innerHTML = `
+            <div class="rs-stat"><span>${evo.total}</span><small>issues found</small></div>
+            <div class="rs-stat is-fix"><span>${evo.counts.fix}</span><small>fixed</small></div>
+            <div class="rs-stat is-accept"><span>${evo.counts.accept_risk}</span><small>risk accepted</small></div>
+            <div class="rs-stat is-defer"><span>${evo.counts.defer}</span><small>deferred</small></div>
+            <div class="rs-stat is-open"><span>${evo.counts.open}</span><small>open</small></div>
+        `;
+
+        if (!state.selectedIssueId || !issues.some((i) => i.id === state.selectedIssueId)) {
+            state.selectedIssueId = issues[0].id;
+        }
+        dom.redesignIssueList.innerHTML = issues.map((issue) => {
+            const dec = issue.decision;
+            const status = dec ? dec.choice : "open";
+            const selected = issue.id === state.selectedIssueId;
+            return `
+                <button type="button" class="rs-issue ${selected ? "is-selected" : ""}" role="option" aria-selected="${selected}" data-issue-id="${escapeAttr(issue.id)}">
+                    <span class="rs-issue-id">${escapeHtml(issue.id)}</span>
+                    <span class="rs-issue-label">${escapeHtml(shortText(issue.label, 64))}</span>
+                    <span class="rs-sev ${escapeAttr(issue.severity)}">${escapeHtml(issue.severity)}</span>
+                    <span class="rs-status ${escapeAttr(status)}">${escapeHtml(STATUS_LABEL[status])}</span>
+                </button>
+            `;
+        }).join("");
+
+        dom.redesignIssueList.querySelectorAll("[data-issue-id]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                state.selectedIssueId = btn.dataset.issueId;
+                renderRedesignStudio();
+            });
+        });
+
+        renderRedesignDetail();
+        renderRedesignWeek(evo);
+    }
+
+    function renderRedesignDetail() {
+        const issues = state.session?.issues || [];
+        const issue = issues.find((i) => i.id === state.selectedIssueId);
+        if (!issue) {
+            dom.redesignDetail.innerHTML = `<div class="rs-detail-placeholder"><span aria-hidden="true">◷</span><h3>Select an issue</h3><p>Choose an issue on the left to see its two futures and decide.</p></div>`;
+            return;
+        }
+        const dec = issue.decision;
+        const tf = issue.two_futures || { fix: [], ignore: [] };
+        const rs = issue.role_swap || {};
+        const tradeoff = (dec && typeof dec.tradeoff === "number") ? dec.tradeoff : 50;
+        dom.redesignDetail.innerHTML = `
+            <div class="rs-detail-head">
+                <span class="rs-issue-id">${escapeHtml(issue.id)}</span>
+                <h3>${escapeHtml(issue.label)}</h3>
+                <span class="rs-sev ${escapeAttr(issue.severity)}">${escapeHtml(issue.severity)}</span>
+            </div>
+            ${issue.summary ? `<p class="rs-summary">${escapeHtml(issue.summary)}</p>` : ""}
+
+            <div class="rs-section">
+                <h4>Two futures for this issue</h4>
+                <div class="rs-futures">
+                    <div class="rs-future fix">
+                        <h5>If you fix it</h5>
+                        ${(tf.fix || []).map(rsBeat).join("")}
+                    </div>
+                    <div class="rs-future ignore">
+                        <h5>If you leave it</h5>
+                        ${(tf.ignore || []).map(rsBeat).join("")}
+                    </div>
+                </div>
+            </div>
+
+            <div class="rs-section">
+                <h4>Role swap — same future, two positions</h4>
+                <div class="rs-roleswap">
+                    <div class="rs-role researcher"><strong>As the researcher</strong><p>${escapeHtml(rs.as_researcher || "")}</p></div>
+                    <div class="rs-role participant"><strong>As the participant</strong><p>${escapeHtml(rs.as_participant || "")}</p></div>
+                </div>
+            </div>
+
+            <div class="rs-section rs-decision">
+                <h4>Your decision</h4>
+                <div class="rs-tradeoff">
+                    <label id="rsTradeoffLabel">Effort–risk balance</label>
+                    <input type="range" min="0" max="100" value="${tradeoff}" data-tradeoff aria-labelledby="rsTradeoffLabel">
+                    <span class="rs-tradeoff-val" data-tradeoff-val>${tradeoff}</span>
+                    <div class="rs-tradeoff-ends"><span>keep design, risk remains</span><span>redesign to remove risk</span></div>
+                </div>
+                <textarea data-rationale class="rs-rationale" placeholder="Why this choice? (optional, but useful for your ethics record)">${escapeHtml(dec?.rationale || "")}</textarea>
+                <div class="rs-decision-actions">
+                    <button type="button" class="rs-btn is-fix" data-decision="fix">Fix the issue</button>
+                    <button type="button" class="rs-btn is-accept" data-decision="accept_risk">Accept the risk</button>
+                    <button type="button" class="rs-btn is-defer" data-decision="defer">Defer</button>
+                </div>
+                ${dec ? `<p class="rs-decided-note">Recorded: <strong>${escapeHtml(STATUS_LABEL[dec.choice])}</strong>${dec.at ? ` · ${escapeHtml(formatDate(dec.at))}` : ""}</p>` : ""}
+            </div>
+        `;
+
+        const tradeoffEl = dom.redesignDetail.querySelector("[data-tradeoff]");
+        const tradeoffVal = dom.redesignDetail.querySelector("[data-tradeoff-val]");
+        if (tradeoffEl && tradeoffVal) {
+            tradeoffEl.addEventListener("input", () => { tradeoffVal.textContent = tradeoffEl.value; });
+        }
+        dom.redesignDetail.querySelectorAll("[data-decision]").forEach((btn) => {
+            btn.addEventListener("click", () => onIssueDecision(issue.id, btn.dataset.decision));
+        });
+    }
+
+    function renderRedesignWeek(evo) {
+        const days = [1, 2, 3, 4, 5, 6, 7];
+        dom.redesignWeek.innerHTML = `
+            <div class="rs-week">
+                ${days.map((d) => {
+                    const dots = evo.markers.filter((m) => m.day === d);
+                    return `
+                        <div class="rs-day">
+                            <span class="rs-day-num">Day ${d}</span>
+                            <div class="rs-day-dots">
+                                ${dots.length ? dots.map((m) => `<span class="rs-dot ${escapeAttr(m.choice)}" title="${escapeHtml(m.issue_label)} — ${escapeHtml(STATUS_LABEL[m.choice] || m.choice)}"></span>`).join("") : `<span class="rs-day-empty"></span>`}
+                            </div>
+                        </div>
+                    `;
+                }).join("")}
+            </div>
+            <p class="rs-week-note">Each decision lands on the day you make it. Amber = fixed, blue = risk accepted, grey = deferred. This is your 1-week redesign record.</p>
+        `;
+    }
+
+    async function onIssueDecision(issueId, choice) {
+        const detail = dom.redesignDetail;
+        const tradeoffEl = detail.querySelector("[data-tradeoff]");
+        const rationaleEl = detail.querySelector("[data-rationale]");
+        const tradeoff = tradeoffEl ? Number(tradeoffEl.value) : null;
+        const rationale = rationaleEl ? rationaleEl.value.trim() : "";
+        await recordIssueDecision(issueId, choice, rationale, tradeoff);
+    }
+
+    async function recordIssueDecision(issueId, choice, rationale, tradeoff) {
+        if (!state.session?.id) {
+            toast("No session", "Build the mirror first.", "error");
+            return;
+        }
+        try {
+            const data = await api(`/sessions/${encodeURIComponent(state.session.id)}/decisions`, {
+                method: "POST",
+                body: { issue_id: issueId, choice, rationale: rationale || "", tradeoff },
+            });
+            const session = unwrapSession(data);
+            if (!session || !session.id) throw new Error("No session returned");
+            state.session = normaliseSession(session, state.session);
+            state.selectedIssueId = issueId;
+            renderAll();
+            toast("Decision saved", `${issueId} → ${STATUS_LABEL[choice] || choice}`);
+        } catch (err) {
+            toast("Could not save", err.message || "Please try again.", "error");
+        }
+    }
+
     function navigateToStep(step, force = false) {
-        const target = clamp(step, 1, 6);
+        const maxStep = state.condition === "b" ? 7 : 6;
+        const target = clamp(step, 1, maxStep);
         if (!force && !canNavigateTo(target)) {
             toast("Complete the earlier step first", "The next workspace opens when its evidence is available.", "error");
             return;
@@ -2717,6 +2983,7 @@
             updateRevisionStats();
         }
         if (target === 6) renderLedger();
+        if (target === 7) renderRedesignStudio();
         document.querySelector(`[data-step-panel="${target}"]`)?.scrollIntoView({ block: "start" });
         dom.workspace.focus({ preventScroll: true });
     }
@@ -2937,6 +3204,12 @@
 
         dom.startOverBtn.addEventListener("click", () => resetLocalState(true));
         dom.newMirrorBtn.addEventListener("click", () => resetLocalState(true));
+        if (dom.rsStartOverBtn) {
+            dom.rsStartOverBtn.addEventListener("click", () => resetLocalState(true));
+        }
+        if (dom.conditionToggle) {
+            dom.conditionToggle.addEventListener("change", () => setCondition(dom.conditionToggle.value));
+        }
         dom.retryConnectionBtn.addEventListener("click", async () => {
             await loadConfiguration();
             if (state.lastConnectionOk) toast("Connection restored", "The SafeBARS service is ready.");
@@ -2956,6 +3229,7 @@
     async function init() {
         cacheDom();
         bindEvents();
+        applyCondition();
         setCommitments([""]);
         renderIntake();
         updatePlanSignals();
