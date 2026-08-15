@@ -154,34 +154,47 @@ def _call_deepseek(api_key: str, issue: str) -> Dict[str, Any]:
     return _normalize_analysis(data, issue)
 
 
-def _analyze_with_llm(issue: str) -> Dict[str, Any]:
-    """Call an LLM and return a normalized analysis, or None on any failure.
+def _analyze_with_llm(issue: str) -> Tuple[Optional[Dict[str, Any]], str]:
+    """Call an LLM and return (normalized_analysis, error_string).
 
     Prefers a dedicated DeepSeek key (matching the Transition Companion prototype),
-    then falls back to the shared multi-provider SafeBARS client.
+    then tries every configured SafeBARS provider in turn. Returns (None, errors)
+    if all attempts fail.
     """
+    messages = [
+        {"role": "system", "content": _ANALYZE_SYSTEM},
+        {"role": "user", "content": f"Researcher's concern: {issue}"},
+    ]
+    errors: List[str] = []
+
     ds_key = os.getenv("DEEPSEEK_API_KEY")
     if ds_key:
         try:
-            return _call_deepseek(ds_key, issue)
-        except Exception:
+            return _call_deepseek(ds_key, issue), ""
+        except Exception as exc:
+            errors.append(f"deepseek:{type(exc).__name__}")
             current_app.logger.exception("Mirror /analyze DeepSeek call failed")
+
     llm = _get_llm()
     if llm and llm.is_configured():
-        try:
-            resp = llm.chat(
-                [
-                    {"role": "system", "content": _ANALYZE_SYSTEM},
-                    {"role": "user", "content": f"Researcher's concern: {issue}"},
-                ],
-                temperature=0.4,
-            )
-            data = _extract_json(resp) if resp else None
-            if data and data.get("reflection") and isinstance(data.get("related_concerns"), list):
-                return _normalize_analysis(data, issue)
-        except Exception:
-            current_app.logger.exception("Mirror /analyze LLM call failed")
-    return None
+        order = []
+        if llm.active_provider_id:
+            order.append(llm.active_provider_id)
+        order += [pid for pid in llm.providers if pid != llm.active_provider_id]
+        for pid in order:
+            try:
+                resp = llm.chat_with_provider(pid, messages, temperature=0.4)
+                if resp and resp.get("ok") and resp.get("text"):
+                    data = _extract_json(resp["text"])
+                    if data and data.get("reflection") and isinstance(data.get("related_concerns"), list):
+                        return _normalize_analysis(data, issue), ""
+                else:
+                    errors.append(f"{pid}:{(resp or {}).get('error_type','?')}")
+            except Exception as exc:
+                errors.append(f"{pid}:{type(exc).__name__}")
+                current_app.logger.exception(f"Mirror /analyze {pid} failed")
+
+    return None, " | ".join(errors)[:300]
 
 
 def _json_object() -> Tuple[Dict[str, Any], Any]:
@@ -298,7 +311,7 @@ def analyze():
     if len(issue) > 2000:
         return jsonify({"success": False, "error": "Issue text is too long (max 2000 chars)."}), 400
 
-    analysis = _analyze_with_llm(issue)
+    analysis, ai_error = _analyze_with_llm(issue)
     source = "ai" if analysis is not None else "fallback"
     if analysis is None:
         analysis = _fallback_analysis(issue)
@@ -310,6 +323,7 @@ def analyze():
         "deepseek_configured": bool(os.getenv("DEEPSEEK_API_KEY")),
         "llm_configured": bool(llm and llm.is_configured()),
         "provider_count": len(llm.providers) if llm else 0,
+        "ai_error": ai_error,
         **analysis,
     })
 
