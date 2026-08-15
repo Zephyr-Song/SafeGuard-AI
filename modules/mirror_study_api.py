@@ -11,7 +11,14 @@ from typing import Any, Dict, Tuple
 
 from flask import Blueprint, current_app, jsonify, request, url_for
 
-from .mirror_study_data import CONDITIONS, FIXES, SHARED_VIGNETTE, public_config
+from .mirror_study_data import (
+    CONDITIONS,
+    FIXES,
+    ISSUE_GALLERY,
+    SHARED_VIGNETTE,
+    classify_issue,
+    public_config,
+)
 from .mirror_study_store import MirrorStudyStore
 from .ratelimit import rate_limit
 
@@ -56,15 +63,64 @@ def _fixes_with_urls() -> List[Dict[str, Any]]:
     return [{**fix, "image_url": _image_url(fix["image"])} for fix in FIXES]
 
 
+def _issue_gallery_with_urls() -> List[Dict[str, Any]]:
+    return [{**item, "image_url": _image_url(item["image"])} for item in ISSUE_GALLERY]
+
+
 @mirror_study_api.get("/config")
 def get_config():
-    """Return the public vignette, conditions, and fixes with URLs."""
+    """Return the public vignette, conditions, fixes and issue gallery with URLs."""
     cfg = public_config()
     cfg["conditions"] = {
         k: _condition_with_urls(v) for k, v in cfg["conditions"].items()
     }
     cfg["fixes"] = _fixes_with_urls()
+    cfg["issue_gallery"] = _issue_gallery_with_urls()
     return jsonify({"success": True, **cfg})
+
+
+@mirror_study_api.post("/issue-image")
+@rate_limit(max_requests=10, window_seconds=60, scope="mirror_study_issue_image")
+def issue_image():
+    """Map a user-supplied issue to a generated AI illustration.
+
+    Body:
+      {"issue": "free-text description of the ethical concern"}
+
+    Response:
+      {
+        "success": true,
+        "theme_id": "...",
+        "theme_label": "...",
+        "image_url": "...",
+        "reflection": "...",
+        "matched_issue": "user text"
+      }
+
+    The mapping is deterministic and reproducible, matching issue keywords to
+    curated AI-generated themes.  This satisfies the CHI 2027 expectation that
+    each participant's own issue is reflected back as a concrete visual.
+    """
+    payload, error = _json_object()
+    if error:
+        return error
+
+    issue = payload.get("issue", "").strip()
+    if not issue:
+        return jsonify({"success": False, "error": "'issue' text is required."}), 400
+
+    if len(issue) > 2000:
+        return jsonify({"success": False, "error": "Issue text is too long (max 2000 chars)."}), 400
+
+    theme = classify_issue(issue)
+    return jsonify({
+        "success": True,
+        "theme_id": theme["id"],
+        "theme_label": theme["label"],
+        "image_url": _image_url(theme["image"]),
+        "reflection": theme["reflection"],
+        "matched_issue": issue,
+    })
 
 
 @mirror_study_api.post("/sessions")
@@ -89,9 +145,13 @@ def create_session():
         condition_id = random.choice(list(CONDITIONS.keys()))
 
     condition = _condition_with_urls(CONDITIONS[condition_id])
+    issue_text = (payload.get("issue") or "").strip()
+    issue_theme = classify_issue(issue_text) if issue_text else None
     session_payload = {
         "condition_id": condition_id,
         "condition_label": condition["label"],
+        "issue_text": issue_text,
+        "issue_theme": issue_theme,
         "vignette": SHARED_VIGNETTE,
         "condition": condition,
         "fixes": _fixes_with_urls(),

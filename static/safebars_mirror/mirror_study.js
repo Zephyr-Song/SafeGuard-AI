@@ -1,407 +1,508 @@
-(() => {
+/* SafeBARS StressLens — Transition Companion inspired frontend */
+
+(function () {
   'use strict';
 
-  const API_BASE = '/api/safebars/mirror-study';
+  const API_BASE = window.SAFEBARS_API_BASE || '/api/safebars/mirror-study';
 
-  // Application state
-  const state = {
-    session: null,
+  // UI state
+  let state = {
     config: null,
-    condition: null,
-    vignette: null,
-    fixes: null,
-    step: 'landing',
-    c1Index: 0,
-    c2Index: 0,
+    session: null,
+    issue: null,
+    issueTheme: null,
+    currentView: 'entry',
+    frameIndex: 0,
+    roleIndex: 0,
     selectedFixes: [],
     fixRanks: {},
-    frameResponses: {},
-    roleResponses: {},
-    veilResponse: '',
-    tradeoffDropped: null,
-    tradeoffText: '',
-    difficulty: null,
+    responses: {},
   };
 
   // DOM helpers
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const show = (el) => el && el.removeAttribute('hidden');
+  const hide = (el) => el && el.setAttribute('hidden', '');
 
-  function showStep(name) {
-    state.step = name;
-    $$('.ms-step').forEach(el => el.classList.remove('ms-step--active'));
-    $(`#step-${name}`).classList.add('ms-step--active');
+  function api(path, opts = {}) {
+    const url = `${API_BASE}${path}`;
+    return fetch(url, {
+      headers: { 'Content-Type': 'application/json' },
+      ...opts,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    }).then((r) => r.json());
+  }
+
+  function setLoading(isLoading) {
+    const el = $('#loading');
+    if (isLoading) show(el); else hide(el);
+  }
+
+  function switchView(name) {
+    state.currentView = name;
+    $$('.view').forEach((v) => v.classList.remove('active'));
+    $(`#view-${name}`).classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function showError(msg) {
-    const el = $('#ms-error');
-    el.textContent = msg;
-    el.style.display = 'block';
-    setTimeout(() => { el.style.display = 'none'; }, 6000);
+  function companionSay(id, text) {
+    const el = $(id);
+    if (!el) return;
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.textContent = text;
+      el.style.opacity = '1';
+    }, 150);
   }
 
-  async function api(method, path, body) {
-    const opts = {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-    };
-    if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(`${API_BASE}${path}`, opts);
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || `HTTP ${res.status}`);
-    }
-    return data;
+  function init() {
+    loadConfig();
+    bindEntry();
+    bindImageView();
+    bindVignette();
+    bindHiddenFacts();
+    bindCondition();
+    bindFrames();
+    bindVeil();
+    bindFixes();
+    bindTradeoff();
+    bindDemographics();
   }
 
-  async function saveResponse(step, data) {
-    if (!state.session) return;
+  async function loadConfig() {
     try {
-      await api('POST', `/sessions/${state.session.session_id}/response`, { step, data });
+      setLoading(true);
+      state.config = await api('/config');
+      renderFixes();
     } catch (err) {
-      showError('Could not auto-save your answer. Please continue; your final submit will still work.');
+      console.error('Could not load study config', err);
+      companionSay('#entry-speech', 'Could not load the study. Please refresh the page.');
+    } finally {
+      setLoading(false);
     }
   }
 
-  // ---------- Landing ----------
-  $('#btn-start').addEventListener('click', async () => {
-    $('#btn-start').disabled = true;
-    $('#btn-start').textContent = 'Loading...';
+  // ---------- Entry ----------
+  function bindEntry() {
+    const form = $('#issue-form');
+    const input = $('#issue-input');
+
+    $('.issue-chips').addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON') {
+        input.value = e.target.dataset.chip;
+        input.focus();
+      }
+    });
+
+    $('#btn-skip-issue').addEventListener('click', () => {
+      input.value = '';
+      startWithIssue('');
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const issue = input.value.trim();
+      if (!issue && !confirm("You haven't described an issue. Continue with the StressLens vignette anyway?")) {
+        return;
+      }
+      await startWithIssue(issue);
+    });
+  }
+
+  async function startWithIssue(issue) {
+    state.issue = issue;
+    setLoading(true);
     try {
-      const session = await api('POST', '/sessions');
-      state.session = session;
-      state.condition = session.condition;
-      state.vignette = session.vignette;
-      state.fixes = session.fixes;
-      renderVignette();
-      showStep('vignette');
+      let matched;
+      if (issue) {
+        matched = await api('/issue-image', {
+          method: 'POST',
+          body: { issue },
+        });
+        if (!matched.success) throw new Error(matched.error);
+        state.issueTheme = matched;
+      }
+      switchView('image');
+      renderIssueImage();
     } catch (err) {
-      showError('Could not start the study: ' + err.message);
-      $('#btn-start').disabled = false;
-      $('#btn-start').textContent = 'Start';
+      console.error(err);
+      alert('Sorry, we could not match an image right now. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  });
+  }
+
+  // ---------- Image view ----------
+  function renderIssueImage() {
+    const img = $('#issue-image');
+    const label = $('#theme-label');
+    const reflection = $('#reflection-text');
+
+    if (state.issueTheme) {
+      img.src = state.issueTheme.image_url;
+      label.textContent = state.issueTheme.theme_label;
+      reflection.textContent = state.issueTheme.reflection;
+      companionSay('#image-speech',
+        `This looks related to "${state.issueTheme.theme_label}". ${state.issueTheme.reflection}`);
+    } else {
+      // Default StressLens vignette preview
+      const theme = state.config.issue_gallery.find((t) => t.id === 'data_collection');
+      img.src = theme.image_url;
+      label.textContent = 'StressLens study';
+      reflection.textContent = state.config.vignette.setting;
+      companionSay('#image-speech',
+        'Let’s walk through the StressLens study together. It is a useful example even if your own issue is different.');
+    }
+  }
+
+  function bindImageView() {
+    $('#btn-explore-stresslens').addEventListener('click', async () => {
+      await createSession();
+      showVignette();
+    });
+    $('#btn-new-issue').addEventListener('click', () => {
+      $('#issue-input').value = '';
+      switchView('entry');
+    });
+  }
+
+  async function createSession() {
+    setLoading(true);
+    try {
+      const body = {};
+      if (state.issue) body.issue = state.issue;
+      if (state.issueTheme) body.theme_id = state.issueTheme.theme_id;
+      state.session = await api('/sessions', { method: 'POST', body });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // ---------- Vignette ----------
-  function renderVignette() {
-    $('#vignette-setting').textContent = state.vignette.setting;
-    $('#vignette-participants').textContent = state.vignette.participants;
-    const list = $('#vignette-hidden');
-    list.innerHTML = '';
-    state.vignette.hidden_facts.forEach(fact => {
-      const li = document.createElement('li');
-      li.innerHTML = `<strong>${fact.label}.</strong> ${fact.text}`;
-      list.appendChild(li);
+  function showVignette() {
+    const v = state.config.vignette;
+    $('#vignette-title').textContent = v.title;
+    $('#vignette-setting').textContent = v.setting;
+    $('#vignette-participants').textContent = v.participants;
+    $('#vignette-dilemma').textContent = v.researcher_dilemma;
+    switchView('vignette');
+  }
+
+  function bindVignette() {
+    $('#btn-vignette-next').addEventListener('click', () => {
+      renderHiddenFacts();
+      switchView('hidden-facts');
     });
-    $('#vignette-dilemma').textContent = state.vignette.researcher_dilemma;
   }
 
-  $('#btn-vignette-next').addEventListener('click', () => {
-    renderConditionIntro();
-    showStep('condition-intro');
-  });
-
-  // ---------- Condition Intro ----------
-  function renderConditionIntro() {
-    const c = state.condition;
-    const container = $('#condition-intro-content');
-    const isC1 = c.id === 'c1_nothing_changes';
-    container.innerHTML = `
-      <div class="ms-card ms-card--accent">
-        <h3>${c.label}</h3>
-        <p>${c.instruction}</p>
-        <p class="ms-meta">${c.frame_intro}</p>
-      </div>
-    `;
-    $('#btn-condition-start').textContent = isC1 ? 'View timeline' : 'Enter the veil';
-  }
-
-  $('#btn-condition-start').addEventListener('click', () => {
-    if (state.condition.id === 'c1_nothing_changes') {
-      state.c1Index = 0;
-      renderC1Frame();
-      showStep('c1-timeline');
-    } else {
-      $('#c2-veil-text').textContent = state.condition.veil_text;
-      showStep('c2-veil');
-    }
-  });
-
-  // ---------- C1 Timeline ----------
-  function renderC1Frame() {
-    const frames = state.condition.frames;
-    const frame = frames[state.c1Index];
-    const progress = 30 + Math.round((state.c1Index / frames.length) * 35);
-    $('#c1-progress').style.width = `${progress}%`;
-
-    const saved = state.frameResponses[frame.id] || '';
-    $('#c1-frame-container').innerHTML = `
-      <div class="ms-frame">
-        <div class="ms-frame__meta">Week ${frame.week} · ${state.c1Index + 1} / ${frames.length}</div>
-        <h3>${frame.title}</h3>
-        <img src="${frame.image_url}" alt="${frame.title}" class="ms-frame__img" loading="lazy">
-        <p class="ms-frame__caption">${frame.caption}</p>
-        <label class="ms-field">
-          <span>${frame.prompt}</span>
-          <textarea data-frame-id="${frame.id}" rows="2" maxlength="400">${saved}</textarea>
-        </label>
-      </div>
-    `;
-    $('#btn-c1-prev').style.visibility = state.c1Index === 0 ? 'hidden' : 'visible';
-    $('#btn-c1-next').textContent = state.c1Index === frames.length - 1 ? 'Choose fixes' : 'Next';
-  }
-
-  $('#btn-c1-prev').addEventListener('click', () => {
-    captureC1Response();
-    if (state.c1Index > 0) {
-      state.c1Index--;
-      renderC1Frame();
-    }
-  });
-
-  $('#btn-c1-next').addEventListener('click', () => {
-    captureC1Response();
-    const frames = state.condition.frames;
-    if (state.c1Index < frames.length - 1) {
-      state.c1Index++;
-      renderC1Frame();
-    } else {
-      saveResponse('frames', state.frameResponses);
-      renderFixes();
-      showStep('fixes');
-    }
-  });
-
-  function captureC1Response() {
-    const ta = $('#c1-frame-container textarea');
-    if (!ta) return;
-    state.frameResponses[ta.dataset.frameId] = ta.value.trim();
-  }
-
-  // ---------- C2 Veil + Roles ----------
-  $('#btn-c2-veil-next').addEventListener('click', () => {
-    state.c2Index = 0;
-    renderC2Role();
-    showStep('c2-roles');
-  });
-
-  function renderC2Role() {
-    const frames = state.condition.frames;
-    const frame = frames[state.c2Index];
-    const progress = 35 + Math.round((state.c2Index / frames.length) * 35);
-    $('#c2-progress').style.width = `${progress}%`;
-
-    const saved = state.roleResponses[frame.id] || '';
-    $('#c2-role-container').innerHTML = `
-      <div class="ms-frame">
-        <div class="ms-frame__meta">${frame.role} · ${state.c2Index + 1} / ${frames.length}</div>
-        <h3>${frame.title}</h3>
-        <img src="${frame.image_url}" alt="${frame.title}" class="ms-frame__img" loading="lazy">
-        <p class="ms-frame__caption">${frame.caption}</p>
-        <label class="ms-field">
-          <span>${frame.prompt}</span>
-          <textarea data-role-id="${frame.id}" rows="2" maxlength="400">${saved}</textarea>
-        </label>
-      </div>
-    `;
-    $('#btn-c2-prev').style.visibility = state.c2Index === 0 ? 'hidden' : 'visible';
-    $('#btn-c2-next').textContent = state.c2Index === frames.length - 1 ? 'Choose fixes' : 'Next';
-  }
-
-  $('#btn-c2-prev').addEventListener('click', () => {
-    captureC2Response();
-    if (state.c2Index > 0) {
-      state.c2Index--;
-      renderC2Role();
-    }
-  });
-
-  $('#btn-c2-next').addEventListener('click', () => {
-    captureC2Response();
-    const frames = state.condition.frames;
-    if (state.c2Index < frames.length - 1) {
-      state.c2Index++;
-      renderC2Role();
-    } else {
-      saveResponse('roles', state.roleResponses);
-      renderFixes();
-      showStep('fixes');
-    }
-  });
-
-  function captureC2Response() {
-    const ta = $('#c2-role-container textarea');
-    if (!ta) return;
-    state.roleResponses[ta.dataset.roleId] = ta.value.trim();
-  }
-
-  // ---------- Fix Selection ----------
-  function renderFixes() {
-    const grid = $('#fixes-grid');
-    grid.innerHTML = '';
-    state.fixes.forEach(fix => {
+  // ---------- Hidden facts ----------
+  function renderHiddenFacts() {
+    const list = $('#hidden-facts-list');
+    list.innerHTML = '';
+    state.config.vignette.hidden_facts.forEach((fact) => {
       const card = document.createElement('div');
-      card.className = 'ms-fix-card';
+      card.className = 'frame-card';
+      card.innerHTML = `<h3>${fact.label}</h3><p>${fact.text}</p>`;
+      list.appendChild(card);
+    });
+  }
+
+  function bindHiddenFacts() {
+    $('#btn-facts-next').addEventListener('click', () => {
+      showConditionIntro();
+    });
+  }
+
+  // ---------- Condition ----------
+  function showConditionIntro() {
+    const cond = state.session.condition;
+    $('#condition-label').textContent = cond.label;
+    $('#condition-instruction').textContent = cond.instruction;
+    switchView('condition');
+  }
+
+  function bindCondition() {
+    $('#btn-condition-start').addEventListener('click', () => {
+      const cond = state.session.condition;
+      if (cond.id === 'c2_you_could_be_anyone') {
+        $('#veil-text').textContent = cond.veil_text || '';
+        switchView('veil');
+      } else {
+        state.frameIndex = 0;
+        renderFrames();
+        switchView('frames');
+      }
+    });
+  }
+
+  // ---------- Veil (C2) ----------
+  function bindVeil() {
+    $('#btn-veil-next').addEventListener('click', () => {
+      const answer = $('#veil-input').value.trim();
+      saveResponse('veil', { answer });
+      state.roleIndex = 0;
+      renderRoles();
+      switchView('frames');
+    });
+  }
+
+  // ---------- Frames / Roles ----------
+  function renderFrames() {
+    const cond = state.session.condition;
+    const frame = cond.frames[state.frameIndex];
+    const container = $('#frames-container');
+    container.innerHTML = '';
+
+    const card = document.createElement('div');
+    card.className = 'frame-card';
+    card.style.maxWidth = '720px';
+    card.style.margin = '0 auto';
+    card.innerHTML = `
+      <span class="entry-kicker">Week ${frame.week || ''}</span>
+      <h3>${frame.title}</h3>
+      <img src="${frame.image_url}" alt="${frame.title}">
+      <p>${frame.caption}</p>
+      <label for="frame-input">${frame.prompt}</label>
+      <textarea id="frame-input" data-frame="${frame.id}"></textarea>
+    `;
+    container.appendChild(card);
+
+    updateFrameDots();
+    $('#btn-frames-next').textContent = state.frameIndex < cond.frames.length - 1 ? 'Next' : 'Choose fixes';
+  }
+
+  function renderRoles() {
+    const cond = state.session.condition;
+    const frame = cond.frames[state.roleIndex];
+    const container = $('#frames-container');
+    container.innerHTML = '';
+
+    const card = document.createElement('div');
+    card.className = 'role-card';
+    card.style.maxWidth = '720px';
+    card.style.margin = '0 auto';
+    card.innerHTML = `
+      <span class="entry-kicker">${frame.role || 'Role'}</span>
+      <h3>${frame.title}</h3>
+      <img src="${frame.image_url}" alt="${frame.title}">
+      <p>${frame.caption}</p>
+      <label for="frame-input">${frame.prompt}</label>
+      <textarea id="frame-input" data-frame="${frame.id}"></textarea>
+    `;
+    container.appendChild(card);
+
+    updateFrameDots();
+    $('#btn-frames-next').textContent = state.roleIndex < cond.frames.length - 1 ? 'Next' : 'Choose fixes';
+  }
+
+  function updateFrameDots() {
+    const cond = state.session.condition;
+    const idx = state.session.condition.id === 'c2_you_could_be_anyone' ? state.roleIndex : state.frameIndex;
+    const dots = $('#frame-dots');
+    dots.innerHTML = '';
+    cond.frames.forEach((_, i) => {
+      const span = document.createElement('span');
+      if (i < idx) span.className = 'completed';
+      else if (i === idx) span.className = 'active';
+      dots.appendChild(span);
+    });
+  }
+
+  function bindFrames() {
+    $('#btn-frames-back').addEventListener('click', () => {
+      if (state.session.condition.id === 'c2_you_could_be_anyone') {
+        if (state.roleIndex > 0) { state.roleIndex--; renderRoles(); }
+        else { switchView('veil'); }
+      } else {
+        if (state.frameIndex > 0) { state.frameIndex--; renderFrames(); }
+        else { switchView('condition'); }
+      }
+    });
+
+    $('#btn-frames-next').addEventListener('click', () => {
+      const input = $('#frame-input');
+      const frameId = input.dataset.frame;
+      const text = input.value.trim();
+      state.responses[frameId] = text;
+
+      const isC2 = state.session.condition.id === 'c2_you_could_be_anyone';
+      const currentIdx = isC2 ? state.roleIndex : state.frameIndex;
+      const total = state.session.condition.frames.length;
+
+      if (currentIdx < total - 1) {
+        if (isC2) state.roleIndex++; else state.frameIndex++;
+        isC2 ? renderRoles() : renderFrames();
+      } else {
+        saveResponse('frames', state.responses);
+        switchView('fixes');
+      }
+    });
+  }
+
+  // ---------- Fixes ----------
+  function renderFixes() {
+    if (!state.config) return;
+    const container = $('#fixes-container');
+    container.innerHTML = '';
+    state.config.fixes.forEach((fix) => {
+      const card = document.createElement('div');
+      card.className = 'fix-card';
       card.dataset.id = fix.id;
       card.innerHTML = `
-        <img src="${fix.image_url}" alt="${fix.title}" loading="lazy">
-        <div class="ms-fix-card__body">
-          <h4>${fix.title}</h4>
-          <p>${fix.description}</p>
-          <div class="ms-badges">
-            <span class="ms-badge ms-badge--effort">Effort: ${fix.effort}</span>
-            <span class="ms-badge ms-badge--risk">Risk reduction: ${fix.risk_reduction}</span>
-          </div>
+        <img src="${fix.image_url}" alt="${fix.title}">
+        <h3>${fix.title}</h3>
+        <p>${fix.description}</p>
+        <div class="effort">
+          <span><strong>Effort:</strong> ${fix.effort}</span>
+          <span><strong>Risk reduction:</strong> ${fix.risk_reduction}</span>
         </div>
       `;
       card.addEventListener('click', () => toggleFix(fix.id));
-      grid.appendChild(card);
+      container.appendChild(card);
     });
-    updateFixSelection();
   }
 
   function toggleFix(id) {
     const idx = state.selectedFixes.indexOf(id);
-    if (idx >= 0) {
+    if (idx > -1) {
       state.selectedFixes.splice(idx, 1);
       delete state.fixRanks[id];
     } else if (state.selectedFixes.length < 3) {
       state.selectedFixes.push(id);
       state.fixRanks[id] = state.selectedFixes.length;
-    }
-    normalizeRanks();
-    updateFixSelection();
-  }
-
-  function normalizeRanks() {
-    state.selectedFixes.forEach((id, i) => {
-      state.fixRanks[id] = i + 1;
-    });
-  }
-
-  function updateFixSelection() {
-    $$('.ms-fix-card').forEach(card => {
-      const id = card.dataset.id;
-      const selected = state.selectedFixes.includes(id);
-      card.classList.toggle('ms-fix-card--selected', selected);
-      const rank = state.fixRanks[id];
-      card.style.setProperty('--rank', rank ? `"${rank}"` : '""');
-    });
-
-    const rankList = $('#fix-rank-list');
-    rankList.innerHTML = '';
-    if (state.selectedFixes.length === 0) {
-      rankList.innerHTML = '<li class="ms-rank-empty">Select fixes above to rank them.</li>';
     } else {
-      state.selectedFixes.forEach((id, i) => {
-        const fix = state.fixes.find(f => f.id === id);
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span class="ms-rank-num">${i + 1}</span>
-          <span class="ms-rank-title">${fix.title}</span>
-          <button class="ms-rank-up" data-id="${id}" ${i === 0 ? 'disabled' : ''}>▲</button>
-          <button class="ms-rank-down" data-id="${id}" ${i === state.selectedFixes.length - 1 ? 'disabled' : ''}>▼</button>
-        `;
-        rankList.appendChild(li);
-      });
+      // Replace oldest if already 3 selected? Just alert.
+      return;
     }
-    $('#fix-rank-panel').style.display = state.selectedFixes.length ? 'block' : 'none';
+    refreshFixCards();
+  }
+
+  function refreshFixCards() {
+    $$('.fix-card').forEach((card) => {
+      const id = card.dataset.id;
+      card.classList.toggle('selected', state.selectedFixes.includes(id));
+      const rank = state.fixRanks[id];
+      const title = card.querySelector('h3');
+      const prefix = rank ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--hero-blue);color:#fff;font-size:12px;font-weight:800;margin-right:8px;">${rank}</span>` : '';
+      title.innerHTML = prefix + state.config.fixes.find((f) => f.id === id).title;
+    });
+    $('#fix-limit-notice').textContent = `${state.selectedFixes.length} of 3 selected`;
     $('#btn-fixes-next').disabled = state.selectedFixes.length !== 3;
-
-    $$('.ms-rank-up').forEach(btn => {
-      btn.addEventListener('click', e => moveFix(e.target.dataset.id, -1));
-    });
-    $$('.ms-rank-down').forEach(btn => {
-      btn.addEventListener('click', e => moveFix(e.target.dataset.id, 1));
-    });
   }
 
-  function moveFix(id, dir) {
-    const idx = state.selectedFixes.indexOf(id);
-    const newIdx = idx + dir;
-    if (newIdx < 0 || newIdx >= state.selectedFixes.length) return;
-    [state.selectedFixes[idx], state.selectedFixes[newIdx]] =
-      [state.selectedFixes[newIdx], state.selectedFixes[idx]];
-    normalizeRanks();
-    updateFixSelection();
-  }
-
-  $('#btn-fixes-next').addEventListener('click', () => {
-    saveResponse('fixes', {
-      selected: state.selectedFixes,
-      ranks: state.fixRanks,
+  function bindFixes() {
+    $('#btn-fixes-back').addEventListener('click', () => {
+      const isC2 = state.session.condition.id === 'c2_you_could_be_anyone';
+      if (isC2) { state.roleIndex = state.session.condition.frames.length - 1; renderRoles(); }
+      else { state.frameIndex = state.session.condition.frames.length - 1; renderFrames(); }
+      switchView('frames');
     });
-    renderTradeoff();
-    showStep('tradeoff');
-  });
 
-  // ---------- Trade-off ----------
-  function renderTradeoff() {
-    const options = state.fixes.filter(f => !state.selectedFixes.includes(f.id));
-    const container = $('#tradeoff-options');
-    container.innerHTML = '';
-    options.forEach(fix => {
-      const btn = document.createElement('button');
-      btn.className = 'ms-tradeoff-btn';
-      btn.textContent = `${fix.title} (effort ${fix.effort}, risk ↓${fix.risk_reduction})`;
-      btn.dataset.id = fix.id;
-      btn.addEventListener('click', () => {
-        state.tradeoffDropped = fix.id;
-        $$('.ms-tradeoff-btn').forEach(b => b.classList.remove('ms-tradeoff-btn--active'));
-        btn.classList.add('ms-tradeoff-btn--active');
-        checkTradeoffReady();
+    $('#btn-fixes-next').addEventListener('click', () => {
+      saveResponse('fixes', {
+        selected: state.selectedFixes,
+        ranks: state.fixRanks,
       });
-      container.appendChild(btn);
+      populateTradeoff();
+      switchView('tradeoff');
     });
   }
 
-  $('#tradeoff-text').addEventListener('input', e => {
-    state.tradeoffText = e.target.value.trim();
-    checkTradeoffReady();
-  });
-
-  function checkTradeoffReady() {
-    $('#btn-tradeoff-next').disabled = !(state.tradeoffDropped && state.tradeoffText.length > 5);
+  // ---------- Tradeoff ----------
+  function populateTradeoff() {
+    const select = $('#dropped-fix');
+    select.innerHTML = '';
+    const unselected = state.config.fixes.filter((f) => !state.selectedFixes.includes(f.id));
+    unselected.forEach((f) => {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.title;
+      select.appendChild(opt);
+    });
   }
 
-  $('#btn-tradeoff-next').addEventListener('click', () => {
-    saveResponse('tradeoff', {
-      dropped_fix_id: state.tradeoffDropped,
-      reason: state.tradeoffText,
+  function bindTradeoff() {
+    $('#btn-tradeoff-back').addEventListener('click', () => switchView('fixes'));
+    $('#btn-tradeoff-next').addEventListener('click', () => {
+      const dropped = $('#dropped-fix').value;
+      const reason = $('#tradeoff-reason').value.trim();
+      if (!reason) {
+        alert('Please explain why you left this fix out.');
+        return;
+      }
+      saveResponse('tradeoff', { dropped_fix_id: dropped, reason });
+      switchView('demographics');
     });
-    showStep('final');
-  });
+  }
 
-  // ---------- Final ----------
-  $$('#difficulty-likert button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.difficulty = parseInt(btn.dataset.value, 10);
-      $$('#difficulty-likert button').forEach(b => b.classList.remove('ms-likert--active'));
-      btn.classList.add('ms-likert--active');
-    });
-  });
-
-  $('#btn-submit').addEventListener('click', async () => {
-    $('#btn-submit').disabled = true;
-    $('#btn-submit').textContent = 'Submitting...';
-    try {
-      await saveResponse('demographics', {
-        difficulty: state.difficulty,
-        comment: $('#final-comment').value.trim(),
-      });
-      await saveResponse('final', {
-        condition_id: state.condition.id,
+  // ---------- Demographics ----------
+  function bindDemographics() {
+    $('#btn-submit').addEventListener('click', async () => {
+      const difficulty = parseInt($('#difficulty').value, 10);
+      const comment = $('#comment').value.trim();
+      const payload = {
+        condition_id: state.session.condition_id,
         selected_fixes: state.selectedFixes,
         fix_ranks: state.fixRanks,
-        tradeoff: { dropped: state.tradeoffDropped, reason: state.tradeoffText },
+        tradeoff: {
+          dropped: $('#dropped-fix').value,
+          reason: $('#tradeoff-reason').value.trim(),
+        },
+        difficulty,
+        comment,
+      };
+      setLoading(true);
+      try {
+        await api(`/sessions/${state.session.session_id}/response`, {
+          method: 'POST',
+          body: { step: 'final', data: payload },
+        });
+        switchView('thank-you');
+      } catch (err) {
+        console.error(err);
+        alert('Submission failed. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    $('#btn-restart').addEventListener('click', () => {
+      state = {
+        config: state.config,
+        session: null,
+        issue: null,
+        issueTheme: null,
+        currentView: 'entry',
+        frameIndex: 0,
+        roleIndex: 0,
+        selectedFixes: [],
+        fixRanks: {},
+        responses: {},
+      };
+      $('#issue-input').value = '';
+      $('#frame-input') && ($('#frame-input').value = '');
+      $('#veil-input').value = '';
+      $('#tradeoff-reason').value = '';
+      $('#comment').value = '';
+      refreshFixCards();
+      switchView('entry');
+    });
+  }
+
+  async function saveResponse(step, data) {
+    if (!state.session) return;
+    try {
+      await api(`/sessions/${state.session.session_id}/response`, {
+        method: 'POST',
+        body: { step, data },
       });
-      $('#done-session-id').textContent = `Reference: ${state.session.session_id}`;
-      showStep('done');
     } catch (err) {
-      showError('Submit failed: ' + err.message);
-      $('#btn-submit').disabled = false;
-      $('#btn-submit').textContent = 'Submit';
+      console.error('Could not save response', err);
     }
-  });
+  }
+
+  init();
 })();

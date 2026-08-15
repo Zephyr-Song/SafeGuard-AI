@@ -300,12 +300,170 @@ FIXES: List[Dict[str, Any]] = [
 ]
 
 
+ISSUE_GALLERY: List[Dict[str, Any]] = [
+    {
+        "id": "data_collection",
+        "label": "Data collection & third parties",
+        "image": "safebars_mirror/img/c1_w02_collection.png",
+        "keywords": [
+            "data", "collect", "cloud", "vendor", "third party", "third-party",
+            "server", "upload", "transfer", "store", "storage", "bytedance",
+            "openai", "google", "vendor", "subprocessor",
+        ],
+        "reflection": (
+            "What information is being gathered, and who beyond your team might "
+            "end up holding a copy?"
+        ),
+    },
+    {
+        "id": "consent",
+        "label": "Consent & transparency",
+        "image": "safebars_mirror/img/issue_consent.png",
+        "keywords": [
+            "consent", "inform", "disclose", "hide", "hidden", "fine print",
+            "agree", "participant", "voluntary", "withdraw", "transparency",
+            "transparent",
+        ],
+        "reflection": (
+            "What would a participant need to know before they could fairly say "
+            "yes?"
+        ),
+    },
+    {
+        "id": "model_risk",
+        "label": "Model error & uncertainty",
+        "image": "safebars_mirror/img/issue_model_risk.png",
+        "keywords": [
+            "model", "accuracy", "error", "wrong", "uncertain", "confidence",
+            "label", "classification", "predict", "false", "overconfident",
+            "bias", "drift", "reproduce", "reproducibility",
+        ],
+        "reflection": (
+            "If the model is confidently wrong, who is most likely to be hurt?"
+        ),
+    },
+    {
+        "id": "deletion",
+        "label": "Deletion & retention",
+        "image": "safebars_mirror/img/c1_w08_deletion.png",
+        "keywords": [
+            "delete", "deletion", "retain", "retention", "remove", "withdraw",
+            "backup", "copy", "log", "audit", "trail", "forget",
+        ],
+        "reflection": (
+            "When someone asks to leave the study, what proof would convince "
+            "them their data is really gone?"
+        ),
+    },
+    {
+        "id": "burden",
+        "label": "Researcher burden & labor",
+        "image": "safebars_mirror/img/issue_burden.png",
+        "keywords": [
+            "ra", "research assistant", "junior", "burden", "labor", "overwork",
+            "supervise", "support", "train", "late", "night", "exhaust",
+            "mental health", "wellbeing", "staff",
+        ],
+        "reflection": (
+            "Who does the difficult, emotional, or invisible work when the system "
+            "flags a problem?"
+        ),
+    },
+    {
+        "id": "crisis",
+        "label": "Crisis & escalation",
+        "image": "safebars_mirror/img/fix_crisis.png",
+        "keywords": [
+            "crisis", "emergency", "distress", "suicide", "self-harm", "harm",
+            "escalate", "protocol", "on-call", "clinician", "safeguard",
+            "flag", "alert",
+        ],
+        "reflection": (
+            "If the system detects a student in serious distress, what happens "
+            "next?"
+        ),
+    },
+    {
+        "id": "human_oversight",
+        "label": "Human review",
+        "image": "safebars_mirror/img/fix_human_review.png",
+        "keywords": [
+            "human", "review", "oversight", "check", "loop", "clinician",
+            "expert", "approve", "verify", "audit", "supervisor",
+        ],
+        "reflection": (
+            "Where in the workflow does a trained person check the AI output "
+            "before it affects someone?"
+        ),
+    },
+    {
+        "id": "local_processing",
+        "label": "Local or edge control",
+        "image": "safebars_mirror/img/fix_local.png",
+        "keywords": [
+            "local", "edge", "device", "on-premise", "sandbox", "institution",
+            "control", "in-house", "privacy preserving", "federated",
+        ],
+        "reflection": (
+            "Could the most sensitive data stay under the participant's or "
+            "institution's control?"
+        ),
+    },
+    {
+        "id": "bystander",
+        "label": "Bystanders & affected non-users",
+        "image": "safebars_mirror/img/c2_roommate.png",
+        "keywords": [
+            "roommate", "friend", "family", "bystander", "non-user", "affected",
+            "mention", "third party", "others", "indirect", "privacy",
+        ],
+        "reflection": (
+            "Who is described or affected by the data even though they never "
+            "signed a consent form?"
+        ),
+    },
+    {
+        "id": "default",
+        "label": "General ethical concern",
+        "image": "safebars_mirror/img/issue_default.png",
+        "keywords": [],
+        "reflection": (
+            "What is the most important thing that could go wrong, and who would "
+            "feel the consequences first?"
+        ),
+    },
+]
+
+
+def classify_issue(text: str) -> Dict[str, Any]:
+    """Match a user-supplied issue to the closest gallery theme.
+
+    The matching is fully deterministic: we count keyword hits and return the
+    best non-default theme, falling back to the default theme when no clear
+    signal is found.
+    """
+    lowered = text.lower()
+    scores = []
+    for item in ISSUE_GALLERY:
+        if item["id"] == "default":
+            continue
+        score = sum(1 for kw in item["keywords"] if kw in lowered)
+        # Give a small bonus for the first matched keyword to break ties.
+        scores.append((score + (0.5 if score else 0), item))
+    scores.sort(key=lambda x: x[0], reverse=True)
+    winner = scores[0][1] if scores and scores[0][0] > 0 else next(
+        item for item in ISSUE_GALLERY if item["id"] == "default"
+    )
+    return winner
+
+
 def public_config() -> Dict[str, Any]:
     """Return everything the front end needs to render the study."""
     return {
         "vignette": SHARED_VIGNETTE,
         "conditions": CONDITIONS,
         "fixes": FIXES,
+        "issue_gallery": ISSUE_GALLERY,
         "max_fixes": 3,
         "notice": (
             "These images are AI-generated editorial illustrations. They are "

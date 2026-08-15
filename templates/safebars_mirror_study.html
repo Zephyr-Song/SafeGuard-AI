@@ -1,175 +1,224 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SafeBARS Ethical Mirror · StressLens Study</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SafeBARS StressLens CHI 2027 study: describe an AI research ethics concern and see a matching AI-generated illustration.">
+  <title>SafeBARS Mirror | StressLens CHI 2027</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='safebars_mirror/mirror_study.css') }}">
 </head>
 <body>
-  <header class="ms-header">
-    <div class="ms-brand">SafeBARS <span class="ms-pipe">|</span> Ethical Mirror</div>
-    <nav class="ms-nav">
-      <a href="/safebars">SafeBARS</a>
-      <a href="/safebars/mirror">Original Mirror</a>
-      <a href="/safebars/mirror-study" class="active">StressLens Study</a>
-    </nav>
-  </header>
+  <div class="app-shell">
+    <header class="brand-header">
+      <a class="wordmark" href="/safebars/mirror"><span>Safe</span>BARS Mirror</a>
+      <nav class="header-nav">
+        <a href="/safebars/mirror">Ethical Mirror</a>
+        <a href="/safebars/mirror-study" class="active">StressLens Study</a>
+      </nav>
+    </header>
 
-  <main id="ms-app" class="ms-app">
-    <!-- Step 0: Landing -->
-    <section id="step-landing" class="ms-step ms-step--active">
-      <div class="ms-hero">
-        <h1>StressLens</h1>
-        <p class="ms-lead">
-          A short reflection task about a student stress-monitoring study.
-          You will read a scenario, see what could go wrong, and choose three
-          concrete fixes.
-        </p>
-        <p class="ms-meta">Estimated time: 6–10 minutes</p>
-        <button id="btn-start" class="ms-btn ms-btn--primary">Start</button>
-      </div>
-      <div class="ms-notice">
-        <strong>Research notice:</strong> The images below are AI-generated
-        editorial illustrations. They are designed to help you imagine
-        plausible consequences, not to report real events or real people.
-      </div>
-    </section>
+    <main class="view-stage">
+      <!-- VIEW: entry -->
+      <section id="view-entry" class="view active">
+        <div class="entry-layout">
+          <div class="entry-copy">
+            <span class="entry-kicker">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 3 3.3.5-2.4 2.3.6 3.3L12 11l-3 1.5.6-3.3L7.2 6.8l3.3-.5L12 3z"/></svg>
+              Hi, I'm your ethical research companion
+            </span>
+            <h1>AI research ethics can be complex. Let's take it one step at a time.</h1>
+            <p>No perfect plan needed. Describe an ethical concern in your own research, then see what it could look like and how to redesign it.</p>
 
-    <!-- Step 1: Shared Vignette -->
-    <section id="step-vignette" class="ms-step">
-      <div class="ms-progress"><span style="width: 15%"></span></div>
-      <h2>The Study</h2>
-      <div class="ms-card">
-        <p id="vignette-setting"></p>
-        <p id="vignette-participants"></p>
-      </div>
-      <h3>What participants are <em>not</em> clearly told</h3>
-      <ul id="vignette-hidden" class="ms-hidden-list"></ul>
-      <div class="ms-card ms-card--warn">
-        <p id="vignette-dilemma"></p>
-      </div>
-      <div class="ms-actions">
-        <button id="btn-vignette-next" class="ms-btn ms-btn--primary">Continue</button>
-      </div>
-    </section>
+            <form id="issue-form" class="issue-form">
+              <label for="issue-input">What's the concern?</label>
+              <textarea id="issue-input" name="issue" placeholder="Describe your situation in your own words..." required maxlength="2000"></textarea>
 
-    <!-- Step 2: Condition Intro -->
-    <section id="step-condition-intro" class="ms-step">
-      <div class="ms-progress"><span style="width: 25%"></span></div>
-      <div id="condition-intro-content"></div>
-      <div class="ms-actions">
-        <button id="btn-condition-start" class="ms-btn ms-btn--primary">Begin</button>
-      </div>
-    </section>
+              <div class="issue-chips" aria-label="Common concerns">
+                <button type="button" data-chip="participants did not know their diary entries were sent to a commercial LLM vendor">Consent not clear</button>
+                <button type="button" data-chip="the AI confidently labels people wrongly and nobody checks it">Model errors</button>
+                <button type="button" data-chip="my RA reviews flagged distress messages alone at night">RA burden</button>
+                <button type="button" data-chip="we cannot prove deletion actually reaches the cloud vendor">Deletion doubt</button>
+                <button type="button" data-chip="there is no clinician escalation when the AI flags crisis">Crisis protocol</button>
+                <button type="button" data-chip="third parties like roommates are mentioned in the data without their consent">Bystanders</button>
+              </div>
 
-    <!-- Step 3a: C1 Timeline -->
-    <section id="step-c1-timeline" class="ms-step">
-      <div class="ms-progress"><span id="c1-progress" style="width: 30%"></span></div>
-      <div id="c1-frame-container"></div>
-      <div class="ms-actions">
-        <button id="btn-c1-prev" class="ms-btn ms-btn--ghost">Previous</button>
-        <button id="btn-c1-next" class="ms-btn ms-btn--primary">Next</button>
-      </div>
-    </section>
+              <button type="submit" class="yellow-button" id="btn-start">
+                <span class="btn-text">Start reflecting</span>
+                <span class="btn-loading" hidden>Matching an image...</span>
+              </button>
+              <button type="button" id="btn-skip-issue" class="text-button">Or jump to the StressLens vignette</button>
+            </form>
+          </div>
 
-    <!-- Step 3b: C2 Veil + Roles -->
-    <section id="step-c2-veil" class="ms-step">
-      <div class="ms-progress"><span style="width: 30%"></span></div>
-      <div class="ms-card ms-card--accent">
-        <h3>Behind the veil</h3>
-        <p id="c2-veil-text"></p>
-      </div>
-      <div class="ms-actions">
-        <button id="btn-c2-veil-next" class="ms-btn ms-btn--primary">Draw a role</button>
-      </div>
-    </section>
-
-    <section id="step-c2-roles" class="ms-step">
-      <div class="ms-progress"><span id="c2-progress" style="width: 35%"></span></div>
-      <div id="c2-role-container"></div>
-      <div class="ms-actions">
-        <button id="btn-c2-prev" class="ms-btn ms-btn--ghost">Previous</button>
-        <button id="btn-c2-next" class="ms-btn ms-btn--primary">Next</button>
-      </div>
-    </section>
-
-    <!-- Step 4: Fix Selection -->
-    <section id="step-fixes" class="ms-step">
-      <div class="ms-progress"><span style="width: 75%"></span></div>
-      <h2>Choose three fixes</h2>
-      <p class="ms-instruction">
-        You can only implement three before launch. Select the ones you think
-        matter most, then rank them 1–3.
-      </p>
-      <div id="fixes-grid" class="ms-fixes-grid"></div>
-      <div id="fix-rank-panel" class="ms-rank-panel">
-        <h4>Your ranking</h4>
-        <ol id="fix-rank-list"></ol>
-      </div>
-      <div class="ms-actions">
-        <button id="btn-fixes-next" class="ms-btn ms-btn--primary" disabled>Continue</button>
-      </div>
-    </section>
-
-    <!-- Step 5: Trade-off -->
-    <section id="step-tradeoff" class="ms-step">
-      <div class="ms-progress"><span style="width: 85%"></span></div>
-      <h2>Effort vs. risk</h2>
-      <p class="ms-instruction">
-        You had to leave two fixes out. Which unselected fix would have reduced
-        the most risk, and why did you drop it?
-      </p>
-      <div id="tradeoff-options" class="ms-tradeoff-options"></div>
-      <label class="ms-field">
-        <span>Explain your trade-off in one or two sentences.</span>
-        <textarea id="tradeoff-text" rows="3" maxlength="500"></textarea>
-      </label>
-      <div class="ms-actions">
-        <button id="btn-tradeoff-next" class="ms-btn ms-btn--primary" disabled>Continue</button>
-      </div>
-    </section>
-
-    <!-- Step 6: Final -->
-    <section id="step-final" class="ms-step">
-      <div class="ms-progress"><span style="width: 95%"></span></div>
-      <h2>Final questions</h2>
-      <div class="ms-field">
-        <span>How emotionally difficult was this reflection?</span>
-        <div class="ms-likert" id="difficulty-likert">
-          <button data-value="1">1<br><small>Not at all</small></button>
-          <button data-value="2">2</button>
-          <button data-value="3">3</button>
-          <button data-value="4">4</button>
-          <button data-value="5">5<br><small>Very</small></button>
+          <div class="entry-mascot">
+            <div class="how-it-works">
+              <h3>How it works</h3>
+              <ol>
+                <li><strong>Describe your issue</strong><span>Tell us what worries you in plain language.</span></li>
+                <li><strong>See the mirror image</strong><span>We match your concern to an AI-generated illustration.</span></li>
+                <li><strong>Redesign the study</strong><span>Walk through consequences and choose safer fixes.</span></li>
+              </ol>
+            </div>
+            <div class="companion">
+              <svg class="companion-bird" viewBox="0 0 64 64" aria-hidden="true">
+                <circle cx="32" cy="30" r="22" fill="#0b73f6"/>
+                <circle cx="24" cy="26" r="3" fill="#fff"/>
+                <circle cx="40" cy="26" r="3" fill="#fff"/>
+                <circle cx="24" cy="26" r="1" fill="#111c48"/>
+                <circle cx="40" cy="26" r="1" fill="#111c48"/>
+                <path d="M28 34c3 3 6 3 9 0" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <path d="M12 36c-6 8 4 14 20 14s26-6 20-14" fill="#ffdc00"/>
+                <path d="M46 20c8-2 12 4 10 10" stroke="#0b73f6" stroke-width="3" fill="none" stroke-linecap="round"/>
+              </svg>
+              <div class="companion-speech" id="entry-speech">I'm here to help you think it through, not to judge your design.</div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="ms-field">
-        <span>Any final comment? (optional)</span>
-        <textarea id="final-comment" rows="3" maxlength="800"></textarea>
-      </div>
-      <div class="ms-actions">
-        <button id="btn-submit" class="ms-btn ms-btn--primary">Submit</button>
-      </div>
-    </section>
+      </section>
 
-    <!-- Step 7: Done -->
-    <section id="step-done" class="ms-step">
-      <div class="ms-hero">
-        <h1>Thank you</h1>
-        <p class="ms-lead">Your responses have been recorded.</p>
-        <p id="done-session-id" class="ms-meta"></p>
-        <a href="/safebars/mirror-study" class="ms-btn ms-btn--ghost">Start another</a>
-      </div>
-    </section>
+      <!-- VIEW: issue image -->
+      <section id="view-image" class="view">
+        <p class="notice">These images are AI-generated editorial illustrations. They are designed to help you imagine plausible consequences, not to report real events or real people.</p>
+        <div class="card-layout">
+          <div class="image-card">
+            <img id="issue-image" src="" alt="AI illustration of the ethical concern">
+            <div class="image-caption">
+              <span id="theme-label"></span>
+              <p id="reflection-text"></p>
+            </div>
+          </div>
+          <div class="companion-panel">
+            <div class="companion-speech large" id="image-speech"></div>
+            <div class="actions">
+              <button id="btn-explore-stresslens" class="primary-button">Explore the StressLens study</button>
+              <button id="btn-new-issue" class="text-button">Describe a different issue</button>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <div id="ms-error" class="ms-error" role="alert"></div>
-  </main>
+      <!-- VIEW: vignette -->
+      <section id="view-vignette" class="view">
+        <div class="condition-intro">
+          <span class="entry-kicker">Common scenario</span>
+          <h2 id="vignette-title"></h2>
+          <p id="vignette-setting"></p>
+          <p id="vignette-participants"></p>
+          <p id="vignette-dilemma"></p>
+          <button id="btn-vignette-next" class="primary-button">Continue</button>
+        </div>
+      </section>
 
-  <footer class="ms-footer">
-    SafeBARS Ethical Mirror · StressLens CHI 2027 study prototype
-  </footer>
+      <!-- VIEW: hidden facts -->
+      <section id="view-hidden-facts" class="view">
+        <div class="condition-intro">
+          <span class="entry-kicker">Before you decide</span>
+          <h2>Five things the consent form did not spell out</h2>
+          <p>These facts are deliberately hidden from participants. Read them, then imagine the study from their perspective.</p>
+          <div id="hidden-facts-list" class="frame-grid"></div>
+          <div class="nav-footer" style="justify-content:center; border-top:0;">
+            <button id="btn-facts-next" class="primary-button">Continue to your condition</button>
+          </div>
+        </div>
+      </section>
 
+      <!-- VIEW: condition intro -->
+      <section id="view-condition" class="view">
+        <div class="condition-intro">
+          <span class="entry-kicker">Random condition</span>
+          <h2 id="condition-label"></h2>
+          <p id="condition-instruction"></p>
+          <button id="btn-condition-start" class="primary-button">Start the walkthrough</button>
+        </div>
+      </section>
+
+      <!-- VIEW: frames / roles -->
+      <section id="view-frames" class="view">
+        <div id="frames-container"></div>
+        <div class="nav-footer">
+          <button id="btn-frames-back" class="text-button">Back</button>
+          <div class="progress-dots" id="frame-dots"></div>
+          <button id="btn-frames-next" class="primary-button">Continue</button>
+        </div>
+      </section>
+
+      <!-- VIEW: veil -->
+      <section id="view-veil" class="view">
+        <div class="condition-intro">
+          <span class="entry-kicker">Veil of ignorance</span>
+          <h2>You don't know which role you'll get</h2>
+          <p id="veil-text"></p>
+          <label for="veil-input" style="display:block; font-weight:700; margin: 18px 0 8px;">What safeguards would you want before you knew your role?</label>
+          <textarea id="veil-input" style="max-width:640px; width:100%; padding:14px; border:2px solid var(--line); border-radius:6px; font-size:14px;"></textarea>
+          <div class="nav-footer" style="justify-content:center; border-top:0; margin-top:18px;">
+            <button id="btn-veil-next" class="primary-button">Draw a role</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: fixes -->
+      <section id="view-fixes" class="view">
+        <div class="condition-intro">
+          <span class="entry-kicker">Revision protocol</span>
+          <h2>Pick up to 3 fixes</h2>
+          <p>Your team has limited time. Choose the three changes that best balance effort and risk reduction.</p>
+        </div>
+        <p class="fix-limit-notice" id="fix-limit-notice">0 of 3 selected</p>
+        <div id="fixes-container" class="fix-grid"></div>
+        <div class="nav-footer">
+          <button id="btn-fixes-back" class="text-button">Back</button>
+          <div class="progress-dots" id="fix-dots"></div>
+          <button id="btn-fixes-next" class="primary-button" disabled>Continue</button>
+        </div>
+      </section>
+
+      <!-- VIEW: tradeoff -->
+      <section id="view-tradeoff" class="view">
+        <div class="tradeoff-form">
+          <h3>What did you leave out?</h3>
+          <p>You couldn't pick every fix. Which one did you drop, and why?</p>
+          <label for="dropped-fix">Dropped fix</label>
+          <select id="dropped-fix"></select>
+          <label for="tradeoff-reason">Effort vs. risk tradeoff</label>
+          <textarea id="tradeoff-reason" placeholder="e.g., 'I left out verified deletion because it needs new infrastructure, but it would have reduced third-party risk.'"></textarea>
+          <div class="nav-footer" style="padding-top:0; margin-top:0; border-top:0; justify-content:space-between;">
+            <button id="btn-tradeoff-back" class="text-button">Back</button>
+            <button id="btn-tradeoff-next" class="primary-button">Continue</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: demographics -->
+      <section id="view-demographics" class="view">
+        <div class="demographics">
+          <h2>One last step</h2>
+          <label for="difficulty">How difficult was it to choose the fixes? (1 = easy, 7 = very hard)</label>
+          <input type="range" id="difficulty" min="1" max="7" value="4">
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted);">
+            <span>Easy</span><span>Very hard</span>
+          </div>
+          <label for="comment" style="margin-top:8px;">Any comment? (optional)</label>
+          <textarea id="comment" placeholder="What surprised you?"></textarea>
+          <button id="btn-submit" class="yellow-button">Submit response</button>
+        </div>
+      </section>
+
+      <!-- VIEW: thank you -->
+      <section id="view-thank-you" class="view">
+        <div class="thank-you">
+          <h2>Thank you</h2>
+          <p>Your response has been recorded. You can close this page, or start again with a different issue.</p>
+          <button id="btn-restart" class="primary-button">Start over</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="loading" class="loading-overlay" hidden>
+    <div class="spinner"></div>
+  </div>
+
+  <script>window.SAFEBARS_API_BASE = "/api/safebars/mirror-study";</script>
   <script src="{{ url_for('static', filename='safebars_mirror/mirror_study.js') }}"></script>
 </body>
 </html>
