@@ -7,6 +7,7 @@ that the experimental intervention can be versioned and analysed independently.
 from __future__ import annotations
 
 import json
+import os
 import random
 from typing import Any, Dict, Tuple
 
@@ -124,24 +125,62 @@ def _fallback_analysis(issue: str) -> Dict[str, Any]:
     }
 
 
-def _analyze_with_llm(issue: str) -> Dict[str, Any]:
-    """Call the LLM and return a normalized analysis, or None on any failure."""
-    llm = _get_llm()
-    if not (llm and llm.is_configured()):
-        return None
-    try:
-        resp = llm.chat(
-            [
+def _call_deepseek(api_key: str, issue: str) -> Dict[str, Any]:
+    """Direct OpenAI-compatible DeepSeek call (mirrors the Transition Companion)."""
+    import requests
+
+    base = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
+    model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+    resp = requests.post(
+        f"{base}/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={
+            "model": model,
+            "messages": [
                 {"role": "system", "content": _ANALYZE_SYSTEM},
                 {"role": "user", "content": f"Researcher's concern: {issue}"},
             ],
-            temperature=0.4,
-        )
-        data = _extract_json(resp) if resp else None
-        if data and data.get("reflection") and isinstance(data.get("related_concerns"), list):
-            return _normalize_analysis(data, issue)
-    except Exception:
-        current_app.logger.exception("Mirror /analyze LLM call failed")
+            "response_format": {"type": "json_object"},
+            "temperature": 0.4,
+            "max_tokens": 600,
+        },
+        timeout=40,
+    )
+    resp.raise_for_status()
+    text = resp.json()["choices"][0]["message"]["content"]
+    data = _extract_json(text)
+    if not data or not data.get("reflection") or not isinstance(data.get("related_concerns"), list):
+        raise ValueError("DeepSeek returned an incomplete response")
+    return _normalize_analysis(data, issue)
+
+
+def _analyze_with_llm(issue: str) -> Dict[str, Any]:
+    """Call an LLM and return a normalized analysis, or None on any failure.
+
+    Prefers a dedicated DeepSeek key (matching the Transition Companion prototype),
+    then falls back to the shared multi-provider SafeBARS client.
+    """
+    ds_key = os.getenv("DEEPSEEK_API_KEY")
+    if ds_key:
+        try:
+            return _call_deepseek(ds_key, issue)
+        except Exception:
+            current_app.logger.exception("Mirror /analyze DeepSeek call failed")
+    llm = _get_llm()
+    if llm and llm.is_configured():
+        try:
+            resp = llm.chat(
+                [
+                    {"role": "system", "content": _ANALYZE_SYSTEM},
+                    {"role": "user", "content": f"Researcher's concern: {issue}"},
+                ],
+                temperature=0.4,
+            )
+            data = _extract_json(resp) if resp else None
+            if data and data.get("reflection") and isinstance(data.get("related_concerns"), list):
+                return _normalize_analysis(data, issue)
+        except Exception:
+            current_app.logger.exception("Mirror /analyze LLM call failed")
     return None
 
 
@@ -264,7 +303,15 @@ def analyze():
     if analysis is None:
         analysis = _fallback_analysis(issue)
 
-    return jsonify({"success": True, "source": source, **analysis})
+    llm = _get_llm()
+    return jsonify({
+        "success": True,
+        "source": source,
+        "deepseek_configured": bool(os.getenv("DEEPSEEK_API_KEY")),
+        "llm_configured": bool(llm and llm.is_configured()),
+        "provider_count": len(llm.providers) if llm else 0,
+        **analysis,
+    })
 
 
 @mirror_study_api.post("/sessions")
