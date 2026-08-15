@@ -128,38 +128,55 @@ def _fallback_analysis(issue: str) -> Dict[str, Any]:
 def _call_deepseek(api_key: str, issue: str) -> Dict[str, Any]:
     """Direct OpenAI-compatible DeepSeek call (mirrors the Transition Companion).
 
-    Defaults to the Aliyun MaaS DeepSeek endpoint/model the prototype uses; override
-    with DEEPSEEK_BASE_URL / DEEPSEEK_MODEL for a standard api.deepseek.com key.
+    Tries the user-configured DEEPSEEK_BASE_URL first, then both well-known DeepSeek
+    endpoints (Aliyun MaaS and api.deepseek.com) so it works no matter which key the
+    user supplied. `enable_thinking` is only sent to the Aliyun MaaS endpoint.
     """
     import requests
 
-    base = os.getenv(
-        "DEEPSEEK_BASE_URL",
-        "https://ws-rpz6r7sem6fuiceu.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
-    ).rstrip("/")
     model = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-pro")
-    resp = requests.post(
-        f"{base}/chat/completions",
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={
-            "model": model,
-            "messages": [
-                {"role": "system", "content": _ANALYZE_SYSTEM},
-                {"role": "user", "content": f"Researcher's concern: {issue}"},
-            ],
-            "response_format": {"type": "json_object"},
-            "enable_thinking": False,
-            "temperature": 0.4,
-            "max_tokens": 700,
-        },
-        timeout=35,
-    )
-    resp.raise_for_status()
-    text = resp.json()["choices"][0]["message"]["content"]
-    data = _extract_json(text)
-    if not data or not data.get("reflection") or not isinstance(data.get("related_concerns"), list):
-        raise ValueError("DeepSeek returned an incomplete response")
-    return _normalize_analysis(data, issue)
+    configured = (os.getenv("DEEPSEEK_BASE_URL") or "").rstrip("/")
+    candidates = []
+    if configured:
+        candidates.append(configured)
+    for base in [
+        "https://ws-rpz6r7sem6fuiceu.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+        "https://api.deepseek.com/v1",
+    ]:
+        if base not in candidates:
+            candidates.append(base)
+
+    last_err: Any = RuntimeError("DeepSeek unavailable")
+    for base in candidates:
+        try:
+            payload = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": _ANALYZE_SYSTEM},
+                    {"role": "user", "content": f"Researcher's concern: {issue}"},
+                ],
+                "response_format": {"type": "json_object"},
+                "temperature": 0.4,
+                "max_tokens": 700,
+            }
+            if "maas.aliyuncs.com" in base:
+                payload["enable_thinking"] = False
+            resp = requests.post(
+                f"{base}/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json=payload,
+                timeout=25,
+            )
+            resp.raise_for_status()
+            text = resp.json()["choices"][0]["message"]["content"]
+            data = _extract_json(text)
+            if not data or not data.get("reflection") or not isinstance(data.get("related_concerns"), list):
+                raise ValueError("DeepSeek returned an incomplete response")
+            return _normalize_analysis(data, issue)
+        except Exception as exc:  # try next candidate endpoint
+            last_err = exc
+            continue
+    raise last_err
 
 
 def _analyze_with_llm(issue: str) -> Tuple[Optional[Dict[str, Any]], str]:
