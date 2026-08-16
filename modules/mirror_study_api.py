@@ -349,7 +349,8 @@ def _llm_json(
                 else:
                     status = resp.get("status_code") if resp else None
                     err_type = (resp or {}).get("error_type", "?")
-                    errors.append(f"{pid}:{err_type}" + (f"[{status}]" if status else ""))
+                    detail = (resp or {}).get("error", "")
+                    errors.append(f"{pid}:{err_type}[{status}] {detail}"[:240])
                     # A 400 while requesting JSON mode usually means this model/
                     # endpoint does not support the OpenAI `response_format` flag.
                     # Retry once WITHOUT it and let the prompt + _extract_json
@@ -370,7 +371,7 @@ def _llm_json(
                             errors.append(f"{pid}:no_json_nofmt")
                         else:
                             s2 = (resp2 or {}).get("status_code")
-                            errors.append(f"{pid}:retry[{s2}]")
+                            errors.append(f"{pid}:retry[{s2}] {(resp2 or {}).get('error','')}"[:120])
             except Exception as exc:
                 errors.append(f"{pid}:{type(exc).__name__}")
                 current_app.logger.warning("Mirror %s %s failed: %s", label, pid, exc)
