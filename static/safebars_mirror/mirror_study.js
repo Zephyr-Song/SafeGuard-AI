@@ -176,6 +176,7 @@
     loadConfig();
     bindBack();
     bindEntry();
+    bindUpload();
     bindChat();
     bindTimeline();
     bindVignette();
@@ -233,6 +234,66 @@
 
     const ta = $('#issue-input');
     if (ta) ta.addEventListener('input', () => autoGrow(ta));
+  }
+
+  // ---------- Document upload: interpret the researcher's own study ----------
+  function bindUpload() {
+    const fileInput = $('#study-file');
+    const drop = $('#upload-drop');
+    const paste = $('#study-paste');
+    const btn = $('#btn-upload-study');
+    if (!btn) return;
+    if (drop && fileInput) {
+      drop.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', () => {
+        const f = fileInput.files[0];
+        const label = $('#upload-text');
+        if (label) label.textContent = f ? f.name : 'Choose a PDF or .txt file';
+      });
+    }
+    btn.addEventListener('click', () => uploadStudy(fileInput, paste));
+  }
+
+  async function uploadStudy(fileInput, paste) {
+    const file = fileInput && fileInput.files && fileInput.files[0];
+    const pasted = (paste && paste.value || '').trim();
+    if (!file && !pasted) {
+      alert('Choose a PDF/.txt file or paste your study text first.');
+      return;
+    }
+    const btn = $('#btn-upload-study');
+    const loading = btn ? btn.querySelector('.btn-loading') : null;
+    const text = btn ? btn.querySelector('.btn-text') : null;
+    if (btn) btn.disabled = true;
+    if (loading) loading.hidden = false;
+    if (text) text.hidden = true;
+    try {
+      const fd = new FormData();
+      if (file) {
+        fd.append('file', file);
+      } else {
+        fd.append('file', new Blob([pasted], { type: 'text/plain' }), 'pasted.txt');
+      }
+      const resp = await fetch(`${API_BASE}/interpret`, { method: 'POST', body: fd });
+      const data = await resp.json();
+      if (!data || data.success === false) {
+        throw new Error((data && data.error) || 'interpret failed');
+      }
+      state.messages = [{ role: 'user', content: data.study_text || pasted }];
+      state.issues = Array.isArray(data.issues) ? data.issues : [];
+      state.issuesSource = data.source;
+      state.problemSummary = data.problem_summary || '';
+      state.fromUpload = true;
+      renderIssues();
+      switchView('issues');
+    } catch (err) {
+      console.error(err);
+      alert((err && err.message) || 'Could not read the study. Please try again or paste the text.');
+    } finally {
+      if (btn) btn.disabled = false;
+      if (loading) loading.hidden = true;
+      if (text) text.hidden = false;
+    }
   }
 
   function skipToVignette() {
@@ -377,6 +438,34 @@
   function renderIssues() {
     const grid = $('#issue-grid');
     if (!grid) return;
+
+    // Adapt the intro for the document-upload path.
+    const eyebrow = $('#issues-eyebrow');
+    const title = $('#issues-title');
+    const problem = $('#issues-problem');
+    const sub = $('#issues-sub');
+    const backBtn = $('#btn-issues-back');
+    if (state.fromUpload) {
+      if (eyebrow) eyebrow.textContent = 'From your uploaded study';
+      if (title) title.textContent = 'Five things you could actually fix';
+      if (problem) {
+        if (state.problemSummary) {
+          problem.hidden = false;
+          problem.innerHTML = `<span class="ip-tag">What I read in your material</span><p>${escapeHtml(state.problemSummary)}</p>`;
+        } else {
+          problem.hidden = true;
+        }
+      }
+      if (sub) sub.innerHTML = 'Pick one to work on first. Each is a concrete step in <em>your</em> study — tap a card to see where it leads.';
+      if (backBtn) backBtn.textContent = 'Back to upload';
+    } else {
+      if (eyebrow) eyebrow.textContent = 'From your conversation';
+      if (title) title.textContent = 'Five things you could actually fix';
+      if (problem) problem.hidden = true;
+      if (sub) sub.innerHTML = 'Pick one to work on first. Each is a concrete step in <em>your</em> study — not a general category. Tap a card to see where it leads.';
+      if (backBtn) backBtn.textContent = 'Back to the conversation';
+    }
+
     grid.innerHTML = '';
     state.issues.forEach((iss, idx) => {
       const card = document.createElement('button');
@@ -888,6 +977,8 @@
         selectedIssue: null,
         timeline: null,
         chatReady: false,
+        problemSummary: '',
+        fromUpload: false,
       };
       history.length = 0;
       $('#issue-input').value = '';

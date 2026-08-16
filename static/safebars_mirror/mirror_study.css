@@ -1670,3 +1670,102 @@ a:focus-visible {
   line-height: 1.45;
 }
 .tl-builds b { color: var(--teal); font-weight: 700; }
+
+/* ---------- Entry: upload study material ---------- */
+.entry-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0 18px;
+  color: var(--navy-2);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.entry-divider::before,
+.entry-divider::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: var(--line-strong);
+  border-radius: 2px;
+}
+.entry-upload { display: flex; flex-direction: column; gap: 12px; }
+.entry-upload h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--ink);
+}
+.entry-upload > p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--navy-2);
+}
+.upload-drop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 18px;
+  border: 2px dashed var(--teal);
+  border-radius: var(--card-radius);
+  background: var(--teal-soft);
+  color: var(--navy-2);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+.upload-drop:hover {
+  background: #e0f4f1;
+  border-color: var(--navy-3);
+  transform: translateY(-1px);
+}
+.upload-drop .upload-icon { width: 30px; height: 30px; color: var(--teal); flex: 0 0 auto; }
+.upload-drop .upload-text { font-weight: 700; font-size: 14px; }
+#study-paste {
+  width: 100%;
+  min-height: 90px;
+  padding: 14px 16px;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--card-radius);
+  background: var(--mist);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.55;
+  resize: vertical;
+}
+#study-paste:focus {
+  border-color: var(--hero-blue);
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(11, 115, 246, 0.14);
+}
+.entry-upload-note {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #7a89a6;
+  line-height: 1.5;
+}
+
+/* ---------- Issues: interpretation banner (upload path) ---------- */
+.issues-problem {
+  margin: 4px 0 14px;
+  padding: 14px 16px;
+  background: var(--teal-soft);
+  border-left: 4px solid var(--teal);
+  border-radius: 10px;
+  color: var(--ink);
+}
+.issues-problem .ip-tag {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+.issues-problem p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}

@@ -132,6 +132,45 @@ _ISSUES_SYSTEM = (
 )
 
 # ---------------------------------------------------------------------------
+# Document upload — interpret a researcher's OWN study material (PDF / text)
+# and surface the same 5-issue structure. The chosen issue then flows into the
+# existing /timeline, which shows where that specific problem leads over time.
+# This lets the researcher drive the whole reflection from their real document
+# instead of a live chat.
+# ---------------------------------------------------------------------------
+_INTERPRET_SYSTEM = (
+    "You are Mirror. A researcher has uploaded their OWN study material — a protocol, "
+    "paper, design document, ethics-approval form, consent form, or similar. Read it and "
+    "interpret the CENTRAL problem or risk their study raises, then break it into EXACTLY "
+    "5 issues they can choose to work on.\n"
+    "THE MOST IMPORTANT RULE: every issue must be NARROW AND FIXABLE. It must name a "
+    "specific mechanism, artefact, step or moment described in THEIR document.\n"
+    "FORBIDDEN as a title: broad category words on their own — 'Privacy', 'Consent', "
+    "'Transparency', 'Bias', 'Fairness', 'Data collection', 'Ethics', 'Accountability', "
+    "'Third parties', 'Model error', 'Deletion', 'Researcher burden'. Those are topics, "
+    "not problems. A good title names the thing that breaks, e.g. 'Weekly feedback email "
+    "goes out with no human check' or 'Roommates named in diaries never agreed'.\n"
+    "Each issue must be solvable by a change the researcher personally controls, within "
+    "weeks, without new funding. If an issue would take a policy change or a new grant, "
+    "narrow it until it fits.\n"
+    "The 5 issues must be clearly distinct (no overlap) and ordered most-urgent first.\n"
+    "Reply with ONLY a JSON object, no markdown, no code fences, with these keys:\n"
+    "- problem_summary: 2-3 sentences interpreting what the researcher is building and the "
+    "core risk surfaced by the document\n"
+    "- issues: an array of exactly 5 objects, each with these keys:\n"
+    "    - title: 5-12 words, concrete, names the specific mechanism or moment\n"
+    "    - one_line: one sentence saying exactly what goes wrong in their setting\n"
+    "    - changeable_decision: the single decision or step they could change (an action, "
+    "not a value or an aspiration)\n"
+    "    - who_is_affected: who specifically bears the cost\n"
+    "    - severity: one of low, medium, high, critical\n"
+    "    - effort: one of low, medium, high\n"
+    "    - why_specific: one sentence on why this is narrow enough to start this week\n"
+    "    - image_id: the best match from this list: " + ", ".join(_IMAGE_IDS) + "\n"
+    "Never invent an image_id outside that list."
+)
+
+# ---------------------------------------------------------------------------
 # Stage 3 — a dated trajectory for ONE chosen issue, plus a single leverage
 # point. Deliberately refuses to broaden back out to general ethics.
 # ---------------------------------------------------------------------------
@@ -199,6 +238,72 @@ def _extract_json(text: str) -> Any:
         return json.loads(text[start : end + 1])
     except Exception:
         return None
+
+
+def _extract_document_text(file_storage: Any, max_chars: int = 16000) -> Tuple[str, Optional[str]]:
+    """Extract plain text from an uploaded .pdf or .txt file.
+
+    Returns (text, error). On success error is None and text is truncated to
+    max_chars. On failure text is '' and error is a user-facing message.
+    """
+    import io
+
+    filename = (getattr(file_storage, "filename", "") or "").lower()
+    raw = file_storage.read()
+    MAX_BYTES = 15 * 1024 * 1024
+    if len(raw) > MAX_BYTES:
+        return "", "The file is larger than 15 MB. Please upload a smaller document or paste the text."
+
+    text = ""
+    if filename.endswith(".txt") or not filename.endswith(".pdf"):
+        try:
+            text = raw.decode("utf-8", errors="ignore")
+        except Exception:
+            text = raw.decode("latin-1", errors="ignore")
+
+    if filename.endswith(".pdf"):
+        text = ""
+        try:
+            from pypdf import PdfReader
+        except Exception:
+            return "", ("Could not load a PDF parser on the server. Please export the "
+                        "document as text and paste it instead.")
+        try:
+            reader = PdfReader(io.BytesIO(raw))
+            pages = [(p.extract_text() or "") for p in reader.pages]
+            text = "\n".join(pages).strip()
+        except Exception:
+            return "", ("The PDF could not be read (it may be scanned images). "
+                        "Please paste the study text instead.")
+        if not text.strip():
+            return "", ("No text could be extracted — the PDF looks image-based. "
+                        "Please paste the study text instead.")
+
+    text = text.strip()
+    if not text:
+        return "", "No readable text was found. Try pasting the study text directly."
+    return text[:max_chars], None
+
+
+def _interpret_from_text(text: str) -> Tuple[List[Dict[str, Any]], str, str, str]:
+    """Run the document-interpretation LLM call.
+
+    Returns (issues, problem_summary, source, ai_error). Falls back to a
+    deterministic issue set (grounded in the document text) when the LLM fails.
+    """
+    prompt = (
+        f"Study material (verbatim extract):\n<<<\n{text}\n>>>\n\n"
+        "Now interpret the central problem and return the JSON object with "
+        "'problem_summary' and exactly 5 concrete, fixable issues."
+    )
+    data, ai_error = _llm_json(_INTERPRET_SYSTEM, prompt, max_tokens=1700, temperature=0.45, label="/interpret")
+    items = _normalize_issues(data) if data else []
+    if len(items) >= 3:
+        summary = _clip((data or {}).get("problem_summary", ""), 800)
+        return items, summary, "ai", ai_error
+    items = _fallback_issues([{"role": "user", "content": text}])
+    summary = "Here is how I read the main risk in your material — five concrete things you could start fixing."
+    return items, summary, "fallback", ai_error
 
 
 def _normalize_analysis(data: Dict[str, Any], issue: str) -> Dict[str, Any]:
@@ -893,6 +998,40 @@ def timeline():
         "ai_error": ai_error if source == "fallback" else "",
         "issue_id": _clip(issue.get("id"), 40),
         **result,
+    })
+
+
+@mirror_study_api.post("/interpret")
+@rate_limit(max_requests=10, window_seconds=120, scope="mirror_study_interpret")
+def interpret():
+    """Interpret an uploaded study document (PDF or text) into 5 fixable issues.
+
+    Multipart form field 'file' (.pdf or .txt). Returns problem_summary (the
+    interpretation of the researcher's problem) plus issues in the same shape as
+    /issues, and the truncated study text so the /timeline can stay grounded in
+    the real document.
+    """
+    if "file" not in request.files:
+        return jsonify({
+            "success": False,
+            "error": "No file uploaded. Send a .pdf or .txt under 15 MB.",
+        }), 400
+    f = request.files["file"]
+    if not getattr(f, "filename", ""):
+        return jsonify({"success": False, "error": "Empty file name."}), 400
+
+    text, err = _extract_document_text(f)
+    if err:
+        return jsonify({"success": False, "error": err}), 422
+
+    issues, summary, source, ai_error = _interpret_from_text(text)
+    return jsonify({
+        "success": True,
+        "source": source,
+        "ai_error": ai_error if source == "fallback" else "",
+        "problem_summary": summary,
+        "study_text": text[:5000],
+        "issues": issues,
     })
 
 

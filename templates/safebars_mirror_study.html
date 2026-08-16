@@ -67,6 +67,24 @@
               </button>
               <button type="button" id="btn-skip-issue" class="text-button">Or jump to the StressLens vignette</button>
             </form>
+
+            <div class="entry-divider"><span>or upload your study</span></div>
+
+            <div class="entry-upload" id="entry-upload">
+              <h3>Upload your study material</h3>
+              <p>Have a protocol, ethics form, or paper? Upload a <b>PDF</b> (or .txt) and I'll read it, interpret the problem, and show you where it could lead.</p>
+              <label class="upload-drop" id="upload-drop">
+                <input type="file" id="study-file" accept=".pdf,.txt" hidden />
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+                <span class="upload-text" id="upload-text">Choose a PDF or .txt file</span>
+              </label>
+              <textarea id="study-paste" placeholder="…or paste your study text here" maxlength="8000"></textarea>
+              <button type="button" class="yellow-button" id="btn-upload-study">
+                <span class="btn-text">Read my study</span>
+                <span class="btn-loading" hidden>Reading your study…</span>
+              </button>
+              <p class="entry-upload-note">Your document is only read to interpret it in this session. Files are not stored.</p>
+            </div>
           </div>
 
           <div class="entry-mascot">
@@ -162,9 +180,10 @@
       <section id="view-issues" class="view">
         <div class="issues-stage">
           <div class="condition-intro">
-            <span class="eyebrow">From your conversation</span>
-            <h2>Five things you could actually fix</h2>
-            <p>Pick one to work on first. Each is a concrete step in <em>your</em> study — not a general category. Tap a card to see where it leads.</p>
+            <span class="eyebrow" id="issues-eyebrow">From your conversation</span>
+            <h2 id="issues-title">Five things you could actually fix</h2>
+            <div class="issues-problem" id="issues-problem" hidden></div>
+            <p id="issues-sub">Pick one to work on first. Each is a concrete step in <em>your</em> study — not a general category. Tap a card to see where it leads.</p>
           </div>
           <div class="issue-grid" id="issue-grid"></div>
           <div class="nav-footer center" style="border-top:0;">
