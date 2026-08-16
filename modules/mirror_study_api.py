@@ -319,20 +319,25 @@ def _llm_json(
             errors.append(f"deepseek:{exc}")
             current_app.logger.warning("Mirror %s DeepSeek call failed: %s", label, exc)
 
-    # 2) Every configured SafeBARS provider (active first), JSON mode.
+    # 2) Configured SafeBARS providers (active first), JSON mode.
+    #    Cap the fallback chain so the total LLM budget stays well under the
+    #    gunicorn worker timeout (Render free tier): active provider first, then
+    #    at most ONE more, each with a 25s timeout. A single good provider is
+    #    enough; exhausting every provider only risks a 502 on heavy prompts.
     llm = _get_llm()
     if llm and llm.is_configured():
         order: List[str] = []
         if llm.active_provider_id:
             order.append(llm.active_provider_id)
         order += [pid for pid in llm.providers if pid not in order]
+        order = order[:2]  # active + one fallback only
         for pid in order:
             try:
                 resp = llm.chat_with_provider_detailed(
                     pid,
                     messages,
                     temperature=temperature,
-                    timeout=30,
+                    timeout=25,
                     max_tokens=max_tokens,
                     response_format={"type": "json_object"},
                 )
@@ -437,12 +442,12 @@ def _clean_messages(raw: Any, limit: int = 24) -> List[Dict[str, str]]:
     return out
 
 
-def _transcript_text(messages: List[Dict[str, str]]) -> str:
+def _transcript_text(messages: List[Dict[str, str]], limit: int = 4000) -> str:
     lines = []
     for m in messages:
         who = "Researcher" if m["role"] == "user" else "Mirror"
         lines.append(f"{who}: {m['content']}")
-    return "\n".join(lines)[:6000]
+    return "\n".join(lines)[:limit]
 
 
 def _user_text(messages: List[Dict[str, str]]) -> str:
@@ -825,7 +830,7 @@ def timeline():
 
     messages = _clean_messages(payload.get("messages"))
     prompt = (
-        f"The researcher's study, in their own words:\n{_transcript_text(messages) or 'not provided'}\n\n"
+        f"The researcher's study, in their own words:\n{_transcript_text(messages, 2500) or 'not provided'}\n\n"
         "THE ONE ISSUE THEY CHOSE TO WORK ON:\n"
         f"- title: {_clip(issue.get('title'), 200)}\n"
         f"- what goes wrong: {_clip(issue.get('one_line'), 320)}\n"
@@ -833,7 +838,7 @@ def timeline():
         f"- who is affected: {_clip(issue.get('who_is_affected'), 200)}\n\n"
         "Return the JSON object. Stay strictly on this one point."
     )
-    data, ai_error = _llm_json(_TIMELINE_SYSTEM, prompt, max_tokens=1700, temperature=0.5, label="/timeline")
+    data, ai_error = _llm_json(_TIMELINE_SYSTEM, prompt, max_tokens=1200, temperature=0.5, label="/timeline")
 
     result = _normalize_timeline(data, issue) if data else None
     if result:
