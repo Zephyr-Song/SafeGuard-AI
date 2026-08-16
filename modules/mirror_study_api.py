@@ -137,17 +137,21 @@ _ISSUES_SYSTEM = (
 # ---------------------------------------------------------------------------
 _TIMELINE_SYSTEM = (
     "You are Mirror. The researcher has chosen ONE specific issue from their own study "
-    "to work on. Project how it plays out over time if nothing changes, then give them "
-    "one concrete place to intervene.\n"
+    "to work on. Run a FORWARD SIMULATION of how this specific problem develops over the "
+    "next 12 months if nothing changes, then give them one concrete place to intervene.\n"
     "STAY ON THIS ONE POINT. Do not broaden into general AI ethics, do not introduce new "
-    "unrelated risks, do not moralise. Every frame must be a plausible downstream "
-    "consequence of this exact decision.\n"
+    "unrelated risks, do not moralise. The frames are a CHAIN: each stage grows directly "
+    "out of the previous one, so the problem visibly develops frame by frame.\n"
     "Reply with ONLY a JSON object, no markdown, no code fences, with these keys:\n"
     "- focus: restate the single specific point being worked on, max 14 words\n"
+    "- future_narrative: 3-5 sentences narrating the overall future development of this "
+    "problem across the year if no one intervenes -- the through-line that connects the frames\n"
     "- frames: array of EXACTLY 5 objects with increasing time labels, in this order: "
     "'Week 1', 'Week 3', 'Month 2', 'Month 6', 'Month 12'. Each object has:\n"
     "    when: the time label\n"
-    "    headline: 4-9 words naming what has happened by then\n"
+    "    headline: 4-9 words naming what has developed by then\n"
+    "    builds_on: one sentence showing how this stage develops out of the previous one "
+    "(for Week 1, say how it starts from the current decision)\n"
     "    what_happens: 1-2 concrete sentences, specific to their study\n"
     "    who_is_affected: who feels it at this point\n"
     "    severity: one of low, medium, high, critical (must not decrease over time)\n"
@@ -673,6 +677,7 @@ def _normalize_timeline(data: Dict[str, Any], issue: Dict[str, Any]) -> Optional
         frames.append({
             "when": _clip(item.get("when"), 24) or _FRAME_LABELS[min(i, 4)],
             "headline": _clip(item.get("headline"), 110),
+            "builds_on": _clip(item.get("builds_on"), 260),
             "what_happens": _clip(item.get("what_happens"), 420),
             "who_is_affected": _clip(item.get("who_is_affected"), 160),
             "severity": sev,
@@ -684,6 +689,7 @@ def _normalize_timeline(data: Dict[str, Any], issue: Dict[str, Any]) -> Optional
     lp = lp if isinstance(lp, dict) else {}
     return {
         "focus": _clip(data.get("focus"), 140) or _clip(issue.get("title"), 140),
+        "future_narrative": _clip(data.get("future_narrative"), 600),
         "frames": frames,
         "leverage_point": {
             "action": _clip(lp.get("action"), 300) or _clip(issue.get("changeable_decision"), 300),
@@ -705,33 +711,45 @@ def _fallback_timeline(issue: Dict[str, Any]) -> Dict[str, Any]:
     specs = [
         ("Week 1", "Nobody notices yet", "low",
          "The study runs as designed and the gap is invisible from the inside.",
-         "Nothing looks wrong, which is exactly why it stays unfixed."),
+         "Nothing looks wrong, which is exactly why it stays unfixed.",
+         "It starts the moment the study goes live with this decision unchanged."),
         ("Week 3", "The first uncomfortable case", "medium",
          "A single case appears that the current process cannot handle cleanly.",
-         "Someone asks a question your documentation cannot answer."),
+         "Someone asks a question your documentation cannot answer.",
+         "That first case exposes the gap the design assumed away."),
         ("Month 2", "Workarounds become the process", "high",
          "The team improvises a fix per case, and the informal habit hardens into the norm.",
-         "Decisions get made in chat messages rather than in the protocol."),
+         "Decisions get made in chat messages rather than in the protocol.",
+         "Each workaround makes the next one feel normal."),
         ("Month 6", "It becomes hard to undo", "high",
          "Data, expectations and downstream analyses now depend on the shortcut.",
-         "Fixing it would mean re-contacting people or re-running analysis."),
+         "Fixing it would mean re-contacting people or re-running analysis.",
+         "The dependency on the shortcut now outlives the people who noticed it."),
         ("Month 12", "It surfaces where it costs most", "critical",
          "The gap shows up in review, publication or a complaint, when options are narrowest.",
-         "You are explaining the decision to someone outside your team."),
+         "You are explaining the decision to someone outside your team.",
+         "By now the problem has grown into something only an outsider can see."),
     ]
     frames = [
         {
             "when": when,
             "headline": headline,
+            "builds_on": builds,
             "what_happens": f"{what} Concretely: {title.lower()}.",
             "who_is_affected": who,
             "severity": sev,
             "early_signal": signal,
         }
-        for when, headline, sev, what, signal in specs
+        for when, headline, sev, what, signal, builds in specs
     ]
     return {
         "focus": title,
+        "future_narrative": (
+            f"If nothing changes, {title.lower()} starts small and invisible, then "
+            f"escalates as each workaround hardens into habit and the dependency grows. "
+            f"By month 12 the cost lands on {who.lower()} at the worst possible moment -- "
+            f"in review, publication or a complaint -- when the choice is hardest to reverse."
+        ),
         "frames": frames,
         "leverage_point": {
             "action": decision,

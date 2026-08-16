@@ -432,6 +432,9 @@
     const focus = $('#timeline-focus');
     if (focus) focus.textContent = data.focus || (state.selectedIssue && state.selectedIssue.title) || '';
 
+    const narr = $('#timeline-narrative');
+    if (narr) narr.textContent = data.future_narrative || '';
+
     const lens = $('#timeline-lens');
     if (lens) {
       lens.innerHTML = '';
@@ -464,6 +467,7 @@
               <h4>${escapeHtml(f.headline)}</h4>
               <span class="sev-badge sev-${f.severity}">${f.severity}</span>
             </div>
+            ${f.builds_on ? `<p class="tl-builds"><b>Develops from:</b> ${escapeHtml(f.builds_on)}</p>` : ''}
             <p>${escapeHtml(f.what_happens)}</p>
             <div class="tl-meta">
               <span><b>Who:</b> ${escapeHtml(f.who_is_affected)}</span>
