@@ -46,10 +46,10 @@
               Hi, I'm your ethical research companion
             </span>
             <h1 class="wavy-underline">AI research ethics can be complex. Let's take it one step at a time.</h1>
-            <p>No perfect plan needed. Describe an ethical concern in your own research, then see what it could look like and how to redesign it.</p>
+            <p>No perfect plan needed. Tell me about your study in your own words — I'll ask a few questions, then we'll narrow it down to things you can actually fix.</p>
 
             <form id="issue-form" class="issue-form">
-              <label for="issue-input">What's the concern?</label>
+              <label for="issue-input">What's on your mind?</label>
               <textarea id="issue-input" name="issue" placeholder="Describe your situation in your own words..." required maxlength="2000"></textarea>
 
               <div class="issue-chips" aria-label="Common concerns">
@@ -62,8 +62,8 @@
               </div>
 
               <button type="submit" class="yellow-button" id="btn-start">
-                <span class="btn-text">Start reflecting</span>
-                <span class="btn-loading" hidden>Mirror is analysing…</span>
+                <span class="btn-text">Start the conversation</span>
+                <span class="btn-loading" hidden>Mirror is listening…</span>
               </button>
               <button type="button" id="btn-skip-issue" class="text-button">Or jump to the StressLens vignette</button>
             </form>
@@ -121,66 +121,74 @@
             <div class="how-it-works">
               <h3>How it works</h3>
               <ol>
-                <li><strong>Describe your issue</strong><span>Tell us what worries you in plain language.</span></li>
-                <li><strong>See the mirror image</strong><span>We match your concern to an AI-generated illustration.</span></li>
-                <li><strong>Redesign the study</strong><span>Walk through consequences and choose safer fixes.</span></li>
+                <li><strong>Talk it through</strong><span>I ask one question at a time — no forms, no jargon.</span></li>
+                <li><strong>Pick one of five issues</strong><span>I turn what you said into five concrete things you could fix.</span></li>
+                <li><strong>See where it leads</strong><span>Get a dated timeline for that one point, and the smallest change that bends it.</span></li>
               </ol>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- VIEW: issue image -->
-      <section id="view-image" class="view">
-        <p class="notice">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><circle cx="12" cy="16.5" r="0.6" fill="currentColor" stroke="none"/></svg>
-          <span>These images are AI-generated editorial illustrations. They are designed to help you imagine plausible consequences, not to report real events or real people.</span>
-        </p>
-        <div class="card-layout">
-          <div class="image-card">
-            <div class="img-wrap">
-              <img id="issue-image" src="" alt="AI illustration of the ethical concern">
-              <span class="theme-ribbon" id="theme-ribbon">Matching…</span>
-            </div>
-            <div class="image-caption">
-              <span class="eyebrow" id="theme-label"></span>
-              <span class="ai-badge" id="ai-badge" hidden>AI-generated reflection</span>
-              <p id="reflection-text"></p>
-            </div>
+      <!-- VIEW: chat (Stage 1) -->
+      <section id="view-chat" class="view">
+        <div class="chat-stage">
+          <div class="chat-header">
+            <span class="eyebrow">Let's talk it through</span>
+            <h2>What are you working on?</h2>
+            <p class="chat-sub">Mirror asks one question at a time. Answer in your own words — no right answers.</p>
           </div>
-          <div class="companion-panel">
-            <div class="panel-head">
-              <svg class="avatar" viewBox="0 0 200 220" aria-hidden="true">
-                <circle cx="100" cy="206" rx="62" r="10" fill="#050a4b" opacity="0.12"/>
-                <path d="M100 38c34 0 56 26 56 64 0 44-26 80-56 80s-56-36-56-80c0-38 22-64 56-64z" fill="#0b73f6"/>
-                <circle cx="78" cy="96" r="20" fill="#fff" stroke="#050a4b" stroke-width="4"/>
-                <circle cx="122" cy="96" r="20" fill="#fff" stroke="#050a4b" stroke-width="4"/>
-                <path d="M58 92c-8-4-16-2-20 4" fill="none" stroke="#050a4b" stroke-width="4" stroke-linecap="round"/>
-                <path d="M142 92c8-4 16-2 20 4" fill="none" stroke="#050a4b" stroke-width="4" stroke-linecap="round"/>
-                <circle class="mascot-eye" cx="78" cy="96" r="8" fill="#050a4b"/>
-                <circle class="mascot-eye" cx="122" cy="96" r="8" fill="#050a4b"/>
-                <path d="M92 116h16l-8 12z" fill="#ffdc00" stroke="#050a4b" stroke-width="2.5" stroke-linejoin="round"/>
-              </svg>
-              <div class="who">
-                <strong>Mirror</strong>
-                <small>your research companion</small>
-              </div>
-            </div>
-            <div class="companion-speech large" id="image-speech"></div>
-            <div class="actions">
-              <button id="btn-explore-stresslens" class="primary-button">Explore the StressLens study</button>
-            </div>
-            <div class="ai-related" id="ai-related" hidden>
-              <span class="related-hint">Mirror also surfaced these angles — tap any to explore</span>
-              <div class="gallery-chips" id="related-chips"></div>
-            </div>
-            <div class="re-analyze">
-              <label for="re-issue-input">Have a different concern?</label>
-              <div class="re-analyze-row">
-                <input id="re-issue-input" type="text" placeholder="Describe it in a few words…" maxlength="2000" autocomplete="off">
-                <button id="btn-re-analyze" type="button" class="text-button">Analyze</button>
-              </div>
-            </div>
+
+          <div class="chat-log" id="chat-log"></div>
+
+          <div class="chat-typing" id="chat-typing" hidden>
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="chat-typing-label">Mirror is typing…</span>
+          </div>
+
+          <div class="chat-ready-box" id="chat-ready-box" hidden>
+            <p>I think I've got enough to name some concrete things you could fix. Want to see them?</p>
+            <button id="btn-summarise-issues" class="primary-button">Show me the 5 issues</button>
+          </div>
+
+          <form class="chat-input-row" id="chat-form">
+            <textarea id="chat-input" placeholder="Type your answer…" maxlength="1500" rows="1" autocomplete="off"></textarea>
+            <button type="submit" id="btn-chat-send" class="primary-button">Send</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- VIEW: issues (Stage 2) -->
+      <section id="view-issues" class="view">
+        <div class="issues-stage">
+          <div class="condition-intro">
+            <span class="eyebrow">From your conversation</span>
+            <h2>Five things you could actually fix</h2>
+            <p>Pick one to work on first. Each is a concrete step in <em>your</em> study — not a general category. Tap a card to see where it leads.</p>
+          </div>
+          <div class="issue-grid" id="issue-grid"></div>
+          <div class="nav-footer center" style="border-top:0;">
+            <button id="btn-issues-back" class="text-button">Back to the conversation</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: timeline (Stage 3) -->
+      <section id="view-timeline" class="view">
+        <div class="timeline-stage">
+          <div class="timeline-head">
+            <span class="eyebrow">Where this one point leads</span>
+            <h2 id="timeline-focus"></h2>
+            <div class="timeline-lens" id="timeline-lens"></div>
+          </div>
+
+          <ol class="timeline-stepper" id="timeline-stepper"></ol>
+
+          <div class="leverage-card" id="leverage-card"></div>
+
+          <div class="nav-footer">
+            <button id="btn-timeline-back" class="text-button">Pick a different issue</button>
+            <button id="btn-timeline-explore" class="primary-button">Explore the StressLens study →</button>
           </div>
         </div>
       </section>

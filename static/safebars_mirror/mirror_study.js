@@ -18,6 +18,13 @@
     selectedFixes: [],
     fixRanks: {},
     responses: {},
+    // three-stage reflection flow
+    messages: [],
+    issues: [],
+    issuesSource: null,
+    selectedIssue: null,
+    timeline: null,
+    chatReady: false,
   };
   let history = [];
 
@@ -46,7 +53,9 @@
 
   const REVEAL = {
     entry: ['.entry-copy', '.entry-mascot'],
-    image: ['.card-layout'],
+    chat: ['.chat-header', '#chat-log'],
+    issues: ['.condition-intro', '#issue-grid'],
+    timeline: ['.timeline-head', '#timeline-stepper', '#leverage-card'],
     vignette: ['.study-panel'],
     'hidden-facts': ['.condition-intro', '#hidden-facts-list'],
     condition: ['.study-panel'],
@@ -66,8 +75,9 @@
   }
 
   const PROGRESS = {
-    vignette: 12, 'hidden-facts': 24, condition: 36, frames: 54,
-    veil: 54, fixes: 74, tradeoff: 88, demographics: 96, 'thank-you': 100,
+    chat: 4, issues: 10, timeline: 18,
+    vignette: 28, 'hidden-facts': 40, condition: 52, frames: 66,
+    veil: 66, fixes: 82, tradeoff: 92, demographics: 97, 'thank-you': 100,
   };
 
   function setProgress(name) {
@@ -166,7 +176,8 @@
     loadConfig();
     bindBack();
     bindEntry();
-    bindImageView();
+    bindChat();
+    bindTimeline();
     bindVignette();
     bindHiddenFacts();
     bindCondition();
@@ -210,146 +221,295 @@
 
     $('#btn-skip-issue').addEventListener('click', () => {
       input.value = '';
-      startWithIssue('');
+      skipToVignette();
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const issue = input.value.trim();
-      if (!issue && !confirm("You haven't described an issue. Continue with the StressLens vignette anyway?")) {
-        return;
-      }
-      await startWithIssue(issue);
+      const text = input.value.trim();
+      if (!text) { skipToVignette(); return; }
+      startChat(text);
+    });
+
+    const ta = $('#issue-input');
+    if (ta) ta.addEventListener('input', () => autoGrow(ta));
+  }
+
+  function skipToVignette() {
+    createSession().then(() => showVignette());
+  }
+
+  function autoGrow(el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  // ---------- Stage 1: conversation ----------
+  function bindChat() {
+    const form = $('#chat-form');
+    if (form) form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = $('#chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      autoGrow(input);
+      sendChat(text);
+    });
+    const ci = $('#chat-input');
+    if (ci) ci.addEventListener('input', () => autoGrow(ci));
+    $('#btn-summarise-issues').addEventListener('click', () => summariseIssues());
+    $('#btn-issues-back').addEventListener('click', () => goBack());
+  }
+
+  function startChat(opening) {
+    state.messages = [{ role: 'user', content: opening }];
+    state.issues = [];
+    state.issuesSource = null;
+    state.selectedIssue = null;
+    state.timeline = null;
+    state.chatReady = false;
+    renderChatBubbles();
+    switchView('chat');
+    setChatInputEnabled(false);
+    showTyping(true);
+    chatTurn().then(() => { showTyping(false); setChatInputEnabled(!state.chatReady); focusChat(); });
+  }
+
+  function renderChatBubbles() {
+    const log = $('#chat-log');
+    if (!log) return;
+    log.innerHTML = '';
+    state.messages.forEach((m) => {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble ' + (m.role === 'user' ? 'bubble-user' : 'bubble-assistant');
+      bubble.textContent = m.content;
+      log.appendChild(bubble);
+    });
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function showTyping(on) {
+    const el = $('#chat-typing');
+    if (el) el.hidden = !on;
+    if (on) { const log = $('#chat-log'); if (log) log.scrollTop = log.scrollHeight; }
+  }
+
+  function setChatInputEnabled(on) {
+    const input = $('#chat-input');
+    const btn = $('#btn-chat-send');
+    if (input) input.disabled = !on;
+    if (btn) btn.disabled = !on;
+  }
+
+  function focusChat() {
+    const input = $('#chat-input');
+    if (input && !input.disabled) input.focus();
+  }
+
+  async function chatTurn() {
+    showTyping(true);
+    try {
+      const data = await api('/chat', { method: 'POST', body: { messages: state.messages } });
+      if (!data || data.success === false) throw new Error((data && data.error) || 'chat failed');
+      const reply = data.reply || '';
+      const question = data.question || '';
+      state.messages.push({
+        role: 'assistant',
+        content: reply + (question ? '\n\n' + question : ''),
+      });
+      renderChatBubbles();
+      state.chatReady = !!data.ready;
+      showReadyBox(!!data.ready);
+      if (data.ready) setChatInputEnabled(false);
+      return data;
+    } catch (err) {
+      console.error(err);
+      state.messages.push({
+        role: 'assistant',
+        content: "Sorry — I had trouble thinking there. Could you say that another way?",
+      });
+      renderChatBubbles();
+    } finally {
+      showTyping(false);
+    }
+  }
+
+  async function sendChat(text) {
+    state.messages.push({ role: 'user', content: text });
+    renderChatBubbles();
+    setChatInputEnabled(false);
+    await chatTurn();
+    setChatInputEnabled(!state.chatReady);
+    focusChat();
+  }
+
+  function showReadyBox(on) {
+    const box = $('#chat-ready-box');
+    if (box) box.hidden = !on;
+  }
+
+  // ---------- Stage 2: five concrete issues ----------
+  async function summariseIssues() {
+    showReadyBox(false);
+    setChatInputEnabled(false);
+    try {
+      const data = await api('/issues', { method: 'POST', body: { messages: state.messages } });
+      if (!data || data.success === false) throw new Error((data && data.error) || 'issues failed');
+      state.issues = Array.isArray(data.issues) ? data.issues : [];
+      state.issuesSource = data.source;
+      renderIssues();
+      switchView('issues');
+    } catch (err) {
+      console.error(err);
+      alert('Could not summarise the issues right now. Please try again.');
+      setChatInputEnabled(true);
+    }
+  }
+
+  function renderIssues() {
+    const grid = $('#issue-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    state.issues.forEach((iss, idx) => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'issue-card fx-reveal';
+      card.style.setProperty('--i', idx);
+      card.innerHTML = `
+        <div class="issue-card-top">
+          <span class="issue-num">${idx + 1}</span>
+          <span class="sev-badge sev-${iss.severity}">${iss.severity}</span>
+          <span class="eff-badge eff-${iss.effort}">${iss.effort} effort</span>
+        </div>
+        <h3 class="issue-title">${escapeHtml(iss.title)}</h3>
+        <p class="issue-one-line">${escapeHtml(iss.one_line)}</p>
+        <div class="issue-meta">
+          <span class="issue-affected"><b>Who:</b> ${escapeHtml(iss.who_is_affected)}</span>
+          <span class="issue-why">${escapeHtml(iss.why_specific)}</span>
+        </div>
+        <span class="issue-cta">See where this leads →</span>`;
+      card.addEventListener('click', () => selectIssue(iss, card));
+      grid.appendChild(card);
     });
   }
 
-  async function startWithIssue(issue) {
-    issue = (issue || '').trim();
-    state.issue = issue;
-    if (!issue) {
-      state.analysis = null;
-      switchView('image');
-      renderIssueImage();
-      return;
+  // ---------- Stage 3: dated trajectory for one issue ----------
+  async function selectIssue(issue, cardEl) {
+    state.selectedIssue = issue;
+    if (cardEl) {
+      cardEl.classList.add('is-loading');
+      cardEl.setAttribute('aria-busy', 'true');
     }
     try {
-      await analyzeIssue(issue);
+      const data = await api('/timeline', {
+        method: 'POST',
+        body: { issue: issue, messages: state.messages },
+      });
+      if (!data || data.success === false) throw new Error((data && data.error) || 'timeline failed');
+      state.timeline = data;
+      renderTimeline(data);
+      switchView('timeline');
     } catch (err) {
       console.error(err);
-      alert('Sorry, we could not analyse that right now. Please try again.');
-    }
-  }
-
-  // ---------- AI analysis (mirrors the transition-companion AI navigator) ----------
-  async function analyzeIssue(issue) {
-    issue = (issue || '').trim();
-    if (!issue) return;
-    setLoading(true, 'Mirror is analysing…');
-    try {
-      const data = await api('/analyze', { method: 'POST', body: { issue } });
-      if (!data || !data.success) throw new Error((data && data.error) || 'analyze failed');
-      state.issue = issue;
-      state.analysis = {
-        source: data.source,
-        summary: data.summary || '',
-        reflection: data.reflection || '',
-        theme_label: data.theme_label || '',
-        theme_id: data.theme_id || 'default',
-        image_url: data.image_url || '',
-        related_concerns: Array.isArray(data.related_concerns) ? data.related_concerns : [],
-        ethical_dimensions: Array.isArray(data.ethical_dimensions) ? data.ethical_dimensions : [],
-      };
-      if (state.currentView === 'entry' || !state.currentView) {
-        switchView('image');
-      }
-      renderIssueImage();
-      sparkleBurst($('.card-layout'), 9);
-    } catch (err) {
-      console.error(err);
-      throw err;
+      alert('Could not build the timeline right now. Please try again.');
     } finally {
-      setLoading(false);
+      if (cardEl) {
+        cardEl.classList.remove('is-loading');
+        cardEl.removeAttribute('aria-busy');
+      }
     }
   }
 
-  // ---------- Image view ----------
-  function renderIssueImage() {
-    const img = $('#issue-image');
-    const label = $('#theme-label');
-    const reflection = $('#reflection-text');
-    const ribbon = $('#theme-ribbon');
-    const aiBadge = $('#ai-badge');
-    const related = $('#ai-related');
-    const relatedChips = $('#related-chips');
+  function renderTimeline(data) {
+    const focus = $('#timeline-focus');
+    if (focus) focus.textContent = data.focus || (state.selectedIssue && state.selectedIssue.title) || '';
 
-    const a = state.analysis;
-    if (a) {
-      img.src = a.image_url;
-      label.textContent = a.theme_label;
-      ribbon.textContent = a.theme_label;
-      reflection.textContent = a.reflection;
-      if (aiBadge) {
-        if (a.source === 'ai') aiBadge.hidden = false;
-        else aiBadge.hidden = true;
+    const lens = $('#timeline-lens');
+    if (lens) {
+      lens.innerHTML = '';
+      if (data.if_nothing_changes) {
+        const n = document.createElement('div');
+        n.className = 'lens-row lens-nothing';
+        n.innerHTML = `<span class="lens-tag">If nothing changes</span><span>${escapeHtml(data.if_nothing_changes)}</span>`;
+        lens.appendChild(n);
       }
-      companionSay('#image-speech', (a.summary ? a.summary + ' ' : '') + a.reflection);
-      // AI-surfaced related concerns (clickable -> re-analyse)
-      relatedChips.innerHTML = '';
-      if (a.related_concerns && a.related_concerns.length) {
-        a.related_concerns.forEach((c) => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.textContent = c;
-          btn.dataset.concern = c;
-          relatedChips.appendChild(btn);
-        });
-        related.hidden = false;
-      } else {
-        related.hidden = true;
+      if (data.if_you_act_now) {
+        const a = document.createElement('div');
+        a.className = 'lens-row lens-act';
+        a.innerHTML = `<span class="lens-tag">If you act now</span><span>${escapeHtml(data.if_you_act_now)}</span>`;
+        lens.appendChild(a);
       }
-    } else {
-      const theme = state.config.issue_gallery.find((t) => t.id === 'data_collection');
-      img.src = theme.image_url;
-      label.textContent = 'StressLens study';
-      ribbon.textContent = 'StressLens study';
-      reflection.textContent = state.config.vignette.setting;
-      if (aiBadge) aiBadge.hidden = true;
-      related.hidden = true;
-      companionSay('#image-speech',
-        'Let’s walk through the StressLens study together. It is a useful example even if your own issue is different.');
+    }
+
+    const stepper = $('#timeline-stepper');
+    if (stepper) {
+      stepper.innerHTML = '';
+      (data.frames || []).forEach((f, i) => {
+        const li = document.createElement('li');
+        li.className = 'tl-node fx-reveal';
+        li.style.setProperty('--i', i);
+        li.innerHTML = `
+          <span class="tl-time">${escapeHtml(f.when)}</span>
+          <span class="tl-dot sev-${f.severity}"></span>
+          <div class="tl-body">
+            <div class="tl-head-row">
+              <h4>${escapeHtml(f.headline)}</h4>
+              <span class="sev-badge sev-${f.severity}">${f.severity}</span>
+            </div>
+            <p>${escapeHtml(f.what_happens)}</p>
+            <div class="tl-meta">
+              <span><b>Who:</b> ${escapeHtml(f.who_is_affected)}</span>
+              <span class="tl-signal"><b>Early signal:</b> ${escapeHtml(f.early_signal)}</span>
+            </div>
+          </div>`;
+        stepper.appendChild(li);
+      });
+    }
+
+    const lp = data.leverage_point || {};
+    const card = $('#leverage-card');
+    if (card) {
+      card.innerHTML = `
+        <h3>One place to intervene</h3>
+        <p class="lp-action">${escapeHtml(lp.action || (state.selectedIssue && state.selectedIssue.changeable_decision) || '')}</p>
+        <div class="lp-grid">
+          <div><span class="lp-k">By when</span><span class="lp-v">${escapeHtml(lp.when || '')}</span></div>
+          <div><span class="lp-k">Owner</span><span class="lp-v">${escapeHtml(lp.owner || '')}</span></div>
+          <div><span class="lp-k">Cost</span><span class="lp-v">${escapeHtml(lp.cost || '')}</span></div>
+        </div>
+        ${data.first_step_this_week ? `<p class="lp-step"><b>First step this week:</b> ${escapeHtml(data.first_step_this_week)}</p>` : ''}
+        ${data.how_to_measure ? `<p class="lp-measure"><b>You\'ll know it worked when:</b> ${escapeHtml(data.how_to_measure)}</p>` : ''}
+      `;
     }
   }
 
-  function bindImageView() {
-    $('#btn-explore-stresslens').addEventListener('click', async () => {
+  // ---------- continue into the StressLens study ----------
+  function bindTimeline() {
+    $('#btn-timeline-back').addEventListener('click', () => goBack());
+    $('#btn-timeline-explore').addEventListener('click', async () => {
       await createSession();
       showVignette();
-    });
-    $('#btn-re-analyze').addEventListener('click', () => {
-      const v = $('#re-issue-input').value.trim();
-      if (!v) return;
-      analyzeIssue(v).catch(() => alert('Could not analyse that. Please try again.'));
-    });
-    $('#re-issue-input').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); $('#btn-re-analyze').click(); }
-    });
-    $('#related-chips').addEventListener('click', (e) => {
-      if (e.target.tagName === 'BUTTON') {
-        const c = e.target.dataset.concern;
-        if (c) {
-          $('#re-issue-input').value = c;
-          analyzeIssue(c).catch(() => alert('Could not analyse that. Please try again.'));
-        }
-      }
     });
   }
 
   async function createSession() {
-    setLoading(true, 'Setting up your session…');
+    setLoading(true, 'Saving your reflection…');
     try {
-      const body = {};
+      const body = {
+        messages: state.messages || [],
+        issues: state.issues || [],
+        selected_issue: state.selectedIssue || null,
+        timeline: state.timeline || null,
+      };
       if (state.issue) body.issue = state.issue;
-      if (state.analysis) body.theme_id = state.analysis.theme_id;
       state.session = await api('/sessions', { method: 'POST', body });
     } catch (err) {
       console.error(err);
@@ -718,6 +878,12 @@
         selectedFixes: [],
         fixRanks: {},
         responses: {},
+        messages: [],
+        issues: [],
+        issuesSource: null,
+        selectedIssue: null,
+        timeline: null,
+        chatReady: false,
       };
       history.length = 0;
       $('#issue-input').value = '';
@@ -737,10 +903,11 @@
     const dropped = state.config.fixes.find((f) => f.id === $('#dropped-fix').value);
     const items = [
       `<b>Condition:</b> ${cond.label}`,
+      state.selectedIssue ? `<b>You focused on:</b> ${escapeHtml(state.selectedIssue.title)}` : '',
       `<b>You kept:</b> ${chosen.join(', ')}`,
       `<b>You left out:</b> ${dropped ? dropped.title : '—'}`,
       `<b>Difficulty:</b> ${$('#difficulty').value} / 7`,
-    ];
+    ].filter(Boolean);
     recap.innerHTML = items.map((t) => `<li>${t}</li>`).join('');
   }
 
