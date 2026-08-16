@@ -30,7 +30,7 @@ services:
       - key: BAILIAN_BASE_URL
         value: https://dashscope.aliyuncs.com/compatible-mode/v1
       - key: BAILIAN_MODEL
-        value: qwen-plus
+        value: qwen3.7-max
       - key: TENCENT_API_KEY
         sync: false
       - key: TENCENT_BASE_URL
